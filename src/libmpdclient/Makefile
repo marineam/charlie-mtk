@@ -1,7 +1,18 @@
-CFLAGS = -Wall -ggdb
-SOURCES = example.c libmpdclient.c
+CC = gcc
+CFLAGS += -g -Wall
+OBJS = libmpdclient.o
+HEAD = libmpdclient.h
 
-example: $(SOURCES)
+all: libmpdclient.o example
 
+%.o: %.c $(HEAD)
+	@echo " CC $@"
+	@$(CC) $(CFLAGS) -c -o $@ $<
+
+example: example.c $(OBJS)
+	@echo " CC $@"
+	@$(CC) $(CFLAGS) -o $@ $^
+
+.PHONY: clean
 clean:
-	rm -f *.o example
+	$(RM) example *.o

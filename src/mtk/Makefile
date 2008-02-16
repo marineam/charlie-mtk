@@ -4,14 +4,20 @@ LIBS = $(shell pkg-config --libs cairo gtk+-2.0)
 OBJS = window.o clickarea.o
 HEAD = window.h clickarea.h
 
-all: test
+all: mtk.a test
 
 %.o: %.c $(HEAD)
-	$(CC) $(CFLAGS) -c -o $@ $<
+	@echo " CC $@"
+	@$(CC) $(CFLAGS) -c -o $@ $<
 
-test: test.o $(OBJS)
-	$(CC) $(CFLAGS) -o $@ test.o $(OBJS) $(LIBS)
+mtk.a: $(OBJS)
+	@echo " AR $@"
+	@$(AR) -rc $@ $^
+
+test: test.c mtk.a
+	@echo " CC $@"
+	@$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 .PHONY: clean
 clean:
-	$(RM) test *.o
+	$(RM) test mtk.a *.o

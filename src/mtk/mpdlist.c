@@ -9,12 +9,15 @@ static gboolean redraw(GtkWidget *widget, GdkEvent *event, gpointer data)
 {
 	static int top = 0, start = 0, offset = 0;
 	int w, h, y;
-	cairo_t *cr;
+	cairo_surface_t *buffer_surface;
+	cairo_t *gcr, *cr;
 	GList *list = mpd_get_dir("");
 
-	cr = gdk_cairo_create(widget->window);
 	w = widget->allocation.width;
 	h = widget->allocation.height;
+	buffer_surface = cairo_image_surface_create(CAIRO_FORMAT_RGB24, w, h);
+	gcr = gdk_cairo_create(widget->window);
+	cr = cairo_create(buffer_surface);
 
 	if (event->type == GDK_BUTTON_PRESS) {
 		start = top;
@@ -58,6 +61,12 @@ static gboolean redraw(GtkWidget *widget, GdkEvent *event, gpointer data)
 	}
 
 	cairo_destroy(cr);
+
+	cairo_set_source_surface(gcr, buffer_surface, 0, 0);
+	cairo_paint(gcr);
+	cairo_destroy(gcr);
+
+	cairo_surface_destroy(buffer_surface);
 
 	return FALSE;
 }

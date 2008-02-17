@@ -14,15 +14,17 @@ all: charlie
 	@echo " CC $@"
 	@$(CC) $(CFLAGS) -c -o $@ $<
 
-mtk/mtk.a: $(HEAD)
-	@$(MAKE) -C mtk mtk.a
+.PHONY: mtk
+mtk:
+	@$(MAKE) -s -C mtk mtk.a
 
-libmpdclient/libmpdclient.o:
-	@$(MAKE) -C libmpdclient libmpdclient.o
+.PHONY: libmpdclient
+libmpdclient:
+	@$(MAKE) -s -C libmpdclient libmpdclient.o
 
-charlie: $(OBJS) mtk/mtk.a libmpdclient/libmpdclient.o
+charlie: $(OBJS) mtk libmpdclient
 	@echo " CC $@"
-	@$(CC) -o $@ $^ $(LIBS)
+	@$(CC) -o $@ $(OBJS) mtk/mtk.a libmpdclient/libmpdclient.o  $(LIBS)
 
 .PHONY: clean
 clean:

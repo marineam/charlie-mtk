@@ -1,9 +1,9 @@
 CC = gcc
 MAKEFLAGS = --no-print-directory
-CFLAGS += -g -Wall $(shell pkg-config --cflags cairo gtk+-2.0)
+CFLAGS += -g -Wall -D_GNU_SOURCE $(shell pkg-config --cflags cairo gtk+-2.0)
 LIBS = $(shell pkg-config --libs cairo gtk+-2.0)
-OBJS = main.o
-HEAD = config.h
+OBJS = main.o mpd.o
+HEAD = config.h mpd.h util.h
 
 all: main
 

@@ -4,32 +4,16 @@
 #include <libmpdclient.h>
 #include <charlie.h>
 #include <mtk.h>
+#include <config.h>
 
-static gboolean redraw(GtkWidget *widget, GdkEvent *event, gpointer data)
+static void update(cairo_surface_t *surface, const char *dir)
 {
-	static int top = 0, start = 0, offset = 0;
-	int w, h, y;
-	cairo_surface_t *buffer_surface;
-	cairo_t *gcr, *cr;
-	GList *list = mpd_get_dir("");
-
-	w = widget->allocation.width;
-	h = widget->allocation.height;
-	buffer_surface = cairo_image_surface_create(CAIRO_FORMAT_RGB24, w, h);
-	gcr = gdk_cairo_create(widget->window);
-	cr = cairo_create(buffer_surface);
-
-	if (event->type == GDK_BUTTON_PRESS) {
-		start = top;
-		offset = event->button.y;
-	}
-	else if (event->type == GDK_MOTION_NOTIFY)
-		top = start + event->motion.y - offset;
-
-	y = top;
+	int y = 0;
+	cairo_t *cr = cairo_create(surface);
+	GList *list = mpd_get_dir(dir);
 
 	cairo_set_source_rgb(cr, 1, 1, 1);
-	cairo_rectangle(cr, 0, 0, w, h);
+	cairo_rectangle(cr, 0, 0, WIDTH, 4000);
 	cairo_fill(cr);
 
 	cairo_set_line_width(cr, 2);
@@ -43,7 +27,7 @@ static gboolean redraw(GtkWidget *widget, GdkEvent *event, gpointer data)
 		mpd_InfoEntity *entity = item->data;
 
 		cairo_move_to(cr, 0, y-1);
-		cairo_line_to(cr, w, y-1);
+		cairo_line_to(cr, WIDTH, y-1);
 		cairo_stroke(cr);
 		cairo_move_to(cr, 0, y+30);
 		if (entity->type == MPD_INFO_ENTITY_TYPE_DIRECTORY) {
@@ -61,12 +45,28 @@ static gboolean redraw(GtkWidget *widget, GdkEvent *event, gpointer data)
 	}
 
 	cairo_destroy(cr);
+}
 
-	cairo_set_source_surface(gcr, buffer_surface, 0, 0);
-	cairo_paint(gcr);
-	cairo_destroy(gcr);
+static gboolean redraw(GtkWidget *widget, GdkEvent *event, cairo_surface_t* sr)
+{
+	static int top = 0, start = 0, offset = 0;
+	//int w, h;
+	cairo_t *cr;
 
-	cairo_surface_destroy(buffer_surface);
+	//w = widget->allocation.width;
+	//h = widget->allocation.height;
+	cr = gdk_cairo_create(widget->window);
+
+	if (event->type == GDK_BUTTON_PRESS) {
+		start = top;
+		offset = event->button.y;
+	}
+	else if (event->type == GDK_MOTION_NOTIFY)
+		top = start + event->motion.y - offset;
+
+	cairo_set_source_surface(cr, sr, 0, top);
+	cairo_paint(cr);
+	cairo_destroy(cr);
 
 	return FALSE;
 }
@@ -75,17 +75,21 @@ static gboolean redraw(GtkWidget *widget, GdkEvent *event, gpointer data)
 GtkWidget* mtk_mpdlist_new()
 {
 	GtkWidget *area;
+	cairo_surface_t *surface;
+
+	surface = cairo_image_surface_create(CAIRO_FORMAT_RGB24, WIDTH, 4000);
+	update(surface, "");
 
 	area = gtk_drawing_area_new();
 	gtk_widget_add_events(area, GDK_BUTTON_PRESS_MASK |
 			GDK_BUTTON1_MOTION_MASK);
 
 	g_signal_connect(area, "expose-event",
-			G_CALLBACK (redraw), NULL);
+			G_CALLBACK (redraw), surface);
 	g_signal_connect(area, "button-press-event",
-			G_CALLBACK (redraw), NULL);
+			G_CALLBACK (redraw), surface);
 	g_signal_connect(area, "motion-notify-event",
-			G_CALLBACK (redraw), NULL);
+			G_CALLBACK (redraw), surface);
 
 	return area;
 }

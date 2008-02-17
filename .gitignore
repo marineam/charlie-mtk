@@ -1,4 +1,4 @@
 *.o
 *.a
-/src/main
+/src/charlie
 /src/mtk/test

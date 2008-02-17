@@ -1,3 +1,4 @@
+#include <string.h>
 #include <cairo.h>
 #include <gtk/gtk.h>
 #include <libmpdclient.h>
@@ -6,7 +7,8 @@
 
 static gboolean redraw(GtkWidget *widget, GdkEvent *event, gpointer data)
 {
-	int w, h, y = 0;
+	static int top = 0, start = 0, offset = 0;
+	int w, h, y;
 	cairo_t *cr;
 	GList *list = mpd_get_dir("");
 
@@ -14,10 +16,20 @@ static gboolean redraw(GtkWidget *widget, GdkEvent *event, gpointer data)
 	w = widget->allocation.width;
 	h = widget->allocation.height;
 
+	if (event->type == GDK_BUTTON_PRESS) {
+		start = top;
+		offset = event->button.y;
+	}
+	else if (event->type == GDK_MOTION_NOTIFY)
+		top = start + event->motion.y - offset;
+
+	y = top;
+
 	cairo_set_source_rgb(cr, 1, 1, 1);
 	cairo_rectangle(cr, 0, 0, w, h);
 	cairo_fill(cr);
 
+	cairo_set_line_width(cr, 2);
 	cairo_set_source_rgb(cr, 0, 0, 0);
 	cairo_select_font_face(cr, "Sans",
 		CAIRO_FONT_SLANT_NORMAL,
@@ -27,10 +39,22 @@ static gboolean redraw(GtkWidget *widget, GdkEvent *event, gpointer data)
 	for (GList *item = list; item != NULL; item = item->next) {
 		mpd_InfoEntity *entity = item->data;
 
-		cairo_move_to(cr, 0, y);
-		if (entity->type == MPD_INFO_ENTITY_TYPE_DIRECTORY)
-			cairo_show_text(cr, entity->info.directory->path);
-		y += 20;
+		cairo_move_to(cr, 0, y-1);
+		cairo_line_to(cr, w, y-1);
+		cairo_stroke(cr);
+		cairo_move_to(cr, 0, y+30);
+		if (entity->type == MPD_INFO_ENTITY_TYPE_DIRECTORY) {
+			/* note: using the gnu version of basename */
+			char *path = strdup(basename(
+				entity->info.directory->path));
+			for (int i = 0; i < strlen(path); i++) {
+				if (path[i] == '_')
+					path[i] = ' ';
+			}
+			cairo_show_text(cr, path);
+			free(path);
+		}
+		y += 40;
 	}
 
 	cairo_destroy(cr);
@@ -44,9 +68,14 @@ GtkWidget* mtk_mpdlist_new()
 	GtkWidget *area;
 
 	area = gtk_drawing_area_new();
-	gtk_widget_add_events(area, GDK_BUTTON_PRESS_MASK);
+	gtk_widget_add_events(area, GDK_BUTTON_PRESS_MASK |
+			GDK_BUTTON1_MOTION_MASK);
 
 	g_signal_connect(area, "expose-event",
+			G_CALLBACK (redraw), NULL);
+	g_signal_connect(area, "button-press-event",
+			G_CALLBACK (redraw), NULL);
+	g_signal_connect(area, "motion-notify-event",
 			G_CALLBACK (redraw), NULL);
 
 	return area;

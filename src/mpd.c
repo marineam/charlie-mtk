@@ -22,12 +22,6 @@ void mpd_init()
 	die_on_mpd_error();
 }
 
-enum
-{
-   NAME_COLUMN,
-   N_COLUMNS
-};
-
 GList* mpd_get_dir(const char *dir)
 {
 	mpd_InfoEntity *entity;

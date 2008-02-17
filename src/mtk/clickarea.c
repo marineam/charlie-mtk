@@ -4,7 +4,7 @@
 
 static gboolean redraw(GtkWidget *widget, GdkEvent *event, gpointer data)
 {
-	static double y = -1;
+	static double y = -999;
 	cairo_t *cr;
 	gint w, h;
 
@@ -14,8 +14,10 @@ static gboolean redraw(GtkWidget *widget, GdkEvent *event, gpointer data)
 
 	if (event->type == GDK_BUTTON_PRESS)
 		y = event->button.y;
+	if (event->type == GDK_MOTION_NOTIFY)
+		y = event->motion.y;
 
-	if (y < 0)
+	if (y == -999)
 		y = h/2;
 
 	cairo_set_source_rgb(cr, 1, 1, 1);
@@ -39,11 +41,14 @@ GtkWidget* mtk_clickarea_new()
 	GtkWidget *area;
 
 	area = gtk_drawing_area_new();
-	gtk_widget_add_events(area, GDK_BUTTON_PRESS_MASK);
+	gtk_widget_add_events(area, GDK_BUTTON_PRESS_MASK |
+			GDK_BUTTON1_MOTION_MASK);
 
 	g_signal_connect(area, "expose-event",
 			G_CALLBACK (redraw), NULL);
 	g_signal_connect(area, "button-press-event",
+			G_CALLBACK (redraw), NULL);
+	g_signal_connect(area, "motion-notify-event",
 			G_CALLBACK (redraw), NULL);
 
 	return area;

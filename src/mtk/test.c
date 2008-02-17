@@ -1,6 +1,5 @@
 #include <gtk/gtk.h>
-#include "window.h"
-#include "clickarea.h"
+#include <mtk.h>
 
 int main (int argc, char *argv[])
 {

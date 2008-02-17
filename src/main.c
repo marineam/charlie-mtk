@@ -1,9 +1,7 @@
 #include <gtk/gtk.h>
-#include "mtk/window.h"
-#include "mtk/clickarea.h"
-#include "mtk/mpdlist.h"
-#include "config.h"
-#include "mpd.h"
+#include <config.h>
+#include <charlie.h>
+#include <mtk.h>
 
 int main (int argc, char *argv[])
 {

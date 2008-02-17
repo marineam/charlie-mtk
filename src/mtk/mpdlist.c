@@ -1,8 +1,8 @@
 #include <cairo.h>
 #include <gtk/gtk.h>
-#include "../libmpdclient/libmpdclient.h"
-#include "../mpd.h"
-#include "mpdlist.h"
+#include <libmpdclient.h>
+#include <charlie.h>
+#include <mtk.h>
 
 static gboolean redraw(GtkWidget *widget, GdkEvent *event, gpointer data)
 {

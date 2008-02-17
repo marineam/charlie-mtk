@@ -1,24 +1,26 @@
 CC = gcc
 MAKEFLAGS = --no-print-directory
 CFLAGS += -g -Wall -D_GNU_SOURCE -std=gnu99
+CFLAGS += -I./include -I./libmpdclient
 CFLAGS += $(shell pkg-config --cflags cairo gtk+-2.0)
 LIBS = $(shell pkg-config --libs cairo gtk+-2.0)
-OBJS = main.o mpd.o
-HEAD = config.h mpd.h util.h
+SRCS = $(wildcard *.c)
+OBJS = $(SRCS:.c=.o)
+HEAD = $(wildcard include/*.h)
 
-all: main
+all: charlie
 
 %.o: %.c $(HEAD)
 	@echo " CC $@"
 	@$(CC) $(CFLAGS) -c -o $@ $<
 
-mtk/mtk.a:
+mtk/mtk.a: $(HEAD)
 	@$(MAKE) -C mtk mtk.a
 
 libmpdclient/libmpdclient.o:
 	@$(MAKE) -C libmpdclient libmpdclient.o
 
-main: $(OBJS) mtk/mtk.a libmpdclient/libmpdclient.o
+charlie: $(OBJS) mtk/mtk.a libmpdclient/libmpdclient.o
 	@echo " CC $@"
 	@$(CC) -o $@ $^ $(LIBS)
 
@@ -26,4 +28,4 @@ main: $(OBJS) mtk/mtk.a libmpdclient/libmpdclient.o
 clean:
 	@$(MAKE) -C mtk clean
 	@$(MAKE) -C libmpdclient clean
-	$(RM) main *.o
+	$(RM) charlie *.o

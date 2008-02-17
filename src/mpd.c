@@ -1,9 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <glib.h>
-#include "libmpdclient/libmpdclient.h"
-#include "util.h"
-#include "mpd.h"
+#include <libmpdclient.h>
+#include <charlie.h>
 
 static mpd_Connection *conn;
 

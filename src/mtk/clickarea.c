@@ -1,6 +1,6 @@
 #include <cairo.h>
 #include <gtk/gtk.h>
-#include "clickarea.h"
+#include <mtk.h>
 
 static gboolean redraw(GtkWidget *widget, GdkEvent *event, gpointer data)
 {

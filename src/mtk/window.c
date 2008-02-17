@@ -1,6 +1,6 @@
 #include <cairo.h>
 #include <gtk/gtk.h>
-#include "window.h"
+#include <mtk.h>
 
 static gboolean mouse(GtkWidget *widget, GdkEventMotion *event, gpointer data)
 {

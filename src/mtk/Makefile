@@ -1,8 +1,9 @@
 CC = gcc
-CFLAGS += -g -Wall $(shell pkg-config --cflags cairo gtk+-2.0)
+CFLAGS += -g -Wall -D_GNU_SOURCE -std=gnu99
+CFLAGS += $(shell pkg-config --cflags cairo gtk+-2.0)
 LIBS = $(shell pkg-config --libs cairo gtk+-2.0)
-OBJS = window.o clickarea.o
-HEAD = window.h clickarea.h
+OBJS = window.o clickarea.o mpdlist.o
+HEAD = window.h clickarea.h mpdlist.h
 
 all: mtk.a test
 

@@ -1,9 +1,9 @@
 #ifndef MPD_H
 #define MPD_H
 
-#include <gtk/gtk.h>
+#include <glib.h>
 
 void mpd_init();
-GtkWidget* mpd_tree_new();
+GList* mpd_get_dir(const char *dir);
 
 #endif

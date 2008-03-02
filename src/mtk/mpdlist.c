@@ -56,6 +56,7 @@ static void update(cairo_surface_t *surface, const char *dir)
 static gboolean redraw(GtkWidget *widget, GdkEvent *event, cairo_surface_t* sr)
 {
 	static int top = UNIT, start = UNIT, offset = 0;
+	static gboolean scroll;
 	int w, h;
 	cairo_t *cr;
 
@@ -64,10 +65,21 @@ static gboolean redraw(GtkWidget *widget, GdkEvent *event, cairo_surface_t* sr)
 	cr = gdk_cairo_create(widget->window);
 
 	if (event->type == GDK_BUTTON_PRESS) {
-		start = top;
-		offset = event->button.y;
+		if (event->button.y <= UNIT) {
+			scroll = FALSE;
+			top -= h-3*UNIT;
+		}
+		else if (event->button.y > h-UNIT) {
+			scroll = FALSE;
+			top += h-3*UNIT;
+		}
+		else {
+			scroll = TRUE;
+			start = top;
+			offset = event->button.y;
+		}
 	}
-	else if (event->type == GDK_MOTION_NOTIFY)
+	else if (scroll && event->type == GDK_MOTION_NOTIFY)
 		top = start + event->motion.y - offset;
 
 	if (top > UNIT)

@@ -6,16 +6,15 @@
 int main (int argc, char *argv[])
 {
 	GtkWidget *window;
-	GtkWidget *box;
+	GtkWidget *hbox;
 
 	gtk_init(&argc, &argv);
 	mpd_init();
 
 	window = mtk_window_new(WIDTH, HEIGHT);
-	box = gtk_hbox_new(TRUE, 0);
-	gtk_container_add(GTK_CONTAINER(window), box);
-	gtk_box_pack_start(GTK_BOX(box), mtk_clickarea_new(), TRUE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(box), mtk_mpdlist_new(), TRUE, TRUE, 0);
+	hbox = gtk_hbox_new(FALSE, 0);
+	gtk_container_add(GTK_CONTAINER(window), hbox);
+	gtk_box_pack_start_defaults(GTK_BOX(hbox), mtk_mpdlist_new());
 
 	gtk_widget_show_all(window);
 

@@ -6,11 +6,14 @@
 #include <mtk.h>
 #include <config.h>
 
+GList *list;
+int list_len;
+
 static void update(cairo_surface_t *surface, const char *dir)
 {
 	int y = 0;
 	cairo_t *cr = cairo_create(surface);
-	GList *list = mpd_get_dir(dir);
+	list = mpd_get_dir(dir);
 
 	cairo_set_source_rgb(cr, 1, 1, 1);
 	cairo_rectangle(cr, 0, 0, WIDTH, 4000);
@@ -23,8 +26,11 @@ static void update(cairo_surface_t *surface, const char *dir)
 		CAIRO_FONT_WEIGHT_NORMAL);
 	cairo_set_font_size(cr, 20.0);
 
+	list_len = 0;
 	for (GList *item = list; item != NULL; item = item->next) {
 		mpd_InfoEntity *entity = item->data;
+
+		list_len++;
 
 		cairo_move_to(cr, 0, y-1);
 		cairo_line_to(cr, WIDTH, y-1);
@@ -49,12 +55,12 @@ static void update(cairo_surface_t *surface, const char *dir)
 
 static gboolean redraw(GtkWidget *widget, GdkEvent *event, cairo_surface_t* sr)
 {
-	static int top = 0, start = 0, offset = 0;
-	//int w, h;
+	static int top = UNIT, start = UNIT, offset = 0;
+	int w, h;
 	cairo_t *cr;
 
-	//w = widget->allocation.width;
-	//h = widget->allocation.height;
+	w = widget->allocation.width;
+	h = widget->allocation.height;
 	cr = gdk_cairo_create(widget->window);
 
 	if (event->type == GDK_BUTTON_PRESS) {
@@ -64,8 +70,28 @@ static gboolean redraw(GtkWidget *widget, GdkEvent *event, cairo_surface_t* sr)
 	else if (event->type == GDK_MOTION_NOTIFY)
 		top = start + event->motion.y - offset;
 
+	if (top > UNIT)
+		top = UNIT;
+	else if (top < (list_len*-UNIT)+(h-UNIT))
+		top = (list_len*-UNIT)+(h-UNIT);
+
+	cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+	cairo_rectangle(cr, 0, 0, w, UNIT-2);
+	cairo_rectangle(cr, 0, h-UNIT, w, h);
+	cairo_fill(cr);
+
+	cairo_set_source_rgb(cr, 0, 0, 0);
+	cairo_move_to(cr, 0, UNIT-1);
+	cairo_line_to(cr, w, UNIT-1);
+	cairo_move_to(cr, 0, h-UNIT-1);
+	cairo_line_to(cr, w, h-UNIT-1);
+	cairo_stroke(cr);
+
+	cairo_rectangle(cr, 0, UNIT, w, h-(2*UNIT)-2);
+	cairo_clip(cr);
 	cairo_set_source_surface(cr, sr, 0, top);
 	cairo_paint(cr);
+
 	cairo_destroy(cr);
 
 	return FALSE;

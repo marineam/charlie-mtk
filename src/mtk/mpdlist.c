@@ -7,7 +7,7 @@
 #include <config.h>
 
 GList *list;
-int list_len;
+int list_len, timed_scroll = UNIT;
 
 static void update(cairo_surface_t *surface, const char *dir)
 {
@@ -56,8 +56,8 @@ static void update(cairo_surface_t *surface, const char *dir)
 static gboolean redraw(GtkWidget *widget, GdkEvent *event, cairo_surface_t* sr)
 {
 	static int top = UNIT, start = UNIT, offset = 0;
-	static gboolean scroll;
-	int w, h;
+	static gboolean slide_scroll;
+	int w, h, min, max;
 	cairo_t *cr;
 
 	w = widget->allocation.width;
@@ -66,26 +66,61 @@ static gboolean redraw(GtkWidget *widget, GdkEvent *event, cairo_surface_t* sr)
 
 	if (event->type == GDK_BUTTON_PRESS) {
 		if (event->button.y <= UNIT) {
-			scroll = FALSE;
-			top -= h-3*UNIT;
+			slide_scroll = FALSE;
+			timed_scroll = timed_scroll - (h/2 - (h/2)%UNIT);
 		}
 		else if (event->button.y > h-UNIT) {
-			scroll = FALSE;
-			top += h-3*UNIT;
+			slide_scroll = FALSE;
+			timed_scroll = timed_scroll + (h/2 - (h/2)%UNIT);
 		}
 		else {
-			scroll = TRUE;
+			slide_scroll = TRUE;
+			timed_scroll = top;
 			start = top;
 			offset = event->button.y;
 		}
 	}
-	else if (scroll && event->type == GDK_MOTION_NOTIFY)
+	if (slide_scroll && event->type == GDK_BUTTON_RELEASE) {
+		/* slide scroll done, adjust to nearest item */
+		timed_scroll = start + event->motion.y - offset;
+		if (timed_scroll > 0) {
+			if (offset < event->motion.y)
+				timed_scroll += UNIT - abs(timed_scroll) % UNIT;
+			else
+				timed_scroll -= abs(timed_scroll) % UNIT;
+		}
+		else {
+			if (offset < event->motion.y)
+				timed_scroll += abs(timed_scroll) % UNIT;
+			else
+				timed_scroll -= UNIT - abs(timed_scroll) % UNIT;
+		}
+	}
+	else if (slide_scroll && event->type == GDK_MOTION_NOTIFY) {
 		top = start + event->motion.y - offset;
+		timed_scroll = top;
+	}
 
-	if (top > UNIT)
-		top = UNIT;
-	else if (top < (list_len*-UNIT)+(h-UNIT))
-		top = (list_len*-UNIT)+(h-UNIT);
+	/* extreme scroll positions, max is the top, min bottom */
+	max = UNIT;
+	min = (list_len*-UNIT)+(h-UNIT);
+
+	if (timed_scroll > max)
+		timed_scroll = max;
+	else if (timed_scroll < min)
+		timed_scroll = min;
+
+	if (top > max)
+		top = max;
+	else if (top < min)
+		top = min;
+
+	if (timed_scroll != top) {
+		if (timed_scroll+1 == top || timed_scroll-1 == top)
+			top = timed_scroll;
+		else
+			top = top + (timed_scroll-top)*0.5;
+	}
 
 	cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
 	cairo_rectangle(cr, 0, 0, w, UNIT-2);
@@ -109,6 +144,11 @@ static gboolean redraw(GtkWidget *widget, GdkEvent *event, cairo_surface_t* sr)
 	return FALSE;
 }
 
+static gboolean timed_redraw(GtkWidget *widget) {
+	if (widget->window != NULL)
+		gtk_widget_queue_draw(widget);
+	return TRUE;
+}
 
 GtkWidget* mtk_mpdlist_new()
 {
@@ -120,7 +160,7 @@ GtkWidget* mtk_mpdlist_new()
 
 	area = gtk_drawing_area_new();
 	gtk_widget_add_events(area, GDK_BUTTON_PRESS_MASK |
-			GDK_BUTTON1_MOTION_MASK);
+			GDK_BUTTON1_MOTION_MASK | GDK_BUTTON_RELEASE_MASK);
 
 	g_signal_connect(area, "expose-event",
 			G_CALLBACK (redraw), surface);
@@ -128,6 +168,10 @@ GtkWidget* mtk_mpdlist_new()
 			G_CALLBACK (redraw), surface);
 	g_signal_connect(area, "motion-notify-event",
 			G_CALLBACK (redraw), surface);
+	g_signal_connect(area, "button-release-event",
+			G_CALLBACK (redraw), surface);
+	/* todo: create/destroy this callback as needed */
+	g_timeout_add(100, (GSourceFunc)timed_redraw, area);
 
 	return area;
 }

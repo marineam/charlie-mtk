@@ -22,6 +22,7 @@ mtk_window_t* mtk_window_new(int w, int h)
 	values.event_mask =
 		XCB_EVENT_MASK_EXPOSURE |
 		XCB_EVENT_MASK_BUTTON_PRESS |
+		XCB_EVENT_MASK_BUTTON_MOTION |
 		XCB_EVENT_MASK_STRUCTURE_NOTIFY;
 	xcb_aux_create_window(_conn, _screen->root_depth,
 		window->id, _screen->root,

@@ -86,6 +86,5 @@ void _mtk_window_resize(mtk_window_t *window, int w, int h)
 	cairo_xcb_surface_set_size(window->surface, w, h);
 	window->width = w;
 	window->height = h;
-	printf("w %d h %d\n", w, h);
 	_mtk_window_draw(window);
 }

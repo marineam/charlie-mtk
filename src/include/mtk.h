@@ -17,6 +17,7 @@ typedef struct mtk_list {
 } mtk_list_t;
 
 typedef struct mtk_window mtk_window_t;
+typedef struct mtk_widget mtk_widget_t;
 
 /* main.c */
 void mtk_init();
@@ -24,13 +25,14 @@ void mtk_cleanup();
 int mtk_event();
 
 /* clickarea.c */
-//mtk_ mtk_clickarea_new();
+mtk_widget_t* mtk_clickarea_new(int x, int y, int w, int h);
 
 /* mpdlist.c */
 //GtkWidget* mtk_mpdlist_new();
 
 /* window.c */
 mtk_window_t* mtk_window_new(int w, int h);
+void mtk_window_add(mtk_window_t* window, mtk_widget_t* widget);
 
 /* utilities */
 mtk_list_t* mtk_list_new();

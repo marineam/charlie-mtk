@@ -4,12 +4,15 @@
 int main (int argc, char *argv[])
 {
 	mtk_window_t *window;
+	mtk_widget_t *clickarea;
 	/* pause for a 100th of a second between polls */
 	struct timespec pause = {.tv_sec = 0, .tv_nsec = 1000000};
 
 	mtk_init();
 
 	window = mtk_window_new(640, 480);
+	clickarea = mtk_clickarea_new(0, 0, 640, 480);
+	mtk_window_add(window, clickarea);
 
 	while (1) {
 		if (mtk_event() < 0)

@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_aux.h>
 #include <cairo.h>
@@ -16,9 +17,11 @@ mtk_window_t* mtk_window_new(int w, int h)
 	window->id = xcb_generate_id(_conn);
 	window->width = w;
 	window->height = h;
+	window->widgets = mtk_list_new();
 	mask = XCB_CW_EVENT_MASK;
 	values.event_mask =
 		XCB_EVENT_MASK_EXPOSURE |
+		XCB_EVENT_MASK_BUTTON_PRESS |
 		XCB_EVENT_MASK_STRUCTURE_NOTIFY;
 	xcb_aux_create_window(_conn, _screen->root_depth,
 		window->id, _screen->root,
@@ -38,15 +41,41 @@ mtk_window_t* mtk_window_new(int w, int h)
 	return window;
 }
 
+void mtk_window_add(mtk_window_t* window, mtk_widget_t* widget)
+{
+	mtk_list_append(window->widgets, widget);
+	widget->window = window;
+	widget->draw(widget);
+}
+
 void _mtk_window_draw(mtk_window_t *window)
 {
-	cairo_t             *cr;
+	cairo_t *cr;
+	mtk_list_node_t *n;
 
 	cr = cairo_create(window->surface);
-	cairo_set_source_rgb(cr, 1, 1, 1);
+	cairo_set_source_rgb(cr, 0, 0, 0);
 	cairo_rectangle(cr, 0, 0, window->width, window->height);
 	cairo_fill(cr);
 	cairo_destroy(cr);
+
+	for (n = window->widgets->first; n; n = n->next) {
+		mtk_widget_t *w = n->data;
+		assert(w->draw);
+		w->draw(w);
+	}
+}
+
+void _mtk_window_click(mtk_window_t *window, int x, int y)
+{
+	mtk_list_node_t *n;
+
+	for (n = window->widgets->first; n; n = n->next) {
+		mtk_widget_t *w = n->data;
+		if (w->click && x >= w->x && y >= w->y &&
+				x <= w->x + w->w && y <= w->y + w->h)
+			w->click(w, x-w->x, y-w->y);
+	}
 }
 
 void _mtk_window_resize(mtk_window_t *window, int w, int h)
@@ -59,4 +88,3 @@ void _mtk_window_resize(mtk_window_t *window, int w, int h)
 	printf("w %d h %d\n", w, h);
 	_mtk_window_draw(window);
 }
-

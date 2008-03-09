@@ -3,7 +3,7 @@ CFLAGS += -g -Wall -D_GNU_SOURCE -std=gnu99
 CFLAGS += -I../include -I../libmpdclient
 CFLAGS += $(shell pkg-config --cflags cairo xcb xcb-aux)
 LIBS = $(shell pkg-config --libs cairo xcb xcb-aux)
-OBJS = main.o window.o util.o
+OBJS = main.o window.o util.o clickarea.o
 HEAD = $(wildcard ../include/*.h) private.h
 
 all: mtk.a test

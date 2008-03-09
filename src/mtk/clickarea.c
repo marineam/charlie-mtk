@@ -1,55 +1,52 @@
 #include <cairo.h>
-#include <gtk/gtk.h>
 #include <mtk.h>
 
-static gboolean redraw(GtkWidget *widget, GdkEvent *event, gpointer data)
+#include "private.h"
+
+struct clickarea {
+	mtk_widget_t widget;
+	int line;
+};
+
+static void draw(mtk_widget_t *widget)
 {
-	static double y = -999;
+	struct clickarea *area = (struct clickarea*)widget;
 	cairo_t *cr;
-	gint w, h;
 
-	cr = gdk_cairo_create(widget->window);
-	w = widget->allocation.width;
-	h = widget->allocation.height;
-
-	if (event->type == GDK_BUTTON_PRESS)
-		y = event->button.y;
-	if (event->type == GDK_MOTION_NOTIFY)
-		y = event->motion.y;
-
-	if (y == -999)
-		y = h/2;
+	cr = cairo_create(widget->window->surface);
 
 	cairo_set_source_rgb(cr, 1, 1, 1);
-	cairo_rectangle(cr, 0, 0, w, h);
+	cairo_rectangle(cr, widget->x, widget->y, widget->w, widget->h);
 	cairo_fill(cr);
 
 	cairo_set_source_rgb(cr, 0, 0, 0);
 	cairo_set_line_width(cr, 2);
-	cairo_move_to(cr, 0, y);
-	cairo_line_to(cr, w, y);
+	cairo_move_to(cr, widget->x, area->line);
+	cairo_line_to(cr, widget->x+widget->w, area->line);
 	cairo_stroke(cr);
 
 	cairo_destroy(cr);
-
-	return FALSE;
 }
 
-
-GtkWidget* mtk_clickarea_new()
+static void click(mtk_widget_t *widget, int x, int y)
 {
-	GtkWidget *area;
+	struct clickarea *area = (struct clickarea*)widget;
 
-	area = gtk_drawing_area_new();
-	gtk_widget_add_events(area, GDK_BUTTON_PRESS_MASK |
-			GDK_BUTTON1_MOTION_MASK);
+	area->line = y;
+	draw(widget);
+}
 
-	g_signal_connect(area, "expose-event",
-			G_CALLBACK (redraw), NULL);
-	g_signal_connect(area, "button-press-event",
-			G_CALLBACK (redraw), NULL);
-	g_signal_connect(area, "motion-notify-event",
-			G_CALLBACK (redraw), NULL);
+mtk_widget_t* mtk_clickarea_new(int x, int y, int w, int h)
+{
+	struct clickarea *area = xmalloc0(sizeof(struct clickarea));
 
-	return area;
+	area->widget.x = x;
+	area->widget.y = y;
+	area->widget.w = w;
+	area->widget.h = h;
+	area->widget.draw = draw;
+	area->widget.click = click;
+	area->line = h/2;
+
+	return (mtk_widget_t*)area;
 }

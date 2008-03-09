@@ -63,11 +63,15 @@ int mtk_event()
 	switch (e->response_type & ~0x80) {
 	case XCB_BUTTON_PRESS:
 		WINDOW_EVENT(xcb_button_press_event_t, event,
-			_mtk_window_click(w, _e->event_x, _e->event_y));
+			_mtk_window_mouse_press(w, _e->event_x, _e->event_y));
+		break;
+	case XCB_BUTTON_RELEASE:
+		WINDOW_EVENT(xcb_button_release_event_t, event,
+			_mtk_window_mouse_release(w, _e->event_x, _e->event_y));
 		break;
 	case XCB_MOTION_NOTIFY:
 		WINDOW_EVENT(xcb_motion_notify_event_t, event,
-			_mtk_window_click(w, _e->event_x, _e->event_y));
+			_mtk_window_mouse_move(w, _e->event_x, _e->event_y));
 		break;
 	case XCB_EXPOSE:    /* draw or redraw the window */
 		WINDOW_EVENT(xcb_expose_event_t, window, _mtk_window_draw(w));

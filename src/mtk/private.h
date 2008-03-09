@@ -16,8 +16,12 @@ struct mtk_window {
 struct mtk_widget {
 	int x, y, w, h;
 	mtk_window_t *window;
-	void (*draw)(mtk_widget_t *widget);
-	void (*click)(mtk_widget_t *widget, int x, int y);
+	cairo_surface_t *surface;
+	void (*draw)(mtk_widget_t *widget); /* required */
+	void (*update)(mtk_widget_t *widget);
+	void (*mouse_press)(mtk_widget_t *widget, int x, int y);
+	void (*mouse_release)(mtk_widget_t *widget, int x, int y);
+	void (*mouse_move)(mtk_widget_t *widget, int x, int y);
 };
 
 extern int _screen_num;
@@ -27,7 +31,9 @@ extern xcb_visualtype_t *_visual;
 extern mtk_list_t *_windows;
 
 void _mtk_window_draw(mtk_window_t *window);
-void _mtk_window_click(mtk_window_t *window, int x, int y);
+void _mtk_window_mouse_press(mtk_window_t *window, int x, int y);
+void _mtk_window_mouse_release(mtk_window_t *window, int x, int y);
+void _mtk_window_mouse_move(mtk_window_t *window, int x, int y);
 void _mtk_window_resize(mtk_window_t *window, int w, int h);
 
 #endif

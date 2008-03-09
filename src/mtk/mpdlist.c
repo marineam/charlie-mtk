@@ -1,19 +1,32 @@
 #include <string.h>
+#include <assert.h>
 #include <cairo.h>
-#include <gtk/gtk.h>
-#include <libmpdclient.h>
-#include <charlie.h>
 #include <mtk.h>
-#include <config.h>
+#include <libmpdclient.h>
 
-GList *list;
-int list_len, timed_scroll = UNIT;
+#include "private.h"
 
-static void update(cairo_surface_t *surface, const char *dir)
+struct mpdlist {
+	mtk_widget_t widget;
+	mtk_list_t* list;
+	int timed_scroll;
+	int slide_scroll;
+	int slide_start;
+	int slide_offset;
+	int scroll_top;
+	void (*updatelist)(mtk_list_t **list);
+	void (*clicked)(mtk_list_t *list, mtk_list_node_t *node);
+};
+
+static void update(mtk_widget_t *widget)
 {
+	struct mpdlist *mpdlist = (struct mpdlist*)widget;
+	cairo_t *cr = cairo_create(widget->surface);
+	mpd_InfoEntity *entity;
 	int y = 0;
-	cairo_t *cr = cairo_create(surface);
-	list = mpd_get_dir(dir);
+
+	assert(mpdlist->updatelist);
+	mpdlist->updatelist(&mpdlist->list);
 
 	cairo_set_source_rgb(cr, 1, 1, 1);
 	cairo_rectangle(cr, 0, 0, WIDTH, 4000);
@@ -26,12 +39,7 @@ static void update(cairo_surface_t *surface, const char *dir)
 		CAIRO_FONT_WEIGHT_NORMAL);
 	cairo_set_font_size(cr, 20.0);
 
-	list_len = 0;
-	for (GList *item = list; item != NULL; item = item->next) {
-		mpd_InfoEntity *entity = item->data;
-
-		list_len++;
-
+	mtk_list_foreach(mpdlist->list, entity) {
 		cairo_move_to(cr, 0, y-1);
 		cairo_line_to(cr, WIDTH, y-1);
 		cairo_stroke(cr);
@@ -53,125 +61,152 @@ static void update(cairo_surface_t *surface, const char *dir)
 	cairo_destroy(cr);
 }
 
-static gboolean redraw(GtkWidget *widget, GdkEvent *event, cairo_surface_t* sr)
+static void draw(mtk_widget_t *widget)
 {
-	static int top = UNIT, start = UNIT, offset = 0;
-	static gboolean slide_scroll;
-	int w, h, min, max;
+	struct mpdlist *mpdlist = (struct mpdlist*)widget;
 	cairo_t *cr;
 
-	w = widget->allocation.width;
-	h = widget->allocation.height;
-	cr = gdk_cairo_create(widget->window);
-
-	if (event->type == GDK_BUTTON_PRESS) {
-		if (event->button.y <= UNIT) {
-			slide_scroll = FALSE;
-			timed_scroll = timed_scroll - (h/2 - (h/2)%UNIT);
-		}
-		else if (event->button.y > h-UNIT) {
-			slide_scroll = FALSE;
-			timed_scroll = timed_scroll + (h/2 - (h/2)%UNIT);
-		}
-		else {
-			slide_scroll = TRUE;
-			timed_scroll = top;
-			start = top;
-			offset = event->button.y;
-		}
-	}
-	if (slide_scroll && event->type == GDK_BUTTON_RELEASE) {
-		/* slide scroll done, adjust to nearest item */
-		timed_scroll = start + event->motion.y - offset;
-		if (timed_scroll > 0) {
-			if (offset < event->motion.y)
-				timed_scroll += UNIT - abs(timed_scroll) % UNIT;
-			else
-				timed_scroll -= abs(timed_scroll) % UNIT;
-		}
-		else {
-			if (offset < event->motion.y)
-				timed_scroll += abs(timed_scroll) % UNIT;
-			else
-				timed_scroll -= UNIT - abs(timed_scroll) % UNIT;
-		}
-	}
-	else if (slide_scroll && event->type == GDK_MOTION_NOTIFY) {
-		top = start + event->motion.y - offset;
-		timed_scroll = top;
-	}
-
-	/* extreme scroll positions, max is the top, min bottom */
-	max = UNIT;
-	min = (list_len*-UNIT)+(h-UNIT);
-
-	if (timed_scroll > max)
-		timed_scroll = max;
-	else if (timed_scroll < min)
-		timed_scroll = min;
-
-	if (top > max)
-		top = max;
-	else if (top < min)
-		top = min;
-
-	if (timed_scroll != top) {
-		if (timed_scroll+1 == top || timed_scroll-1 == top)
-			top = timed_scroll;
-		else
-			top = top + (timed_scroll-top)*0.5;
-	}
+	cr = cairo_create(widget->window->surface);
 
 	cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
-	cairo_rectangle(cr, 0, 0, w, UNIT-2);
-	cairo_rectangle(cr, 0, h-UNIT, w, h);
+	cairo_rectangle(cr, 0, 0, widget->w, UNIT-2);
+	cairo_rectangle(cr, 0, widget->h - UNIT, widget->w, widget->h);
 	cairo_fill(cr);
 
 	cairo_set_source_rgb(cr, 0, 0, 0);
 	cairo_move_to(cr, 0, UNIT-1);
-	cairo_line_to(cr, w, UNIT-1);
-	cairo_move_to(cr, 0, h-UNIT-1);
-	cairo_line_to(cr, w, h-UNIT-1);
+	cairo_line_to(cr, widget->w, UNIT-1);
+	cairo_move_to(cr, 0, widget->h - UNIT-1);
+	cairo_line_to(cr, widget->w, widget->h - UNIT-1);
 	cairo_stroke(cr);
 
-	cairo_rectangle(cr, 0, UNIT, w, h-(2*UNIT)-2);
+	cairo_rectangle(cr, 0, UNIT, widget->w, widget->h - (2*UNIT)-2);
 	cairo_clip(cr);
-	cairo_set_source_surface(cr, sr, 0, top);
+	cairo_set_source_surface(cr, widget->surface, 0, mpdlist->scroll_top);
 	cairo_paint(cr);
 
 	cairo_destroy(cr);
-
-	return FALSE;
 }
 
+/*
 static gboolean timed_redraw(GtkWidget *widget) {
 	if (widget->window != NULL)
 		gtk_widget_queue_draw(widget);
 	return TRUE;
+
+}
+*/
+
+/* cleans things up after mouse events */
+static void scroll_fixup(struct mpdlist *mpdlist)
+{
+	/* extreme scroll positions, max is the top, min bottom */
+	int max = UNIT;
+	int min = (mtk_list_length(mpdlist->list) * -UNIT) +
+		(mpdlist->widget.h - UNIT);
+
+	if (mpdlist->timed_scroll > max)
+		mpdlist->timed_scroll = max;
+	else if (mpdlist->timed_scroll < min)
+		mpdlist->timed_scroll = min;
+
+	if (mpdlist->scroll_top > max)
+		mpdlist->scroll_top = max;
+	else if (mpdlist->scroll_top < min)
+		mpdlist->scroll_top = min;
+
+	if (mpdlist->timed_scroll != mpdlist->scroll_top) {
+		if (mpdlist->timed_scroll+1 == mpdlist->scroll_top ||
+		    mpdlist->timed_scroll-1 == mpdlist->scroll_top)
+			mpdlist->scroll_top = mpdlist->timed_scroll;
+		else
+			mpdlist->scroll_top += (mpdlist->timed_scroll
+				- mpdlist->scroll_top) * 0.5;
+	}
 }
 
-GtkWidget* mtk_mpdlist_new()
+static void mouse_press(mtk_widget_t *widget, int x, int y)
 {
-	GtkWidget *area;
-	cairo_surface_t *surface;
+	struct mpdlist *mpdlist = (struct mpdlist*)widget;
 
-	surface = cairo_image_surface_create(CAIRO_FORMAT_RGB24, WIDTH, 4000);
-	update(surface, "");
+	if (y <= UNIT) {
+		mpdlist->slide_scroll = 0;
+		mpdlist->timed_scroll -= (widget->h/2 - (widget->h/2)%UNIT);
+	}
+	else if (y > widget->h-UNIT) {
+		mpdlist->slide_scroll = 0;
+		mpdlist->timed_scroll += (widget->h/2 - (widget->h/2)%UNIT);
+	}
+	else {
+		mpdlist->slide_scroll = 1;
+		mpdlist->timed_scroll = mpdlist->scroll_top;
+		mpdlist->slide_start = mpdlist->scroll_top;
+		mpdlist->slide_offset = y;
+	}
 
-	area = gtk_drawing_area_new();
-	gtk_widget_add_events(area, GDK_BUTTON_PRESS_MASK |
-			GDK_BUTTON1_MOTION_MASK | GDK_BUTTON_RELEASE_MASK);
+	scroll_fixup(mpdlist);
+	draw(widget);
+}
 
-	g_signal_connect(area, "expose-event",
-			G_CALLBACK (redraw), surface);
-	g_signal_connect(area, "button-press-event",
-			G_CALLBACK (redraw), surface);
-	g_signal_connect(area, "motion-notify-event",
-			G_CALLBACK (redraw), surface);
-	g_signal_connect(area, "button-release-event",
-			G_CALLBACK (redraw), surface);
-	/* todo: create/destroy this callback as needed */
-	g_timeout_add(100, (GSourceFunc)timed_redraw, area);
+static void mouse_release(mtk_widget_t *widget, int x, int y)
+{
+	struct mpdlist *mpdlist = (struct mpdlist*)widget;
 
-	return area;
+	if (!mpdlist->slide_scroll)
+		return;
+
+	/* slide scroll done, adjust to nearest item */
+	mpdlist->timed_scroll = mpdlist->slide_start + y -
+		mpdlist->slide_offset;
+	if (mpdlist->timed_scroll > 0) {
+		if (mpdlist->slide_offset < y)
+			mpdlist->timed_scroll +=
+				UNIT - abs(mpdlist->timed_scroll) % UNIT;
+		else
+			mpdlist->timed_scroll -=
+				abs(mpdlist->timed_scroll) % UNIT;
+	}
+	else {
+		if (mpdlist->slide_offset < y)
+			mpdlist->timed_scroll +=
+				abs(mpdlist->timed_scroll) % UNIT;
+		else
+			mpdlist->timed_scroll -=
+				UNIT - abs(mpdlist->timed_scroll) % UNIT;
+	}
+
+	scroll_fixup(mpdlist);
+	draw(widget);
+}
+
+static void mouse_move(mtk_widget_t *widget, int x, int y)
+{
+	struct mpdlist *mpdlist = (struct mpdlist*)widget;
+
+	if (!mpdlist->slide_scroll)
+		return;
+
+	mpdlist->scroll_top = mpdlist->slide_start + y - mpdlist->slide_offset;
+	mpdlist->timed_scroll = mpdlist->scroll_top;
+
+	scroll_fixup(mpdlist);
+	draw(widget);
+}
+
+mtk_widget_t* mtk_mpdlist_new(mtk_list_t *list)
+{
+	struct mpdlist *mpdlist = xmalloc0(sizeof(struct mpdlist));
+
+	mpdlist->widget.surface =
+		cairo_image_surface_create(CAIRO_FORMAT_RGB24, WIDTH, 4000);
+	mpdlist->widget.update = update;
+	mpdlist->widget.draw = draw;
+	mpdlist->widget.mouse_press = mouse_press;
+	mpdlist->widget.mouse_release = mouse_release;
+	mpdlist->widget.mouse_move = mouse_move;
+	mpdlist->list = list;
+
+	//g_timeout_add(100, (GSourceFunc)timed_redraw, area);
+
+	return (mtk_widget_t*)mpdlist;
 }

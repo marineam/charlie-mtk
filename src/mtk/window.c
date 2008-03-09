@@ -7,6 +7,12 @@
 
 #include "private.h"
 
+/* for finding widgets at a location */
+#define FOREACH_AT_XY(l,w,x,y) \
+	mtk_list_foreach(l, w) \
+		if (x >= w->x && y >= w->y && \
+		    x <= w->x + w->w && y <= w->y + w->h)
+
 mtk_window_t* mtk_window_new(int w, int h)
 {
 	mtk_window_t *window = xmalloc0(sizeof(mtk_window_t));
@@ -22,6 +28,7 @@ mtk_window_t* mtk_window_new(int w, int h)
 	values.event_mask =
 		XCB_EVENT_MASK_EXPOSURE |
 		XCB_EVENT_MASK_BUTTON_PRESS |
+		XCB_EVENT_MASK_BUTTON_RELEASE |
 		XCB_EVENT_MASK_BUTTON_MOTION |
 		XCB_EVENT_MASK_STRUCTURE_NOTIFY;
 	xcb_aux_create_window(_conn, _screen->root_depth,
@@ -66,15 +73,31 @@ void _mtk_window_draw(mtk_window_t *window)
 	}
 }
 
-void _mtk_window_click(mtk_window_t *window, int x, int y)
+void _mtk_window_mouse_press(mtk_window_t *window, int x, int y)
 {
 	mtk_widget_t *w;
 
-	mtk_list_foreach(window->widgets, w) {
-		if (w->click && x >= w->x && y >= w->y &&
-				x <= w->x + w->w && y <= w->y + w->h)
-			w->click(w, x-w->x, y-w->y);
-	}
+	FOREACH_AT_XY(window->widgets, w, x, y)
+		if (w->mouse_press)
+			w->mouse_press(w, x-w->x, y-w->y);
+}
+
+void _mtk_window_mouse_release(mtk_window_t *window, int x, int y)
+{
+	mtk_widget_t *w;
+
+	FOREACH_AT_XY(window->widgets, w, x, y)
+		if (w->mouse_release)
+			w->mouse_release(w, x-w->x, y-w->y);
+}
+
+void _mtk_window_mouse_move(mtk_window_t *window, int x, int y)
+{
+	mtk_widget_t *w;
+
+	FOREACH_AT_XY(window->widgets, w, x, y)
+		if (w->mouse_move)
+			w->mouse_move(w, x-w->x, y-w->y);
 }
 
 void _mtk_window_resize(mtk_window_t *window, int w, int h)

@@ -45,7 +45,8 @@ mtk_widget_t* mtk_clickarea_new(int x, int y, int w, int h)
 	area->widget.w = w;
 	area->widget.h = h;
 	area->widget.draw = draw;
-	area->widget.click = click;
+	area->widget.mouse_press = click;
+	area->widget.mouse_move = click;
 	area->line = h/2;
 
 	return (mtk_widget_t*)area;

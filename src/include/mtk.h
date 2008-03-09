@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "config.h"
+
 typedef struct mtk_list_node {
 	struct mtk_list_node *next;
 	struct mtk_list_node *prev;
@@ -37,6 +39,10 @@ void mtk_window_add(mtk_window_t* window, mtk_widget_t* widget);
 /* utilities */
 mtk_list_t* mtk_list_new();
 void mtk_list_append(mtk_list_t *l, void* d);
+
+static inline int mtk_list_length(mtk_list_t *l) {
+	return l->count;
+}
 
 #define mtk_list_foreach(l,d) \
 	for (mtk_list_node_t *n = (l)->first; \

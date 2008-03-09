@@ -37,6 +37,12 @@ void mtk_window_add(mtk_window_t* window, mtk_widget_t* widget);
 /* utilities */
 mtk_list_t* mtk_list_new();
 void mtk_list_append(mtk_list_t *l, void* d);
+
+#define mtk_list_foreach(l,d) \
+	for (mtk_list_node_t *n = (l)->first; \
+		(d)=n?n->data:(d), n; \
+		n = n->next)
+
 void* xmalloc(size_t size);
 void* xmalloc0(size_t size);
 

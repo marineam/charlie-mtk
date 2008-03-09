@@ -34,15 +34,23 @@ void mtk_cleanup()
 	xcb_disconnect(_conn);
 }
 
+/* for use in mtk_event, searches for the window the
+ * event applies to and runs the given code for it */
+#define WINDOW_EVENT(type, member, code) \
+	{ type *_e = (type*)e; \
+	mtk_list_foreach(_windows, w) { \
+		if (w->id == _e->member) { \
+			code; \
+			xcb_flush(_conn); \
+			break; \
+		} \
+	} \
+	assert(w); } /* w should have been found */
+
 int mtk_event()
 {
 	xcb_generic_event_t *e;
-	xcb_expose_event_t *ee;
-	xcb_configure_notify_event_t *ce;
-	xcb_button_press_event_t *be;
-	xcb_motion_notify_event_t *me;
 	mtk_window_t *w = NULL;
-	mtk_list_node_t *n;
 
 	e = xcb_poll_for_event(_conn);
 
@@ -53,68 +61,24 @@ int mtk_event()
 		return 0; /* nothing to do */
 
 	switch (e->response_type & ~0x80) {
-		case XCB_BUTTON_PRESS:
-			be = (xcb_button_press_event_t*)e;
-
-			for (n = _windows->first; n; n = n->next) {
-				w = n->data;
-				if (w->id == be->event) {
-					_mtk_window_click(w,
-						be->event_x, be->event_y);
-					xcb_flush(_conn);
-					break;
-				}
-			}
-			assert(w); /* w should have been found */
-
-			break;
-		case XCB_MOTION_NOTIFY:
-			me = (xcb_motion_notify_event_t*)e;
-
-			for (n = _windows->first; n; n = n->next) {
-				w = n->data;
-				if (w->id == me->event) {
-					_mtk_window_click(w,
-						me->event_x, me->event_y);
-					xcb_flush(_conn);
-					break;
-				}
-			}
-			assert(w); /* w should have been found */
-
-			break;
-		case XCB_EXPOSE:    /* draw or redraw the window */
-			ee = (xcb_expose_event_t*)e;
-
-			for (n = _windows->first; n; n = n->next) {
-				w = n->data;
-				if (w->id == ee->window) {
-					_mtk_window_draw(w);
-					xcb_flush(_conn);
-					break;
-				}
-			}
-			assert(w); /* w should have been found */
-
-			break;
-		case XCB_CONFIGURE_NOTIFY:
-			ce = (xcb_configure_notify_event_t*)e;
-
-			for (n = _windows->first; n; n = n->next) {
-				w = n->data;
-				if (w->id == ce->window) {
-					_mtk_window_resize(w,
-						ce->width, ce->height);
-					xcb_flush(_conn);
-					break;
-				}
-			}
-			assert(w); /* w should have been found */
-
-			break;
-		default:
-			/* ignore everything else */
-			break;
+	case XCB_BUTTON_PRESS:
+		WINDOW_EVENT(xcb_button_press_event_t, event,
+			_mtk_window_click(w, _e->event_x, _e->event_y));
+		break;
+	case XCB_MOTION_NOTIFY:
+		WINDOW_EVENT(xcb_motion_notify_event_t, event,
+			_mtk_window_click(w, _e->event_x, _e->event_y));
+		break;
+	case XCB_EXPOSE:    /* draw or redraw the window */
+		WINDOW_EVENT(xcb_expose_event_t, window, _mtk_window_draw(w));
+		break;
+	case XCB_CONFIGURE_NOTIFY:
+		WINDOW_EVENT(xcb_configure_notify_event_t, window,
+			_mtk_window_resize(w, _e->width, _e->height));
+		break;
+	default:
+		/* ignore everything else */
+		break;
 	}
 
 	free(e);

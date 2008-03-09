@@ -51,8 +51,8 @@ void mtk_window_add(mtk_window_t* window, mtk_widget_t* widget)
 
 void _mtk_window_draw(mtk_window_t *window)
 {
+	mtk_widget_t *w;
 	cairo_t *cr;
-	mtk_list_node_t *n;
 
 	cr = cairo_create(window->surface);
 	cairo_set_source_rgb(cr, 0, 0, 0);
@@ -60,8 +60,7 @@ void _mtk_window_draw(mtk_window_t *window)
 	cairo_fill(cr);
 	cairo_destroy(cr);
 
-	for (n = window->widgets->first; n; n = n->next) {
-		mtk_widget_t *w = n->data;
+	mtk_list_foreach(window->widgets, w) {
 		assert(w->draw);
 		w->draw(w);
 	}
@@ -69,10 +68,9 @@ void _mtk_window_draw(mtk_window_t *window)
 
 void _mtk_window_click(mtk_window_t *window, int x, int y)
 {
-	mtk_list_node_t *n;
+	mtk_widget_t *w;
 
-	for (n = window->widgets->first; n; n = n->next) {
-		mtk_widget_t *w = n->data;
+	mtk_list_foreach(window->widgets, w) {
 		if (w->click && x >= w->x && y >= w->y &&
 				x <= w->x + w->w && y <= w->y + w->h)
 			w->click(w, x-w->x, y-w->y);

@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
-#include <glib.h>
 #include <libmpdclient.h>
 #include <charlie.h>
+#include <mtk.h>
 
 static mpd_Connection *conn;
 
@@ -22,16 +22,16 @@ void mpd_init()
 	die_on_mpd_error();
 }
 
-GList* mpd_get_dir(const char *dir)
+mtk_list_t* mpd_get_dir(const char *dir)
 {
 	mpd_InfoEntity *entity;
-	GList *list = NULL;
+	mtk_list_t *list = mtk_list_new();
 
 	mpd_sendLsInfoCommand(conn, dir);
 	die_on_mpd_error();
 
 	while((entity = mpd_getNextInfoEntity(conn)))
-		list = g_list_append(list, entity);
+		mtk_list_append(list, entity);
 
 	die_on_mpd_error();
 

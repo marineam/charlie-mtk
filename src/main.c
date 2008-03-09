@@ -1,24 +1,30 @@
-#include <gtk/gtk.h>
+#include <time.h>
 #include <config.h>
 #include <charlie.h>
 #include <mtk.h>
 
 int main (int argc, char *argv[])
 {
-	GtkWidget *window;
-	GtkWidget *hbox;
+	mtk_window_t *window;
+	mtk_widget_t *mpdlist;
+	mtk_list_t* dir;
+	/* pause for a 100th of a second between polls */
+	struct timespec pause = {.tv_sec = 0, .tv_nsec = 1000000};
 
-	gtk_init(&argc, &argv);
+	mtk_init();
 	mpd_init();
 
+	dir = mpd_get_dir("");
+
 	window = mtk_window_new(WIDTH, HEIGHT);
-	hbox = gtk_hbox_new(FALSE, 0);
-	gtk_container_add(GTK_CONTAINER(window), hbox);
-	gtk_box_pack_start_defaults(GTK_BOX(hbox), mtk_mpdlist_new());
+	mpdlist = mtk_mpdlist_new(0, 0, WIDTH, HEIGHT, dir);
+	mtk_window_add(window, mpdlist);
 
-	gtk_widget_show_all(window);
-
-	gtk_main();
+	while (1) {
+		if (mtk_event() < 0)
+			break;
+		nanosleep(&pause,NULL);
+	}
 
 	return 0;
 }

@@ -25,8 +25,8 @@ static void update(mtk_widget_t *widget)
 	mpd_InfoEntity *entity;
 	int y = 0;
 
-	assert(mpdlist->updatelist);
-	mpdlist->updatelist(&mpdlist->list);
+	if (mpdlist->updatelist)
+		mpdlist->updatelist(&mpdlist->list);
 
 	cairo_set_source_rgb(cr, 1, 1, 1);
 	cairo_rectangle(cr, 0, 0, WIDTH, 4000);
@@ -193,10 +193,14 @@ static void mouse_move(mtk_widget_t *widget, int x, int y)
 	draw(widget);
 }
 
-mtk_widget_t* mtk_mpdlist_new(mtk_list_t *list)
+mtk_widget_t* mtk_mpdlist_new(int x, int y, int w, int h, mtk_list_t *list)
 {
 	struct mpdlist *mpdlist = xmalloc0(sizeof(struct mpdlist));
 
+	mpdlist->widget.x = x;
+	mpdlist->widget.y = y;
+	mpdlist->widget.w = w;
+	mpdlist->widget.h = h;
 	mpdlist->widget.surface =
 		cairo_image_surface_create(CAIRO_FORMAT_RGB24, WIDTH, 4000);
 	mpdlist->widget.update = update;
@@ -205,6 +209,8 @@ mtk_widget_t* mtk_mpdlist_new(mtk_list_t *list)
 	mpdlist->widget.mouse_release = mouse_release;
 	mpdlist->widget.mouse_move = mouse_move;
 	mpdlist->list = list;
+
+	update(&mpdlist->widget);
 
 	//g_timeout_add(100, (GSourceFunc)timed_redraw, area);
 

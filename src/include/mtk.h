@@ -30,7 +30,7 @@ int mtk_event();
 mtk_widget_t* mtk_clickarea_new(int x, int y, int w, int h);
 
 /* mpdlist.c */
-//GtkWidget* mtk_mpdlist_new();
+mtk_widget_t* mtk_mpdlist_new(int x, int y, int w, int h, mtk_list_t *list);
 
 /* window.c */
 mtk_window_t* mtk_window_new(int w, int h);

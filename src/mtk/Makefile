@@ -9,15 +9,15 @@ HEAD = $(wildcard ../include/*.h) private.h
 all: mtk.a test
 
 %.o: %.c $(HEAD)
-	@echo " CC $@"
+	@echo " CC mtk/$@"
 	@$(CC) $(CFLAGS) -c -o $@ $<
 
 mtk.a: $(OBJS)
-	@echo " AR $@"
+	@echo " AR mtk/$@"
 	@$(AR) -rc $@ $^
 
 test: test.c mtk.a
-	@echo " CC $@"
+	@echo " CC mtk/$@"
 	@$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 .PHONY: clean

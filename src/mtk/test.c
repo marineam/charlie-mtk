@@ -1,22 +1,21 @@
-#include <gtk/gtk.h>
+#include <time.h>
 #include <mtk.h>
 
 int main (int argc, char *argv[])
 {
-	GtkWidget *window;
-	GtkWidget *box;
+	mtk_window_t *window;
+	/* pause for a 100th of a second between polls */
+	struct timespec pause = {.tv_sec = 0, .tv_nsec = 1000000};
 
-	gtk_init(&argc, &argv);
+	mtk_init();
 
 	window = mtk_window_new(640, 480);
-	box = gtk_hbox_new(TRUE, 0);
-	gtk_container_add(GTK_CONTAINER(window), box);
-	gtk_box_pack_start(GTK_BOX(box), mtk_clickarea_new(), TRUE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(box), mtk_clickarea_new(), TRUE, TRUE, 0);
 
-	gtk_widget_show_all(window);
-
-	gtk_main();
+	while (1) {
+		if (mtk_event() < 0)
+			break;
+		nanosleep(&pause,NULL);
+	}
 
 	return 0;
 }

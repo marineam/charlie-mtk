@@ -1,28 +1,62 @@
+#include <xcb/xcb.h>
+#include <xcb/xcb_aux.h>
 #include <cairo.h>
-#include <gtk/gtk.h>
+#include <cairo-xcb.h>
 #include <mtk.h>
 
-static gboolean mouse(GtkWidget *widget, GdkEventMotion *event, gpointer data)
+#include "private.h"
+
+mtk_window_t* mtk_window_new(int w, int h)
 {
-	/* this is where volume control will go... */
-	//printf("drag: %lf\n", event->y);
+	mtk_window_t *window = xmalloc0(sizeof(mtk_window_t));
+	xcb_params_cw_t values;
+	uint32_t mask;
 
-	return FALSE;
-}
+	/* create window */
+	window->id = xcb_generate_id(_conn);
+	window->width = w;
+	window->height = h;
+	mask = XCB_CW_EVENT_MASK;
+	values.event_mask =
+		XCB_EVENT_MASK_EXPOSURE |
+		XCB_EVENT_MASK_STRUCTURE_NOTIFY;
+	xcb_aux_create_window(_conn, _screen->root_depth,
+		window->id, _screen->root,
+		0, 0, w, h, 0, /* x,y,w,h,border */
+		XCB_WINDOW_CLASS_INPUT_OUTPUT,
+		_screen->root_visual, mask, &values);
 
-GtkWidget* mtk_window_new(gint w, gint h)
-{
-	GtkWidget *window;
+	/* show the window */
+	xcb_map_window(_conn, window->id);
 
-	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_widget_add_events(window, GDK_BUTTON1_MOTION_MASK);
+	window->surface = cairo_xcb_surface_create(_conn,
+		window->id, _visual, w, h);
+	xcb_flush(_conn);
 
-	g_signal_connect(window, "destroy",
-			G_CALLBACK (gtk_main_quit), NULL);
-	g_signal_connect(window, "motion-notify-event",
-			G_CALLBACK (mouse), NULL);
-
-	gtk_window_set_default_size(GTK_WINDOW(window), w, h);
+	mtk_list_append(_windows, window);
 
 	return window;
 }
+
+void _mtk_window_draw(mtk_window_t *window)
+{
+	cairo_t             *cr;
+
+	cr = cairo_create(window->surface);
+	cairo_set_source_rgb(cr, 1, 1, 1);
+	cairo_rectangle(cr, 0, 0, window->width, window->height);
+	cairo_fill(cr);
+	cairo_destroy(cr);
+}
+
+void _mtk_window_resize(mtk_window_t *window, int w, int h)
+{
+	if (w == window->width && h == window->height)
+		return; /* no change in size */
+	cairo_xcb_surface_set_size(window->surface, w, h);
+	window->width = w;
+	window->height = h;
+	printf("w %d h %d\n", w, h);
+	_mtk_window_draw(window);
+}
+

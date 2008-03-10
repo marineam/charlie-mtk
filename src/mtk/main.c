@@ -15,6 +15,9 @@ mtk_list_t *_windows;
 
 void mtk_init()
 {
+	/* fire off timer thread */
+	_mtk_timer_init();
+
 	/* open connection with the server */
 	_conn = xcb_connect(NULL, &_screen_num);
 	die_on(xcb_connection_has_error(_conn), "Cannot open display\n");

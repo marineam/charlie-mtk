@@ -15,6 +15,8 @@ typedef struct mtk_list_node {
 typedef struct mtk_list {
 	struct mtk_list_node *first;
 	struct mtk_list_node *last;
+	struct mtk_list_node *current_node;
+	int current_index;
 	int count;
 } mtk_list_t;
 
@@ -43,6 +45,8 @@ void mtk_timer_add(double interval, int(*callback)(void *data), void *data);
 /* utilities */
 mtk_list_t* mtk_list_new();
 void mtk_list_append(mtk_list_t *l, void* d);
+void* mtk_list_goto(mtk_list_t *l, int i);
+void* mtk_list_next(mtk_list_t *l);
 
 static inline int mtk_list_length(mtk_list_t *l) {
 	return l->count;

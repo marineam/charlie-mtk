@@ -20,6 +20,32 @@ void mtk_list_append(mtk_list_t *l, void* d)
 	l->count++;
 }
 
+void* mtk_list_goto(mtk_list_t *l, int i)
+{
+	if (!l->current_node || i < l->current_index) {
+		l->current_index = 0;
+		l->current_node = l->first;
+	}
+
+	while (l->current_node && l->current_index < i) {
+		l->current_index++;
+		l->current_node = l->current_node->next;
+	}
+
+	return l->current_node ? l->current_node->data : NULL;
+}
+
+void* mtk_list_next(mtk_list_t *l)
+{
+	if (!l->current_node)
+		return NULL;
+
+	l->current_index++;
+	l->current_node = l->current_node->next;
+
+	return l->current_node ? l->current_node->data : NULL;
+}
+
 void* xmalloc(size_t size)
 {
 	void *ret = malloc(size);

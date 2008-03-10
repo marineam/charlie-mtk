@@ -50,12 +50,15 @@ void mtk_cleanup()
 	} \
 	assert(w); } /* w should have been found */
 
-int mtk_event()
+int mtk_event(int block)
 {
 	xcb_generic_event_t *e;
 	mtk_window_t *w = NULL;
 
-	e = xcb_poll_for_event(_conn);
+	if (block)
+		e = xcb_wait_for_event(_conn);
+	else
+		e = xcb_poll_for_event(_conn);
 
 	if (xcb_connection_has_error(_conn))
 		return -1;
@@ -90,4 +93,9 @@ int mtk_event()
 
 	free(e);
 	return 0;
+}
+
+void mtk_main()
+{
+	while (mtk_event(1) >= 0);
 }

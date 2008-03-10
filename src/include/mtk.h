@@ -24,7 +24,8 @@ typedef struct mtk_widget mtk_widget_t;
 /* main.c */
 void mtk_init();
 void mtk_cleanup();
-int mtk_event();
+int mtk_event(int block);
+void mtk_main();
 
 /* clickarea.c */
 mtk_widget_t* mtk_clickarea_new(int x, int y, int w, int h);

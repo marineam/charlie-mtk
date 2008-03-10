@@ -88,15 +88,6 @@ static void draw(mtk_widget_t *widget)
 	cairo_destroy(cr);
 }
 
-/*
-static gboolean timed_redraw(GtkWidget *widget) {
-	if (widget->window != NULL)
-		gtk_widget_queue_draw(widget);
-	return TRUE;
-
-}
-*/
-
 /* cleans things up after mouse events */
 static void scroll_fixup(struct mpdlist *mpdlist)
 {
@@ -123,6 +114,13 @@ static void scroll_fixup(struct mpdlist *mpdlist)
 			mpdlist->scroll_top += (mpdlist->timed_scroll
 				- mpdlist->scroll_top) * 0.5;
 	}
+}
+
+static int timed_draw(void *data)
+{
+	scroll_fixup((struct mpdlist*)data);
+	draw((mtk_widget_t*)data);
+	return 1;
 }
 
 static void mouse_press(mtk_widget_t *widget, int x, int y)
@@ -212,7 +210,7 @@ mtk_widget_t* mtk_mpdlist_new(int x, int y, int w, int h, mtk_list_t *list)
 
 	update(&mpdlist->widget);
 
-	//g_timeout_add(100, (GSourceFunc)timed_redraw, area);
+	mtk_timer_add(0.08, timed_draw, mpdlist);
 
 	return (mtk_widget_t*)mpdlist;
 }

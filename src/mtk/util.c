@@ -19,6 +19,8 @@ void mtk_list_append(mtk_list_t *l, void* d)
 void mtk_list_insert(mtk_list_t *l, void* d)
 {
 	mtk_list_node_t *n = xmalloc0(sizeof(mtk_list_node_t));
+
+	assert(d);
 	n->data = d;
 
 	if (l->current_index == 0) {
@@ -62,7 +64,7 @@ void* mtk_list_replace(mtk_list_t *l, void* d)
 void* mtk_list_remove(mtk_list_t *l)
 {
 	mtk_list_node_t *old;
-	void *data;
+	void *data = NULL;
 
 	old = l->current_node;
 	if (l->current_index == 0) {

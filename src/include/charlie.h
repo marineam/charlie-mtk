@@ -5,6 +5,6 @@
 
 /* mpd.c */
 void mpd_init();
-mtk_list_t* mpd_get_dir(const char *dir);
+mtk_widget_t* mpd_dirlist_new(int x, int y, int w, int h);
 
 #endif

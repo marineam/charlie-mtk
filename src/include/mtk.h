@@ -33,7 +33,10 @@ void mtk_main();
 mtk_widget_t* mtk_clickarea_new(int x, int y, int w, int h);
 
 /* mpdlist.c */
-mtk_widget_t* mtk_mpdlist_new(int x, int y, int w, int h, mtk_list_t *list);
+mtk_widget_t* mtk_mpdlist_new(int x, int y, int w, int h,
+	void (*updatelist)(mtk_list_t *list, void *data),
+	int (*clicked)(void **data, mtk_list_t *list, int pos),
+	void *data);
 
 /* window.c */
 mtk_window_t* mtk_window_new(int w, int h);
@@ -65,7 +68,7 @@ void* xmalloc0(size_t size);
 
 #define die_on(x, fmt, args...) \
 	if (x) { \
-		fprintf(stderr, fmt, ## args); \
+		fprintf(stderr, "%s:%d " fmt, __FILE__, __LINE__, ## args); \
 		exit(1); \
 	}
 

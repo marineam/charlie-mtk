@@ -22,21 +22,46 @@ void mpd_init()
 	die_on_mpd_error();
 }
 
-mtk_list_t* mpd_get_dir(const char *dir)
+static void updatedir(mtk_list_t *list, void *data)
 {
-	mpd_InfoEntity *entity;
-	mtk_list_t *list = mtk_list_new();
+	mpd_InfoEntity *entity, *old;
 
-	mpd_sendLsInfoCommand(conn, dir);
+	mpd_sendLsInfoCommand(conn, (char*)data);
 	die_on_mpd_error();
 
-	while((entity = mpd_getNextInfoEntity(conn)))
-		mtk_list_append(list, entity);
+	mtk_list_goto(list, 0);
+	while((entity = mpd_getNextInfoEntity(conn))) {
+		die_on_mpd_error();
+		old = mtk_list_replace(list, entity);
+		mtk_list_next(list);
+		//if (old)
+		//	mpd_freeInfoEntity(old);
+	}
+
+	while (old) {
+		old = mtk_list_remove(list);
+		//mpd_freeInfoEntity(old);
+	}
 
 	die_on_mpd_error();
 
 	mpd_finishCommand(conn);
 	die_on_mpd_error();
+}
 
-	return list;
+static int clicked(void **data, mtk_list_t *list, int pos)
+{
+	mpd_InfoEntity *entity;
+
+	entity = mtk_list_goto(list, pos);
+	if (entity->type == MPD_INFO_ENTITY_TYPE_DIRECTORY) {
+		printf("%s\n", entity->info.directory->path);
+		free(*data);
+		*data = strdup(entity->info.directory->path);
+	}
+	return 1;
+}
+
+mtk_widget_t* mpd_dirlist_new(int x, int y, int w, int h) {
+	return mtk_mpdlist_new(x, y, w, h, updatedir, clicked, strdup(""));
 }

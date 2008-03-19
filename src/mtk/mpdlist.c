@@ -13,9 +13,11 @@ struct mpdlist {
 	int slide_scroll;
 	int slide_start;
 	int slide_offset;
+	int slide_scroll_moved;
 	int scroll_top;
-	void (*updatelist)(mtk_list_t **list);
-	void (*clicked)(mtk_list_t *list, mtk_list_node_t *node);
+	void (*updatelist)(mtk_list_t *list, void *data);
+	int (*clicked)(void **data, mtk_list_t *list, int pos);
+	void *data;
 };
 
 static void update(mtk_widget_t *widget)
@@ -26,7 +28,7 @@ static void update(mtk_widget_t *widget)
 	int y = 0;
 
 	if (mpdlist->updatelist)
-		mpdlist->updatelist(&mpdlist->list);
+		mpdlist->updatelist(mpdlist->list, mpdlist->data);
 
 	cairo_set_source_rgb(cr, 1, 1, 1);
 	cairo_rectangle(cr, 0, 0, WIDTH, 4000);
@@ -82,7 +84,8 @@ static void draw(mtk_widget_t *widget)
 
 	cairo_rectangle(cr, 0, UNIT, widget->w, widget->h - (2*UNIT)-2);
 	cairo_clip(cr);
-	cairo_set_source_surface(cr, widget->surface, 0, mpdlist->scroll_top);
+	cairo_set_source_surface(cr, widget->surface, 0,
+		-mpdlist->scroll_top + UNIT);
 	cairo_paint(cr);
 
 	cairo_destroy(cr);
@@ -92,9 +95,9 @@ static void draw(mtk_widget_t *widget)
 static void scroll_fixup(struct mpdlist *mpdlist)
 {
 	/* extreme scroll positions, max is the top, min bottom */
-	int max = UNIT;
-	int min = (mtk_list_length(mpdlist->list) * -UNIT) +
-		(mpdlist->widget.h - UNIT);
+	int min = 0;
+	int max = (mtk_list_length(mpdlist->list) * UNIT) -
+		(mpdlist->widget.h - 2*UNIT);
 
 	if (mpdlist->timed_scroll > max)
 		mpdlist->timed_scroll = max;
@@ -153,25 +156,32 @@ static void mouse_release(mtk_widget_t *widget, int x, int y)
 	if (!mpdlist->slide_scroll)
 		return;
 
-	/* slide scroll done, adjust to nearest item */
-	mpdlist->timed_scroll = mpdlist->slide_start + y -
-		mpdlist->slide_offset;
-	if (mpdlist->timed_scroll > 0) {
+	if (!mpdlist->slide_scroll_moved && mpdlist->clicked) {
+		int pos = (float)(y - UNIT) / UNIT +
+			(float)mpdlist->scroll_top / UNIT;
+
+		if (mpdlist->clicked(&mpdlist->data, mpdlist->list, pos)) {
+			mpdlist->timed_scroll = 0;
+			mpdlist->scroll_top = 0;
+		}
+		update(widget);
+		return;
+	}
+	else if (mpdlist->slide_scroll_moved) {
+		/* slide scroll done, adjust to nearest item */
+		mpdlist->timed_scroll = mpdlist->slide_start - y +
+			mpdlist->slide_offset;
+
 		if (mpdlist->slide_offset < y)
-			mpdlist->timed_scroll +=
-				UNIT - abs(mpdlist->timed_scroll) % UNIT;
-		else
 			mpdlist->timed_scroll -=
 				abs(mpdlist->timed_scroll) % UNIT;
-	}
-	else {
-		if (mpdlist->slide_offset < y)
-			mpdlist->timed_scroll +=
-				abs(mpdlist->timed_scroll) % UNIT;
 		else
-			mpdlist->timed_scroll -=
+			mpdlist->timed_scroll +=
 				UNIT - abs(mpdlist->timed_scroll) % UNIT;
 	}
+
+	mpdlist->slide_scroll = 0;
+	mpdlist->slide_scroll_moved = 0;
 
 	scroll_fixup(mpdlist);
 	draw(widget);
@@ -184,14 +194,21 @@ static void mouse_move(mtk_widget_t *widget, int x, int y)
 	if (!mpdlist->slide_scroll)
 		return;
 
-	mpdlist->scroll_top = mpdlist->slide_start + y - mpdlist->slide_offset;
+	if (!mpdlist->slide_scroll_moved && abs(y - mpdlist->slide_offset) < 5)
+		return;
+
+	mpdlist->scroll_top = mpdlist->slide_start - y + mpdlist->slide_offset;
 	mpdlist->timed_scroll = mpdlist->scroll_top;
+	mpdlist->slide_scroll_moved = 1;
 
 	scroll_fixup(mpdlist);
 	draw(widget);
 }
 
-mtk_widget_t* mtk_mpdlist_new(int x, int y, int w, int h, mtk_list_t *list)
+mtk_widget_t* mtk_mpdlist_new(int x, int y, int w, int h,
+	void (*updatelist)(mtk_list_t *list, void *data),
+	int (*clicked)(void **data, mtk_list_t *list, int pos),
+	void *data)
 {
 	struct mpdlist *mpdlist = xmalloc0(sizeof(struct mpdlist));
 
@@ -206,11 +223,14 @@ mtk_widget_t* mtk_mpdlist_new(int x, int y, int w, int h, mtk_list_t *list)
 	mpdlist->widget.mouse_press = mouse_press;
 	mpdlist->widget.mouse_release = mouse_release;
 	mpdlist->widget.mouse_move = mouse_move;
-	mpdlist->list = list;
+	mpdlist->list = mtk_list_new();
+	mpdlist->data = data;
+	mpdlist->updatelist = updatelist;
+	mpdlist->clicked = clicked;
 
 	update(&mpdlist->widget);
 
-	mtk_timer_add(0.08, timed_draw, mpdlist);
+	//mtk_timer_add(0.08, timed_draw, mpdlist);
 
 	return (mtk_widget_t*)mpdlist;
 }

@@ -30,16 +30,17 @@ static void* timer_thread(void* unused)
 	sigemptyset(&sigset);
 	sigaddset(&sigset, SIGALRM);
 
-	while (sigwaitinfo(&sigset, &info) > 0) {
-		struct timer *t = info.si_ptr;
+	while (1) {
+		while (sigwaitinfo(&sigset, &info) > 0) {
+			struct timer *t = info.si_ptr;
 
-		assert(t);
-		t->callback(t->data);
-		/* todo: check return status */
+			assert(t);
+			t->callback(t->data);
+			/* todo: check return status */
+		}
+
+		fprintf(stderr, "Timer thread got unknown signal!");
 	}
-
-	fprintf(stderr, "Timer thread got unknown signal!");
-	exit(1);
 
 	return NULL;
 }

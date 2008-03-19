@@ -45,6 +45,9 @@ void mtk_timer_add(double interval, int(*callback)(void *data), void *data);
 /* utilities */
 mtk_list_t* mtk_list_new();
 void mtk_list_append(mtk_list_t *l, void* d);
+void mtk_list_insert(mtk_list_t *l, void* d);
+void* mtk_list_replace(mtk_list_t *l, void* d);
+void* mtk_list_remove(mtk_list_t *l);
 void* mtk_list_goto(mtk_list_t *l, int i);
 void* mtk_list_next(mtk_list_t *l);
 

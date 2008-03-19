@@ -26,8 +26,13 @@ charlie: $(OBJS) mtk libmpdclient
 	@echo " CC $@"
 	@$(CC) -o $@ $(OBJS) mtk/mtk.a libmpdclient/libmpdclient.o  $(LIBS)
 
+.PHONY: test
+test: mtk libmpdclient
+	@$(MAKE) -C tests
+
 .PHONY: clean
 clean:
 	@$(MAKE) -C mtk clean
 	@$(MAKE) -C libmpdclient clean
+	@$(MAKE) -C tests clean
 	$(RM) charlie *.o

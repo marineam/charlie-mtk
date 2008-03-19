@@ -28,6 +28,8 @@ void mtk_list_insert(mtk_list_t *l, void* d)
 			l->first->prev = n;
 		}
 		l->first = n;
+		if (!l->last)
+			l->last = n;
 	}
 	else if (l->current_index == l->count) {
 		assert(l->current_node == NULL);
@@ -65,7 +67,8 @@ void* mtk_list_remove(mtk_list_t *l)
 	old = l->current_node;
 	if (l->current_index == 0) {
 		assert(l->current_node == l->first);
-		l->first = l->first->next;
+		if (l->first)
+			l->first = l->first->next;
 		l->current_node = l->first;
 		if (l->first)
 			l->first->prev = NULL;
@@ -79,12 +82,16 @@ void* mtk_list_remove(mtk_list_t *l)
 		l->current_node->prev->next = l->current_node->next;
 		if (l->current_node->next)
 			l->current_node->next->prev = l->current_node->prev;
+		else
+			l->last = l->current_node->prev;
 		l->current_node = l->current_node->next;
 	}
 
-	data = old->data;
-	free(old);
-	l->count--;
+	if (old) {
+		data = old->data;
+		free(old);
+		l->count--;
+	}
 
 	return data;
 }

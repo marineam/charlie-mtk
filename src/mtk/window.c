@@ -78,13 +78,13 @@ void mtk_window_add(mtk_window_t* window, mtk_widget_t* widget)
 void _mtk_window_draw(mtk_window_t *window)
 {
 	mtk_widget_t *w;
-	cairo_t *cr;
+	/*cairo_t *cr;
 
 	cr = cairo_create(window->surface);
 	cairo_set_source_rgb(cr, 0, 0, 0);
 	cairo_rectangle(cr, 0, 0, window->width, window->height);
 	cairo_fill(cr);
-	cairo_destroy(cr);
+	cairo_destroy(cr);*/
 
 	mtk_list_foreach(window->widgets, w) {
 		assert(w->draw);

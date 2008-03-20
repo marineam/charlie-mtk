@@ -59,6 +59,7 @@ int _mtk_timer_event()
 			t->active = 0;
 			timer_delete(t->id);
 		}
+		_mtk_flush();
 		ret = 1;
 	}
 	else {

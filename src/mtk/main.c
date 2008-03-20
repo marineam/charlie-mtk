@@ -37,6 +37,11 @@ void mtk_cleanup()
 	xcb_disconnect(_conn);
 }
 
+void _mtk_flush()
+{
+	xcb_flush(_conn);
+}
+
 /* for use in mtk_event, searches for the window the
  * event applies to and runs the given code for it */
 #define WINDOW_EVENT(type, member, code) \

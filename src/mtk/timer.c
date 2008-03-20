@@ -10,8 +10,7 @@
 
 struct timer {
 	timer_t id;
-	double interval;
-	double remaining;
+	int active;
 	void *data;
 	int (*callback)(void *data);
 };
@@ -53,9 +52,26 @@ int _mtk_timer_event()
 
 	mtk_list_goto(events, 0);
 	if ((t = mtk_list_remove(events))) {
-		t->callback(t->data);
-		/* todo: check return status */
+		if (!t->callback(t->data)) {
+			t->active = 0;
+			timer_delete(t->id);
+		}
 		ret = 1;
+	}
+	else {
+		/* there were no pending events so it should
+		 * now be safe to free unactive timers */
+		t = mtk_list_goto(timers, 0);
+		while (t) {
+			if (!t->active) {
+				free(t);
+				mtk_list_remove(timers);
+				t = mtk_list_current(timers);
+			}
+			else {
+				t = mtk_list_next(timers);
+			}
+		}
 	}
 
 	sigprocmask(SIG_UNBLOCK, &sigset, NULL);
@@ -79,8 +95,7 @@ void mtk_timer_add(double interval, int(*callback)(void *data), void *data)
 	sigev.sigev_value.sival_ptr = t;
 
 	timer_create(CLOCK_REALTIME, &sigev, &t->id);
-	t->interval = interval;
-	t->remaining = interval;
+	t->active = 1;
 	t->callback = callback;
 	t->data = data;
 

@@ -10,6 +10,7 @@ struct mpdlist {
 	mtk_widget_t widget;
 	mtk_list_t* list;
 	int timed_scroll;
+	int timed_active;
 	int slide_scroll;
 	int slide_start;
 	int slide_offset;
@@ -159,8 +160,7 @@ static void scroll_fixup(struct mpdlist *mpdlist)
 		mpdlist->scroll_top = min;
 
 	if (mpdlist->timed_scroll != mpdlist->scroll_top) {
-		if (mpdlist->timed_scroll+1 == mpdlist->scroll_top ||
-		    mpdlist->timed_scroll-1 == mpdlist->scroll_top)
+		if (abs(mpdlist->timed_scroll - mpdlist->scroll_top) <=2)
 			mpdlist->scroll_top = mpdlist->timed_scroll;
 		else
 			mpdlist->scroll_top += (mpdlist->timed_scroll
@@ -170,9 +170,17 @@ static void scroll_fixup(struct mpdlist *mpdlist)
 
 static int timed_draw(void *data)
 {
-	scroll_fixup((struct mpdlist*)data);
+	struct mpdlist *mpdlist = data;
+
+	scroll_fixup(mpdlist);
 	draw((mtk_widget_t*)data);
-	return 1;
+
+	if (mpdlist->scroll_top == mpdlist->timed_scroll) {
+		mpdlist->timed_active = 0;
+		return 0;
+	}
+	else
+		return 1;
 }
 
 static void mouse_press(mtk_widget_t *widget, int x, int y)
@@ -182,10 +190,18 @@ static void mouse_press(mtk_widget_t *widget, int x, int y)
 	if (y <= UNIT) {
 		mpdlist->slide_scroll = 0;
 		mpdlist->timed_scroll -= (widget->h/2 - (widget->h/2)%UNIT);
+		if (!mpdlist->timed_active) {
+			mpdlist->timed_active = 1;
+			mtk_timer_add(0.08, timed_draw, mpdlist);
+		}
 	}
 	else if (y > widget->h-UNIT) {
 		mpdlist->slide_scroll = 0;
 		mpdlist->timed_scroll += (widget->h/2 - (widget->h/2)%UNIT);
+		if (!mpdlist->timed_active) {
+			mpdlist->timed_active = 1;
+			mtk_timer_add(0.08, timed_draw, mpdlist);
+		}
 	}
 	else {
 		mpdlist->slide_scroll = 1;
@@ -278,8 +294,6 @@ mtk_widget_t* mtk_mpdlist_new(int x, int y, int w, int h,
 	mpdlist->clicked = clicked;
 
 	update(&mpdlist->widget);
-
-	mtk_timer_add(0.08, timed_draw, mpdlist);
 
 	return (mtk_widget_t*)mpdlist;
 }

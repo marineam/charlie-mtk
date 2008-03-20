@@ -54,6 +54,10 @@ void* mtk_list_remove(mtk_list_t *l);
 void* mtk_list_goto(mtk_list_t *l, int i);
 void* mtk_list_next(mtk_list_t *l);
 
+static inline void* mtk_list_current(mtk_list_t *l) {
+	return l->current_node? l->current_node->data : NULL;
+}
+
 static inline int mtk_list_length(mtk_list_t *l) {
 	return l->count;
 }

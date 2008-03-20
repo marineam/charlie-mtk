@@ -26,6 +26,7 @@ static void update(mtk_widget_t *widget)
 {
 	struct mpdlist *mpdlist = (struct mpdlist*)widget;
 	cairo_t *cr = cairo_create(mpdlist->scroll_surface);
+	cairo_pattern_t *pat;
 	mpd_InfoEntity *entity;
 	int y = 0;
 
@@ -37,17 +38,22 @@ static void update(mtk_widget_t *widget)
 	cairo_fill(cr);
 
 	cairo_set_line_width(cr, 2);
-	cairo_set_source_rgb(cr, 0, 0, 0);
 	cairo_select_font_face(cr, "Sans",
 		CAIRO_FONT_SLANT_NORMAL,
 		CAIRO_FONT_WEIGHT_NORMAL);
-	cairo_set_font_size(cr, 20.0);
+	cairo_set_font_size(cr, UNIT*0.5);
+
+	pat = cairo_pattern_create_linear(0, 0, widget->w, 0);
+	cairo_pattern_add_color_stop_rgb(pat, 0.0, 0.8, 0.9, 0.9);
+	cairo_pattern_add_color_stop_rgb(pat, 0.6, 1.0, 1.0, 1.0);
 
 	mtk_list_foreach(mpdlist->list, entity) {
-		cairo_move_to(cr, 0, y-1);
-		cairo_line_to(cr, WIDTH, y-1);
-		cairo_stroke(cr);
-		cairo_move_to(cr, 0, y+30);
+		cairo_rectangle(cr, UNIT*0.1, y+UNIT*0.1, widget->w, UNIT*0.8);
+		cairo_set_source(cr, pat);
+		cairo_fill(cr);
+
+		cairo_set_source_rgb(cr, 0, 0, 0);
+		cairo_move_to(cr, UNIT*0.2, y+UNIT*0.75);
 		if (entity->type == MPD_INFO_ENTITY_TYPE_DIRECTORY) {
 			/* note: using the gnu version of basename */
 			char *path = strdup(basename(
@@ -70,9 +76,10 @@ static void update(mtk_widget_t *widget)
 			cairo_show_text(cr, path);
 			free(path);
 		}
-		y += 40;
+		y += UNIT;
 	}
 
+	cairo_pattern_destroy(pat);
 	cairo_destroy(cr);
 }
 

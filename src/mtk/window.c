@@ -78,6 +78,14 @@ void mtk_window_add(mtk_window_t* window, mtk_widget_t* widget)
 void _mtk_window_draw(mtk_window_t *window)
 {
 	mtk_widget_t *w;
+
+	mtk_list_foreach(window->widgets, w)
+		draw_widget(w);
+}
+
+void _mtk_window_redraw(mtk_window_t *window)
+{
+	mtk_widget_t *w;
 	/*cairo_t *cr;
 
 	cr = cairo_create(window->surface);
@@ -89,8 +97,9 @@ void _mtk_window_draw(mtk_window_t *window)
 	mtk_list_foreach(window->widgets, w) {
 		assert(w->draw);
 		w->draw(w);
-		draw_widget(w);
 	}
+
+	_mtk_window_draw(window);
 }
 
 void _mtk_window_mouse_press(mtk_window_t *window, int x, int y)
@@ -127,5 +136,5 @@ void _mtk_window_resize(mtk_window_t *window, int w, int h)
 	cairo_xcb_surface_set_size(window->surface, w, h);
 	window->width = w;
 	window->height = h;
-	_mtk_window_draw(window);
+	_mtk_window_redraw(window);
 }

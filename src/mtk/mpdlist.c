@@ -82,7 +82,7 @@ static void draw(mtk_widget_t *widget)
 	cairo_t *cr;
 	cairo_pattern_t *pat;
 
-	cr = cairo_create(widget->window->surface);
+	cr = cairo_create(widget->surface);
 
 	pat = cairo_pattern_create_linear(0, 0, 0, UNIT);
 	cairo_pattern_add_color_stop_rgb(pat, 0.0, 0.6, 0.6, 0.9);
@@ -134,6 +134,9 @@ static void draw(mtk_widget_t *widget)
 	cairo_paint(cr);
 
 	cairo_destroy(cr);
+
+	/* FIXME: redrawing the entire window is a bit silly, but works */
+	_mtk_window_draw(widget->window);
 }
 
 /* cleans things up after mouse events */

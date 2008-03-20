@@ -33,6 +33,7 @@ extern mtk_list_t *_windows;
 void _mtk_flush();
 
 void _mtk_window_draw(mtk_window_t *window);
+void _mtk_window_redraw(mtk_window_t *window);
 void _mtk_window_mouse_press(mtk_window_t *window, int x, int y);
 void _mtk_window_mouse_release(mtk_window_t *window, int x, int y);
 void _mtk_window_mouse_move(mtk_window_t *window, int x, int y);

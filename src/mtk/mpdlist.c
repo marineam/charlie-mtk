@@ -237,7 +237,6 @@ static void mouse_release(mtk_widget_t *widget, int x, int y)
 			mpdlist->scroll_top = 0;
 		}
 		update(widget);
-		return;
 	}
 	else if (mpdlist->slide_scroll_moved) {
 		/* slide scroll done, adjust to nearest item */

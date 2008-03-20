@@ -229,14 +229,14 @@ static void mouse_release(mtk_widget_t *widget, int x, int y)
 		int pos = (float)(y - UNIT) / UNIT +
 			(float)mpdlist->scroll_top / UNIT;
 
-		if (pos >= mtk_list_length(mpdlist->list))
-			return;
-
-		if (mpdlist->clicked(&mpdlist->data, mpdlist->list, pos)) {
-			mpdlist->timed_scroll = 0;
-			mpdlist->scroll_top = 0;
+		if (pos >= mtk_list_length(mpdlist->list)) {
+			if (mpdlist->clicked(&mpdlist->data,
+			    mpdlist->list, pos)) {
+				mpdlist->timed_scroll = 0;
+				mpdlist->scroll_top = 0;
+			}
+			update(widget);
 		}
-		update(widget);
 	}
 	else if (mpdlist->slide_scroll_moved) {
 		/* slide scroll done, adjust to nearest item */

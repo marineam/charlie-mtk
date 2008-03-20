@@ -256,6 +256,11 @@ static void mouse_release(mtk_widget_t *widget, int x, int y)
 		else
 			mpdlist->timed_scroll +=
 				UNIT - abs(mpdlist->timed_scroll) % UNIT;
+
+		if (!mpdlist->timed_active) {
+			mpdlist->timed_active = 1;
+			mtk_timer_add(0.08, timed_draw, mpdlist);
+		}
 	}
 
 	mpdlist->slide_scroll = 0;

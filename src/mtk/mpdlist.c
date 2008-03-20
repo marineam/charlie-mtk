@@ -229,7 +229,7 @@ static void mouse_release(mtk_widget_t *widget, int x, int y)
 		int pos = (float)(y - UNIT) / UNIT +
 			(float)mpdlist->scroll_top / UNIT;
 
-		if (pos >= mtk_list_length(mpdlist->list)) {
+		if (pos < mtk_list_length(mpdlist->list)) {
 			if (mpdlist->clicked(&mpdlist->data,
 			    mpdlist->list, pos)) {
 				mpdlist->timed_scroll = 0;

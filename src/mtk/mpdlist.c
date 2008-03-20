@@ -57,6 +57,17 @@ static void update(mtk_widget_t *widget)
 			cairo_show_text(cr, path);
 			free(path);
 		}
+		else if (entity->type == MPD_INFO_ENTITY_TYPE_SONG) {
+			/* note: using the gnu version of basename */
+			char *path = strdup(basename(
+				entity->info.song->file));
+			for (int i = 0; i < strlen(path); i++) {
+				if (path[i] == '_')
+					path[i] = ' ';
+			}
+			cairo_show_text(cr, path);
+			free(path);
+		}
 		y += 40;
 	}
 
@@ -67,22 +78,54 @@ static void draw(mtk_widget_t *widget)
 {
 	struct mpdlist *mpdlist = (struct mpdlist*)widget;
 	cairo_t *cr;
+	cairo_pattern_t *pat;
 
 	cr = cairo_create(widget->window->surface);
 
-	cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
-	cairo_rectangle(cr, 0, 0, widget->w, UNIT-2);
+	pat = cairo_pattern_create_linear(0, 0, 0, UNIT);
+	cairo_pattern_add_color_stop_rgb(pat, 0.0, 0.6, 0.6, 0.9);
+	cairo_pattern_add_color_stop_rgb(pat, 1.0, 1.0, 1.0, 1.0);
+	cairo_rectangle(cr, 0, 0, widget->w, UNIT);
+	cairo_set_source(cr, pat);
+	cairo_fill(cr);
+	cairo_pattern_destroy(pat);
+
+	pat = cairo_pattern_create_linear(0, widget->h-UNIT, 0, widget->h);
+	cairo_pattern_add_color_stop_rgb(pat, 1.0, 0.6, 0.6, 0.9);
+	cairo_pattern_add_color_stop_rgb(pat, 0.0, 1.0, 1.0, 1.0);
 	cairo_rectangle(cr, 0, widget->h - UNIT, widget->w, widget->h);
+	cairo_set_source(cr, pat);
+	cairo_fill(cr);
+	cairo_pattern_destroy(pat);
+
+	cairo_move_to(cr, widget->w/2.0-UNIT*0.25, UNIT*0.75);
+	cairo_line_to(cr, widget->w/2.0, UNIT*0.25);
+	cairo_line_to(cr, widget->w/2.0+UNIT*0.25, UNIT*0.75);
+	cairo_close_path(cr);
+
+	if (mpdlist->scroll_top == 0)
+		cairo_set_source_rgba(cr, 0.0, 0.0, 0.9, 0.2);
+	else if (mpdlist->scroll_top > mpdlist->timed_scroll)
+		cairo_set_source_rgba(cr, 0.0, 0.0, 0.9, 0.9);
+	else
+		cairo_set_source_rgba(cr, 0.0, 0.0, 0.9, 0.7);
 	cairo_fill(cr);
 
-	cairo_set_source_rgb(cr, 0, 0, 0);
-	cairo_move_to(cr, 0, UNIT-1);
-	cairo_line_to(cr, widget->w, UNIT-1);
-	cairo_move_to(cr, 0, widget->h - UNIT-1);
-	cairo_line_to(cr, widget->w, widget->h - UNIT-1);
-	cairo_stroke(cr);
+	cairo_move_to(cr, widget->w/2.0-UNIT*0.25, widget->h - UNIT*0.75);
+	cairo_line_to(cr, widget->w/2.0, widget->h - UNIT*0.25);
+	cairo_line_to(cr, widget->w/2.0+UNIT*0.25, widget->h - UNIT*0.75);
+	cairo_close_path(cr);
 
-	cairo_rectangle(cr, 0, UNIT, widget->w, widget->h - (2*UNIT)-2);
+	if (mpdlist->scroll_top ==
+		mtk_list_length(mpdlist->list)*UNIT - widget->h + 2*UNIT)
+		cairo_set_source_rgba(cr, 0.0, 0.0, 0.9, 0.2);
+	else if (mpdlist->scroll_top < mpdlist->timed_scroll)
+		cairo_set_source_rgba(cr, 0.0, 0.0, 0.9, 0.9);
+	else
+		cairo_set_source_rgba(cr, 0.0, 0.0, 0.9, 0.7);
+	cairo_fill(cr);
+
+	cairo_rectangle(cr, 0, UNIT, widget->w, widget->h - 2*UNIT);
 	cairo_clip(cr);
 	cairo_set_source_surface(cr, widget->surface, 0,
 		-mpdlist->scroll_top + UNIT);
@@ -98,6 +141,12 @@ static void scroll_fixup(struct mpdlist *mpdlist)
 	int min = 0;
 	int max = (mtk_list_length(mpdlist->list) * UNIT) -
 		(mpdlist->widget.h - 2*UNIT);
+
+	if (max <= min) {
+		mpdlist->timed_scroll = 0;
+		mpdlist->scroll_top = 0;
+		return;
+	}
 
 	if (mpdlist->timed_scroll > max)
 		mpdlist->timed_scroll = max;
@@ -230,7 +279,7 @@ mtk_widget_t* mtk_mpdlist_new(int x, int y, int w, int h,
 
 	update(&mpdlist->widget);
 
-	//mtk_timer_add(0.08, timed_draw, mpdlist);
+	mtk_timer_add(0.08, timed_draw, mpdlist);
 
 	return (mtk_widget_t*)mpdlist;
 }

@@ -3,9 +3,41 @@
 #include <string.h>
 #include <mtk.h>
 
+
+#ifndef NDEBUG
+static void list_audit(mtk_list_t *l) {
+	void *d;
+	int i;
+
+	if (l->count == 0) {
+		assert(l->first == NULL);
+		assert(l->last == NULL);
+		assert(l->current_node == NULL);
+		assert(l->current_index == 0);
+		return;
+	}
+
+	assert(l->first);
+	assert(l->last);
+
+	i = 0;
+	mtk_list_foreach(l, d) {
+		assert(d);
+		if (l->current_node == n)
+			assert(l->current_index == i);
+		i++;
+	}
+
+	assert(i == l->count);
+}
+#else
+ #define list_audit(l)
+#endif
+
 mtk_list_t* mtk_list_new()
 {
 	mtk_list_t *l = xmalloc0(sizeof(mtk_list_t));
+	list_audit(l);
 	return l;
 }
 
@@ -14,6 +46,7 @@ void mtk_list_append(mtk_list_t *l, void* d)
 	l->current_node = NULL;
 	l->current_index = l->count;
 	mtk_list_insert(l,d);
+	list_audit(l);
 }
 
 void mtk_list_insert(mtk_list_t *l, void* d)
@@ -51,6 +84,7 @@ void mtk_list_insert(mtk_list_t *l, void* d)
 
 	l->current_node = n;
 	l->count++;
+	list_audit(l);
 }
 
 void* mtk_list_replace(mtk_list_t *l, void* d)
@@ -58,6 +92,7 @@ void* mtk_list_replace(mtk_list_t *l, void* d)
 	void *data;
 	data = mtk_list_remove(l);
 	mtk_list_insert(l,d);
+	list_audit(l);
 	return data;
 }
 
@@ -69,6 +104,8 @@ void* mtk_list_remove(mtk_list_t *l)
 	old = l->current_node;
 	if (l->current_index == 0) {
 		assert(l->current_node == l->first);
+		if (l->first == l->last)
+			l->last = NULL;
 		if (l->first)
 			l->first = l->first->next;
 		l->current_node = l->first;
@@ -95,6 +132,7 @@ void* mtk_list_remove(mtk_list_t *l)
 		l->count--;
 	}
 
+	list_audit(l);
 	return data;
 }
 
@@ -112,6 +150,7 @@ void* mtk_list_goto(mtk_list_t *l, int i)
 
 	assert(l->current_node || l->current_index == l->count);
 
+	list_audit(l);
 	return l->current_node ? l->current_node->data : NULL;
 }
 
@@ -123,6 +162,7 @@ void* mtk_list_next(mtk_list_t *l)
 	l->current_index++;
 	l->current_node = l->current_node->next;
 
+	list_audit(l);
 	return l->current_node ? l->current_node->data : NULL;
 }
 

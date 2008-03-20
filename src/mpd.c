@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include <libmpdclient.h>
 #include <charlie.h>
 #include <mtk.h>
@@ -54,6 +55,7 @@ static int clicked(void **data, mtk_list_t *list, int pos)
 	mpd_InfoEntity *entity;
 
 	entity = mtk_list_goto(list, pos);
+	assert(entity);
 	if (entity->type == MPD_INFO_ENTITY_TYPE_DIRECTORY) {
 		printf("%s\n", entity->info.directory->path);
 		free(*data);

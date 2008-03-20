@@ -20,8 +20,11 @@ static mtk_list_t *events;
 
 static void timer_handler(int sig, siginfo_t *info, void *data)
 {
-	assert(info->si_ptr);
-	mtk_list_append(events, info->si_ptr);
+	/* Only handle signals from timers */
+	if (info->si_code == SI_TIMER) {
+		assert(info->si_ptr);
+		mtk_list_append(events, info->si_ptr);
+	}
 }
 
 void _mtk_timer_init()
@@ -52,7 +55,7 @@ int _mtk_timer_event()
 
 	mtk_list_goto(events, 0);
 	if ((t = mtk_list_remove(events))) {
-		if (!t->callback(t->data)) {
+		if (t->active && !t->callback(t->data)) {
 			t->active = 0;
 			timer_delete(t->id);
 		}

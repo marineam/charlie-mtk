@@ -37,5 +37,6 @@ void _mtk_window_mouse_move(mtk_window_t *window, int x, int y);
 void _mtk_window_resize(mtk_window_t *window, int w, int h);
 
 void _mtk_timer_init();
+int _mtk_timer_event();
 
 #endif

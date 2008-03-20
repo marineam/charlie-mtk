@@ -1,10 +1,9 @@
 
 #include <assert.h>
-#include <pthread.h>
 #include <time.h>
 #include <signal.h>
 #include <stdlib.h>
-#include <limits.h>
+//#include <limits.h>
 #include <string.h>
 #include <mtk.h>
 #include "private.h"
@@ -18,47 +17,49 @@ struct timer {
 };
 
 static mtk_list_t *timers;
-static pthread_t timer_thread_id;
+static mtk_list_t *events;
 
-/* This thread will spend all of it's time sleeping,
- * only responding when a signal comes in. */
-static void* timer_thread(void* unused)
+static void timer_handler(int sig, siginfo_t *info, void *data)
 {
-	siginfo_t info;
-	sigset_t sigset;
-
-	sigemptyset(&sigset);
-	sigaddset(&sigset, SIGALRM);
-
-	while (1) {
-		while (sigwaitinfo(&sigset, &info) > 0) {
-			struct timer *t = info.si_ptr;
-
-			assert(t);
-			t->callback(t->data);
-			/* todo: check return status */
-		}
-
-		fprintf(stderr, "Timer thread got unknown signal!");
-	}
-
-	return NULL;
+	assert(info->si_ptr);
+	mtk_list_append(events, info->si_ptr);
 }
 
 void _mtk_timer_init()
 {
-	sigset_t sigset;
-	int r;
+	struct sigaction handler;
 
 	timers = mtk_list_new();
+	events = mtk_list_new();
 
-	/* block SIGALRM in main thread */
+	handler.sa_sigaction = timer_handler;
+	handler.sa_flags = SA_SIGINFO;
+	sigemptyset(&handler.sa_mask);
+
+	sigaction(SIGALRM, &handler, NULL);
+}
+
+int _mtk_timer_event()
+{
+	sigset_t sigset;
+	struct timer *t;
+	int ret = 0;
+
+	/* block SIGALRM while we handle events
+	 * this is important since mtk_lists don't have any locking */
 	sigemptyset(&sigset);
 	sigaddset(&sigset, SIGALRM);
-	pthread_sigmask(SIG_BLOCK, &sigset, NULL);
+	sigprocmask(SIG_BLOCK, &sigset, NULL);
 
-	r = pthread_create(&timer_thread_id, NULL, timer_thread, NULL);
-	die_on(r<0, "pthread_create failded\n");
+	mtk_list_goto(events, 0);
+	if ((t = mtk_list_remove(events))) {
+		t->callback(t->data);
+		/* todo: check return status */
+		ret = 1;
+	}
+
+	sigprocmask(SIG_UNBLOCK, &sigset, NULL);
+	return ret;
 }
 
 void mtk_timer_add(double interval, int(*callback)(void *data), void *data)

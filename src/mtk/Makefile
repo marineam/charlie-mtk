@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS += -g -Wall -D_GNU_SOURCE -std=gnu99
 CFLAGS += -I../include -I../libmpdclient
 CFLAGS += $(shell pkg-config --cflags cairo xcb xcb-aux)
-LIBS = $(shell pkg-config --libs cairo xcb xcb-aux) -pthread -lrt
+LIBS = $(shell pkg-config --libs cairo xcb xcb-aux) -lrt
 OBJS = main.o window.o util.o clickarea.o mpdlist.o timer.o
 HEAD = $(wildcard ../include/*.h) private.h
 

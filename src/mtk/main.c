@@ -50,15 +50,12 @@ void mtk_cleanup()
 	} \
 	assert(w); } /* w should have been found */
 
-int mtk_event(int block)
+static int event()
 {
 	xcb_generic_event_t *e;
 	mtk_window_t *w = NULL;
 
-	if (block)
-		e = xcb_wait_for_event(_conn);
-	else
-		e = xcb_poll_for_event(_conn);
+	e = xcb_poll_for_event(_conn);
 
 	if (xcb_connection_has_error(_conn))
 		return -1;
@@ -92,10 +89,24 @@ int mtk_event(int block)
 	}
 
 	free(e);
-	return 0;
+	return 1;
 }
 
 void mtk_main()
 {
-	while (mtk_event(1) >= 0);
+	int ev;
+	/* pause for a 100th of a second between polls */
+	struct timespec pause = {.tv_sec = 0, .tv_nsec = 1000000};
+
+	while (1) {
+		if ((ev = event()) < 0)
+			break;
+
+		ev += _mtk_timer_event();
+
+		if (!ev) {
+			/* no events that time, so lets just idle a bit */
+			nanosleep(&pause,NULL);
+		}
+	}
 }

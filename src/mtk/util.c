@@ -23,7 +23,7 @@ static void list_audit(mtk_list_t *l) {
 	i = 0;
 	mtk_list_foreach(l, d) {
 		assert(d);
-		if (l->current_node == n)
+		if (l->current_node == __n)
 			assert(l->current_index == i);
 		i++;
 	}

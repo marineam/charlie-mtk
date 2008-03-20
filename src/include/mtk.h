@@ -63,9 +63,9 @@ static inline int mtk_list_length(mtk_list_t *l) {
 }
 
 #define mtk_list_foreach(l,d) \
-	for (mtk_list_node_t *n = (l)->first; \
-		(d)=n?n->data:(d), n; \
-		n = n->next)
+	for (mtk_list_node_t *__n = (l)->first; \
+		(d)=__n?__n->data:(d), __n; \
+		__n = __n->next)
 
 void* xmalloc(size_t size);
 void* xmalloc0(size_t size);

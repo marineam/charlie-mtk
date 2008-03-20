@@ -65,7 +65,7 @@ void mtk_window_add(mtk_window_t* window, mtk_widget_t* widget)
 	mtk_list_append(window->widgets, widget);
 	widget->window = window;
 	widget->surface = cairo_surface_create_similar(window->surface,
-			CAIRO_CONTENT_COLOR_ALPHA,
+			CAIRO_CONTENT_COLOR,
 			window->width, window->height);
 
 	if (widget->update)

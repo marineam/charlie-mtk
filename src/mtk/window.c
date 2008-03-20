@@ -49,11 +49,30 @@ mtk_window_t* mtk_window_new(int w, int h)
 	return window;
 }
 
+static void draw_widget(mtk_widget_t* widget) {
+	cairo_t *cr = cairo_create(widget->window->surface);
+
+	cairo_rectangle(cr, widget->x, widget->y, widget->w, widget->h);
+	cairo_clip(cr);
+	cairo_set_source_surface(cr, widget->surface, widget->x, widget->y);
+	cairo_paint(cr);
+
+	cairo_destroy(cr);
+}
+
 void mtk_window_add(mtk_window_t* window, mtk_widget_t* widget)
 {
 	mtk_list_append(window->widgets, widget);
 	widget->window = window;
+	widget->surface = cairo_surface_create_similar(window->surface,
+			CAIRO_CONTENT_COLOR_ALPHA,
+			window->width, window->height);
+
+	if (widget->update)
+		widget->update(widget);
+	assert(widget->draw);
 	widget->draw(widget);
+	draw_widget(widget);
 }
 
 void _mtk_window_draw(mtk_window_t *window)
@@ -70,6 +89,7 @@ void _mtk_window_draw(mtk_window_t *window)
 	mtk_list_foreach(window->widgets, w) {
 		assert(w->draw);
 		w->draw(w);
+		draw_widget(w);
 	}
 }
 

@@ -16,6 +16,7 @@ struct mpdlist {
 	int slide_offset;
 	int slide_scroll_moved;
 	int scroll_top;
+	cairo_surface_t *scroll_surface;
 	void (*updatelist)(mtk_list_t *list, void *data);
 	int (*clicked)(void **data, mtk_list_t *list, int pos);
 	void *data;
@@ -24,7 +25,7 @@ struct mpdlist {
 static void update(mtk_widget_t *widget)
 {
 	struct mpdlist *mpdlist = (struct mpdlist*)widget;
-	cairo_t *cr = cairo_create(widget->surface);
+	cairo_t *cr = cairo_create(mpdlist->scroll_surface);
 	mpd_InfoEntity *entity;
 	int y = 0;
 
@@ -128,7 +129,7 @@ static void draw(mtk_widget_t *widget)
 
 	cairo_rectangle(cr, 0, UNIT, widget->w, widget->h - 2*UNIT);
 	cairo_clip(cr);
-	cairo_set_source_surface(cr, widget->surface, 0,
+	cairo_set_source_surface(cr, mpdlist->scroll_surface, 0,
 		-mpdlist->scroll_top + UNIT);
 	cairo_paint(cr);
 
@@ -281,7 +282,7 @@ mtk_widget_t* mtk_mpdlist_new(int x, int y, int w, int h,
 	mpdlist->widget.y = y;
 	mpdlist->widget.w = w;
 	mpdlist->widget.h = h;
-	mpdlist->widget.surface =
+	mpdlist->scroll_surface =
 		cairo_image_surface_create(CAIRO_FORMAT_RGB24, WIDTH, 4000);
 	mpdlist->widget.update = update;
 	mpdlist->widget.draw = draw;
@@ -292,8 +293,6 @@ mtk_widget_t* mtk_mpdlist_new(int x, int y, int w, int h,
 	mpdlist->data = data;
 	mpdlist->updatelist = updatelist;
 	mpdlist->clicked = clicked;
-
-	update(&mpdlist->widget);
 
 	return (mtk_widget_t*)mpdlist;
 }

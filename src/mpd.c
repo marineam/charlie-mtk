@@ -9,6 +9,21 @@ static mpd_Connection *conn;
 
 #define die_on_mpd_error() die_on(conn->error, "%s\n", conn->errorStr)
 
+static int updatestatus(void *nill)
+{
+	mpd_Status *status;
+
+	mpd_sendStatusCommand(conn);
+	status = mpd_getStatus(conn);
+	die_on_mpd_error();
+
+	mpd_freeStatus(status);
+	mpd_finishCommand(conn);
+	die_on_mpd_error();
+
+	return 1;
+}
+
 void mpd_init()
 {
 	char *hostname = getenv("MPD_HOST");
@@ -21,6 +36,8 @@ void mpd_init()
 
 	conn = mpd_newConnection(hostname, atoi(port), 10);
 	die_on_mpd_error();
+
+	mtk_timer_add(1.0, updatestatus, NULL);
 }
 
 static void updatedir(mtk_list_t *list, void *data)
@@ -35,13 +52,14 @@ static void updatedir(mtk_list_t *list, void *data)
 		die_on_mpd_error();
 		old = mtk_list_replace(list, entity);
 		mtk_list_next(list);
-		//if (old)
-		//	mpd_freeInfoEntity(old);
+		if (old)
+			mpd_freeInfoEntity(old);
 	}
 
 	while (old) {
 		old = mtk_list_remove(list);
-		//mpd_freeInfoEntity(old);
+		if (old)
+			mpd_freeInfoEntity(old);
 	}
 
 	die_on_mpd_error();

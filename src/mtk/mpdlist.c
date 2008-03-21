@@ -47,7 +47,11 @@ static char* entityname(mpd_InfoEntity *entity)
 
 	if (file) {
 		name = strrchr(file, '/');
-		name = strdup(name?name+1:file);
+		name = name?name+1:file;
+		if (strstr(file, "../") == file)
+			asprintf(&name, "Directory: %s", name);
+		else
+			name = strdup(name);
 		for (int i = 0; i < strlen(name); i++) {
 			if (name[i] == '_')
 				name[i] = ' ';
@@ -266,8 +270,8 @@ static void mouse_release(mtk_widget_t *widget, int x, int y)
 			    mpdlist->list, pos)) {
 				mpdlist->timed_scroll = 0;
 				mpdlist->scroll_top = 0;
+				update(widget);
 			}
-			update(widget);
 		}
 	}
 	else if (mpdlist->slide_scroll_moved) {

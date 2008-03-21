@@ -106,7 +106,8 @@ void mtk_timer_add(double interval, int(*callback)(void *data), void *data)
 	mtk_list_append(timers, t);
 
 	time.it_interval.tv_sec = (time_t)interval;
-	time.it_interval.tv_nsec = (long)(interval*1000000000);
+	time.it_interval.tv_nsec =
+		(long)((interval-(time_t)interval)*1000000000);
 	assert(time.it_interval.tv_sec || time.it_interval.tv_nsec);
 	time.it_value.tv_sec = time.it_interval.tv_sec;
 	time.it_value.tv_nsec = time.it_interval.tv_nsec;

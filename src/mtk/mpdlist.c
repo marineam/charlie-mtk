@@ -22,13 +22,51 @@ struct mpdlist {
 	void *data;
 };
 
+/* returns a string with a well chosen name
+ * result must be freed */
+static char* entityname(mpd_InfoEntity *entity)
+{
+	char *name = NULL, *file = NULL;
+
+	switch(entity->type) {
+		case MPD_INFO_ENTITY_TYPE_SONG:
+			if (entity->info.song->title)
+				name = strdup(entity->info.song->title);
+			else
+				file = entity->info.song->file;
+			break;
+		case MPD_INFO_ENTITY_TYPE_DIRECTORY:
+			file = entity->info.directory->path;
+			break;
+		case MPD_INFO_ENTITY_TYPE_PLAYLISTFILE:
+			file = entity->info.playlistFile->path;
+			break;
+		default:
+			assert(0);
+	}
+
+	if (file) {
+		name = strrchr(file, '/');
+		name = strdup(name?name+1:file);
+		for (int i = 0; i < strlen(name); i++) {
+			if (name[i] == '_')
+				name[i] = ' ';
+		}
+	}
+
+	return name;
+}
+
+
 static void update(mtk_widget_t *widget)
 {
 	struct mpdlist *mpdlist = (struct mpdlist*)widget;
 	cairo_t *cr = cairo_create(mpdlist->scroll_surface);
 	cairo_pattern_t *pat;
+	cairo_text_extents_t te;
 	mpd_InfoEntity *entity;
 	int y = 0;
+	char *name;
 
 	if (mpdlist->updatelist)
 		mpdlist->updatelist(mpdlist->list, mpdlist->data);
@@ -42,40 +80,27 @@ static void update(mtk_widget_t *widget)
 		CAIRO_FONT_SLANT_NORMAL,
 		CAIRO_FONT_WEIGHT_NORMAL);
 	cairo_set_font_size(cr, UNIT*0.5);
+	/* font_extents seems like the "correct" way to do this but
+	 * the font's ascent value doesn't actually match it's ascent */
+	cairo_text_extents(cr, "M", &te);
 
 	pat = cairo_pattern_create_linear(0, 0, widget->w, 0);
 	cairo_pattern_add_color_stop_rgb(pat, 0.0, 0.8, 0.9, 0.9);
 	cairo_pattern_add_color_stop_rgb(pat, 0.6, 1.0, 1.0, 1.0);
 
 	mtk_list_foreach(mpdlist->list, entity) {
+
 		cairo_rectangle(cr, UNIT*0.1, y+UNIT*0.1, widget->w, UNIT*0.8);
 		cairo_set_source(cr, pat);
 		cairo_fill(cr);
 
 		cairo_set_source_rgb(cr, 0, 0, 0);
-		cairo_move_to(cr, UNIT*0.2, y+UNIT*0.75);
-		if (entity->type == MPD_INFO_ENTITY_TYPE_DIRECTORY) {
-			/* note: using the gnu version of basename */
-			char *path = strdup(basename(
-				entity->info.directory->path));
-			for (int i = 0; i < strlen(path); i++) {
-				if (path[i] == '_')
-					path[i] = ' ';
-			}
-			cairo_show_text(cr, path);
-			free(path);
-		}
-		else if (entity->type == MPD_INFO_ENTITY_TYPE_SONG) {
-			/* note: using the gnu version of basename */
-			char *path = strdup(basename(
-				entity->info.song->file));
-			for (int i = 0; i < strlen(path); i++) {
-				if (path[i] == '_')
-					path[i] = ' ';
-			}
-			cairo_show_text(cr, path);
-			free(path);
-		}
+
+		name = entityname(entity);
+		cairo_move_to(cr, UNIT*0.2, y+UNIT*0.5 + te.height*0.5);
+		cairo_show_text(cr, name);
+		free(name);
+
 		y += UNIT;
 	}
 

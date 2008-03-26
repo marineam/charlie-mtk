@@ -3,6 +3,6 @@
 
 #define WIDTH 800
 #define HEIGHT 480
-#define UNIT 40
+#define UNIT 48
 
 #endif

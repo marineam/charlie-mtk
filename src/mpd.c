@@ -146,3 +146,7 @@ static int clicked(void **data, mtk_list_t *list, int pos)
 mtk_widget_t* mpd_dirlist_new(int x, int y, int w, int h) {
 	return mtk_mpdlist_new(x, y, w, h, updatedir, clicked, NULL);
 }
+
+mtk_widget_t* mpd_status_new(int x, int y, int w, int h) {
+	return mtk_text_new(x, y, w, UNIT, "test");
+}

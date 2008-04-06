@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <libmpdclient.h>
 
 #include "config.h"
 
@@ -42,10 +43,14 @@ mtk_widget_t* mtk_mpdlist_new(int x, int y, int w, int h,
 mtk_window_t* mtk_window_new(int w, int h);
 void mtk_window_add(mtk_window_t* window, mtk_widget_t* widget);
 
+/* text.c */
+mtk_widget_t* mtk_text_new(int x, int y, int w, int h, char *t);
+
 /* timer.c */
 void mtk_timer_add(double interval, int(*callback)(void *data), void *data);
 
 /* utilities */
+char* entityname(mpd_InfoEntity *entity);
 mtk_list_t* mtk_list_new();
 void mtk_list_append(mtk_list_t *l, void* d);
 void mtk_list_insert(mtk_list_t *l, void* d);

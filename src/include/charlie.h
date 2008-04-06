@@ -6,5 +6,6 @@
 /* mpd.c */
 void mpd_init();
 mtk_widget_t* mpd_dirlist_new(int x, int y, int w, int h);
+mtk_widget_t* mpd_status_new(int x, int y, int w, int h);
 
 #endif

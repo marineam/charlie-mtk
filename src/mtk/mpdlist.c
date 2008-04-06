@@ -22,46 +22,6 @@ struct mpdlist {
 	void *data;
 };
 
-/* returns a string with a well chosen name
- * result must be freed */
-static char* entityname(mpd_InfoEntity *entity)
-{
-	char *name = NULL, *file = NULL;
-
-	switch(entity->type) {
-		case MPD_INFO_ENTITY_TYPE_SONG:
-			if (entity->info.song->title)
-				name = strdup(entity->info.song->title);
-			else
-				file = entity->info.song->file;
-			break;
-		case MPD_INFO_ENTITY_TYPE_DIRECTORY:
-			file = entity->info.directory->path;
-			break;
-		case MPD_INFO_ENTITY_TYPE_PLAYLISTFILE:
-			file = entity->info.playlistFile->path;
-			break;
-		default:
-			assert(0);
-	}
-
-	if (file) {
-		name = strrchr(file, '/');
-		name = name?name+1:file;
-		if (strstr(file, "../") == file)
-			asprintf(&name, "Directory: %s", name);
-		else
-			name = strdup(name);
-		for (int i = 0; i < strlen(name); i++) {
-			if (name[i] == '_')
-				name[i] = ' ';
-		}
-	}
-
-	return name;
-}
-
-
 static void update(mtk_widget_t *widget)
 {
 	struct mpdlist *mpdlist = (struct mpdlist*)widget;

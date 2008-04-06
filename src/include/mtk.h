@@ -21,8 +21,12 @@ typedef struct mtk_list {
 	int count;
 } mtk_list_t;
 
-typedef struct mtk_window mtk_window_t;
 typedef struct mtk_widget mtk_widget_t;
+#define MTK_WIDGET(w) ((mtk_widget_t*)w)
+typedef struct mtk_container mtk_container_t;
+#define MTK_CONTAINER(c) ((mtk_container_t*)c)
+typedef struct mtk_window mtk_window_t;
+#define MTK_WINDOW(w) ((mtk_window_t*)w)
 
 /* main.c */
 void mtk_init();
@@ -38,6 +42,9 @@ mtk_widget_t* mtk_mpdlist_new(int x, int y, int w, int h,
 	void (*updatelist)(mtk_list_t *list, void *data),
 	int (*clicked)(void **data, mtk_list_t *list, int pos),
 	void *data);
+
+/* container.c */
+void mtk_container_add(mtk_container_t* c, mtk_widget_t* widget);
 
 /* window.c */
 mtk_window_t* mtk_window_new(int w, int h);

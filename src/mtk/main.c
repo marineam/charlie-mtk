@@ -99,17 +99,25 @@ static int event()
 
 void mtk_main()
 {
-	int ev;
+	int xev, tev;
 	/* pause for a 100th of a second between polls */
 	struct timespec pause = {.tv_sec = 0, .tv_nsec = 1000000};
+	mtk_window_t *w;
 
 	while (1) {
-		if ((ev = event()) < 0)
+		if ((xev = event()) < 0)
 			break;
 
-		ev += _mtk_timer_event();
+		if ((tev = _mtk_timer_event())) {
+			/* FIXME: force a full redraw on timer events.
+			 * this is silly but I don't have a better way yet */
+			mtk_list_foreach(_windows, w) {
+				_mtk_window_draw(w);
+				xcb_flush(_conn);
+			}
+		}
 
-		if (!ev) {
+		if (!xev && !tev) {
 			/* no events that time, so lets just idle a bit */
 			nanosleep(&pause,NULL);
 		}

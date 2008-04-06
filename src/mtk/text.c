@@ -36,9 +36,6 @@ static void draw(mtk_widget_t *widget)
 	}
 
 	cairo_destroy(cr);
-
-	/* FIXME: redrawing the entire window is a bit silly, but works */
-	_mtk_window_draw(widget->window);
 }
 
 mtk_widget_t* mtk_text_new(int x, int y, int w, int h, char *t)

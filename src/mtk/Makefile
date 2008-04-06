@@ -3,10 +3,10 @@ CFLAGS += -g -Wall -D_GNU_SOURCE -std=gnu99
 CFLAGS += -I../include -I../libmpdclient
 CFLAGS += $(shell pkg-config --cflags cairo xcb xcb-aux)
 LIBS = $(shell pkg-config --libs cairo xcb xcb-aux) -lrt
-OBJS = main.o window.o util.o clickarea.o mpdlist.o timer.o text.o
+OBJS = main.o widget.o container.o window.o util.o mpdlist.o timer.o text.o
 HEAD = $(wildcard ../include/*.h) private.h
 
-all: mtk.a test
+all: mtk.a
 
 %.o: %.c $(HEAD)
 	@echo " CC mtk/$@"
@@ -16,9 +16,9 @@ mtk.a: $(OBJS)
 	@echo " AR mtk/$@"
 	@$(AR) -rc $@ $^
 
-test: test.c mtk.a
-	@echo " CC mtk/$@"
-	@$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+#test: test.c mtk.a
+#	@echo " CC mtk/$@"
+#	@$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 .PHONY: clean
 clean:

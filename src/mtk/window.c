@@ -7,12 +7,6 @@
 
 #include "private.h"
 
-/* for finding widgets at a location */
-#define FOREACH_AT_XY(l,w,x,y) \
-	mtk_list_foreach(l, w) \
-		if (x >= w->x && y >= w->y && \
-		    x <= w->x + w->w && y <= w->y + w->h)
-
 mtk_window_t* mtk_window_new(int w, int h)
 {
 	mtk_window_t *window = xmalloc0(sizeof(mtk_window_t));
@@ -20,10 +14,9 @@ mtk_window_t* mtk_window_new(int w, int h)
 	uint32_t mask;
 
 	/* create window */
+	_mtk_container_new((mtk_container_t*)window,0,0,w,h);
 	window->id = xcb_generate_id(_conn);
-	window->width = w;
-	window->height = h;
-	window->widgets = mtk_list_new();
+
 	mask = XCB_CW_EVENT_MASK;
 	values.event_mask =
 		XCB_EVENT_MASK_EXPOSURE |
@@ -40,7 +33,7 @@ mtk_window_t* mtk_window_new(int w, int h)
 	/* show the window */
 	xcb_map_window(_conn, window->id);
 
-	window->surface = cairo_xcb_surface_create(_conn,
+	MTK_WIDGET(window)->surface = cairo_xcb_surface_create(_conn,
 		window->id, _visual, w, h);
 	xcb_flush(_conn);
 
@@ -49,92 +42,41 @@ mtk_window_t* mtk_window_new(int w, int h)
 	return window;
 }
 
-static void draw_widget(mtk_widget_t* widget) {
-	cairo_t *cr = cairo_create(widget->window->surface);
-
-	cairo_rectangle(cr, widget->x, widget->y, widget->w, widget->h);
-	cairo_clip(cr);
-	cairo_set_source_surface(cr, widget->surface, widget->x, widget->y);
-	cairo_paint(cr);
-
-	cairo_destroy(cr);
-}
-
 void mtk_window_add(mtk_window_t* window, mtk_widget_t* widget)
 {
-	mtk_list_append(window->widgets, widget);
-	widget->window = window;
-	widget->surface = cairo_surface_create_similar(window->surface,
-			CAIRO_CONTENT_COLOR,
-			window->width, window->height);
-
-	if (widget->update)
-		widget->update(widget);
-	assert(widget->draw);
-	widget->draw(widget);
-	draw_widget(widget);
+	mtk_container_add(MTK_CONTAINER(window), widget);
 }
 
 void _mtk_window_draw(mtk_window_t *window)
 {
-	mtk_widget_t *w;
-
-	mtk_list_foreach(window->widgets, w)
-		draw_widget(w);
-}
-
-void _mtk_window_redraw(mtk_window_t *window)
-{
-	mtk_widget_t *w;
-	/*cairo_t *cr;
-
-	cr = cairo_create(window->surface);
-	cairo_set_source_rgb(cr, 0, 0, 0);
-	cairo_rectangle(cr, 0, 0, window->width, window->height);
-	cairo_fill(cr);
-	cairo_destroy(cr);*/
-
-	mtk_list_foreach(window->widgets, w) {
-		assert(w->draw);
-		w->draw(w);
-	}
-
-	_mtk_window_draw(window);
+	MTK_WIDGET(window)->draw(MTK_WIDGET(window));
 }
 
 void _mtk_window_mouse_press(mtk_window_t *window, int x, int y)
 {
-	mtk_widget_t *w;
-
-	FOREACH_AT_XY(window->widgets, w, x, y)
-		if (w->mouse_press)
-			w->mouse_press(w, x-w->x, y-w->y);
+	MTK_WIDGET(window)->mouse_press(MTK_WIDGET(window), x, y);
+	MTK_WIDGET(window)->draw(MTK_WIDGET(window));
 }
 
 void _mtk_window_mouse_release(mtk_window_t *window, int x, int y)
 {
-	mtk_widget_t *w;
-
-	FOREACH_AT_XY(window->widgets, w, x, y)
-		if (w->mouse_release)
-			w->mouse_release(w, x-w->x, y-w->y);
+	MTK_WIDGET(window)->mouse_release(MTK_WIDGET(window), x, y);
+	MTK_WIDGET(window)->draw(MTK_WIDGET(window));
 }
 
 void _mtk_window_mouse_move(mtk_window_t *window, int x, int y)
 {
-	mtk_widget_t *w;
-
-	FOREACH_AT_XY(window->widgets, w, x, y)
-		if (w->mouse_move)
-			w->mouse_move(w, x-w->x, y-w->y);
+	MTK_WIDGET(window)->mouse_move(MTK_WIDGET(window), x, y);
+	MTK_WIDGET(window)->draw(MTK_WIDGET(window));
 }
 
 void _mtk_window_resize(mtk_window_t *window, int w, int h)
 {
-	if (w == window->width && h == window->height)
+	if (w == MTK_WIDGET(window)->w && h == MTK_WIDGET(window)->h)
 		return; /* no change in size */
-	cairo_xcb_surface_set_size(window->surface, w, h);
-	window->width = w;
-	window->height = h;
-	_mtk_window_redraw(window);
+	cairo_xcb_surface_set_size(MTK_WIDGET(window)->surface, w, h);
+	MTK_WIDGET(window)->w = w;
+	MTK_WIDGET(window)->h = h;
+	/* TODO: reisize and signal child widgets somehow? */
+	MTK_WIDGET(window)->draw(MTK_WIDGET(window));
 }

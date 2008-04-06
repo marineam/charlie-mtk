@@ -130,9 +130,6 @@ static void draw(mtk_widget_t *widget)
 	cairo_paint(cr);
 
 	cairo_destroy(cr);
-
-	/* FIXME: redrawing the entire window is a bit silly, but works */
-	_mtk_window_draw(widget->window);
 }
 
 /* cleans things up after mouse events */

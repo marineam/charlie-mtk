@@ -6,15 +6,9 @@
 
 #include "private.h"
 
-struct text {
-	mtk_widget_t widget;
-	char *text;
-	double size;
-};
-
 static void draw(mtk_widget_t *widget)
 {
-	struct text *text = (struct text*)widget;
+	mtk_text_t *text = MTK_TEXT(widget);
 	cairo_t *cr = cairo_create(widget->surface);
 	cairo_text_extents_t te;
 
@@ -38,16 +32,21 @@ static void draw(mtk_widget_t *widget)
 	cairo_destroy(cr);
 }
 
-mtk_widget_t* mtk_text_new(int x, int y, int w, int h, char *t)
+mtk_text_t* mtk_text_new(int x, int y, int w, int h, char *t)
 {
-	struct text *text = xmalloc0(sizeof(struct text));
+	mtk_text_t *text = xmalloc0(sizeof(mtk_text_t));
 
-	text->widget.x = x;
-	text->widget.y = y;
-	text->widget.w = w;
-	text->widget.h = h;
-	text->widget.draw = draw;
-	text->text = t;
+	_mtk_widget_new(MTK_WIDGET(text), x, y, w, h);
+	MTK_WIDGET(text)->draw = draw;
+	mtk_text_set(text, t);
 
-	return (mtk_widget_t*)text;
+	return text;
+}
+
+void mtk_text_set(mtk_text_t *text, char *t)
+{
+	free(text->text);
+	assert(t);
+	text->text = strdup(t);
+	assert(text->text);
 }

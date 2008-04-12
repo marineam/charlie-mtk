@@ -39,6 +39,8 @@ mtk_window_t* mtk_window_new(int w, int h)
 
 	mtk_list_append(_windows, window);
 
+	MTK_WIDGET(window)->init(MTK_WIDGET(window), NULL);
+
 	return window;
 }
 

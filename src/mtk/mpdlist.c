@@ -281,10 +281,7 @@ mtk_widget_t* mtk_mpdlist_new(int x, int y, int w, int h,
 {
 	struct mpdlist *mpdlist = xmalloc0(sizeof(struct mpdlist));
 
-	mpdlist->widget.x = x;
-	mpdlist->widget.y = y;
-	mpdlist->widget.w = w;
-	mpdlist->widget.h = h;
+	_mtk_widget_new(MTK_WIDGET(mpdlist), x, y, w, h);
 	mpdlist->scroll_surface =
 		cairo_image_surface_create(CAIRO_FORMAT_RGB24, WIDTH, 4000);
 	mpdlist->widget.update = update;

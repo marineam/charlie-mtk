@@ -5,6 +5,13 @@
 #include <charlie.h>
 #include <mtk.h>
 
+struct status {
+	mtk_container_t _parent;
+	mtk_text_t *title;
+	mtk_text_t *artist;
+	mtk_text_t *album;
+} *status_widget;
+
 static mpd_Connection *conn;
 
 #define die_on_mpd_error() die_on(conn->error, "%s\n", conn->errorStr)
@@ -12,10 +19,34 @@ static mpd_Connection *conn;
 static int updatestatus(void *nill)
 {
 	mpd_Status *status;
+	mpd_InfoEntity *entity;
 
+	mpd_sendCommandListOkBegin(conn);
 	mpd_sendStatusCommand(conn);
+	mpd_sendCurrentSongCommand(conn);
+	mpd_sendCommandListEnd(conn);
+
 	status = mpd_getStatus(conn);
 	die_on_mpd_error();
+
+	mpd_nextListOkCommand(conn);
+
+	entity = mpd_getNextInfoEntity(conn);
+	if (entity && entity->type == MPD_INFO_ENTITY_TYPE_SONG) {
+		mpd_Song *song = entity->info.song;
+
+		if (song->title)
+			mtk_text_set(status_widget->title, song->title);
+		else
+			mtk_text_set(status_widget->title, song->file);
+		if (song->artist)
+			mtk_text_set(status_widget->artist, song->artist);
+		if (song->album)
+			mtk_text_set(status_widget->album, song->album);
+	}
+
+	if (entity)
+		mpd_freeInfoEntity(entity);
 
 	mpd_freeStatus(status);
 	mpd_finishCommand(conn);
@@ -36,8 +67,6 @@ void mpd_init()
 
 	conn = mpd_newConnection(hostname, atoi(port), 10);
 	die_on_mpd_error();
-
-	mtk_timer_add(1.0, updatestatus, NULL);
 }
 
 static void updatedir(mtk_list_t *list, void *data)
@@ -148,5 +177,20 @@ mtk_widget_t* mpd_dirlist_new(int x, int y, int w, int h) {
 }
 
 mtk_widget_t* mpd_status_new(int x, int y, int w, int h) {
-	return mtk_text_new(x, y, w, UNIT, "test");
+	status_widget = xmalloc0(sizeof(struct status));
+
+	_mtk_container_new(MTK_CONTAINER(status_widget), x,y,w,h);
+	status_widget->title = mtk_text_new(0,0,w,UNIT*0.5,"foobar");
+	status_widget->artist = mtk_text_new(0,UNIT*0.5,w,UNIT*0.5,"foobaz");
+	status_widget->album = mtk_text_new(0,UNIT,w,UNIT*0.5,"whee");
+	mtk_container_add(MTK_CONTAINER(status_widget),
+			  MTK_WIDGET(status_widget->title));
+	mtk_container_add(MTK_CONTAINER(status_widget),
+			  MTK_WIDGET(status_widget->artist));
+	mtk_container_add(MTK_CONTAINER(status_widget),
+			  MTK_WIDGET(status_widget->album));
+
+	updatestatus(NULL);
+	mtk_timer_add(1.0, updatestatus, NULL);
+	return MTK_WIDGET(status_widget);
 }

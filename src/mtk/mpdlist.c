@@ -7,7 +7,7 @@
 #include "private.h"
 
 struct mpdlist {
-	mtk_widget_t widget;
+	PARENT(mtk_widget);
 	mtk_list_t* list;
 	int timed_scroll;
 	int timed_active;
@@ -138,7 +138,7 @@ static void scroll_fixup(struct mpdlist *mpdlist)
 	/* extreme scroll positions, max is the top, min bottom */
 	int min = 0;
 	int max = (mtk_list_length(mpdlist->list) * UNIT) -
-		(mpdlist->widget.h - 2*UNIT);
+		(MTK_WIDGET(mpdlist)->h - 2*UNIT);
 
 	if (max <= min) {
 		mpdlist->timed_scroll = 0;
@@ -284,11 +284,11 @@ mtk_widget_t* mtk_mpdlist_new(int x, int y, int w, int h,
 	_mtk_widget_new(MTK_WIDGET(mpdlist), x, y, w, h);
 	mpdlist->scroll_surface =
 		cairo_image_surface_create(CAIRO_FORMAT_RGB24, WIDTH, 4000);
-	mpdlist->widget.update = update;
-	mpdlist->widget.draw = draw;
-	mpdlist->widget.mouse_press = mouse_press;
-	mpdlist->widget.mouse_release = mouse_release;
-	mpdlist->widget.mouse_move = mouse_move;
+	MTK_WIDGET(mpdlist)->update = update;
+	MTK_WIDGET(mpdlist)->draw = draw;
+	MTK_WIDGET(mpdlist)->mouse_press = mouse_press;
+	MTK_WIDGET(mpdlist)->mouse_release = mouse_release;
+	MTK_WIDGET(mpdlist)->mouse_move = mouse_move;
 	mpdlist->list = mtk_list_new();
 	mpdlist->data = data;
 	mpdlist->updatelist = updatelist;

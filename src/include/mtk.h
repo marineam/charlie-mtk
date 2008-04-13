@@ -9,6 +9,8 @@
 
 #include "config.h"
 
+#define PARENT(class) struct class _parent_class_
+
 typedef struct mtk_list_node {
 	struct mtk_list_node *next;
 	struct mtk_list_node *prev;
@@ -49,20 +51,20 @@ struct mtk_widget {
 };
 
 struct mtk_container {
-	mtk_widget_t widget;
+	PARENT(mtk_widget);
 	mtk_list_t *widgets;
 	int ran_init;
 	void (*parent_init)(mtk_widget_t* widget, mtk_widget_t* parent);
 };
 
 struct mtk_window {
-	mtk_container_t container;
+	PARENT(mtk_container);
 	xcb_window_t id;
 	//cairo_surface_t *surface;
 };
 
 struct mtk_text {
-	mtk_widget_t widget;
+	PARENT(mtk_widget);
 	char *text;
 	double size;
 };

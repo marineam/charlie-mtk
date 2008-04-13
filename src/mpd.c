@@ -6,7 +6,7 @@
 #include <mtk.h>
 
 struct status {
-	mtk_container_t _parent;
+	PARENT(mtk_container);
 	mtk_text_t *title;
 	mtk_text_t *artist;
 	mtk_text_t *album;

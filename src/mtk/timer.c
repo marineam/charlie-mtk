@@ -55,6 +55,7 @@ int _mtk_timer_event()
 
 	mtk_list_goto(events, 0);
 	if ((t = mtk_list_remove(events))) {
+		sigprocmask(SIG_UNBLOCK, &sigset, NULL);
 		if (t->active && !t->callback(t->data)) {
 			t->active = 0;
 			timer_delete(t->id);
@@ -76,9 +77,9 @@ int _mtk_timer_event()
 				t = mtk_list_next(timers);
 			}
 		}
+		sigprocmask(SIG_UNBLOCK, &sigset, NULL);
 	}
 
-	sigprocmask(SIG_UNBLOCK, &sigset, NULL);
 	return ret;
 }
 

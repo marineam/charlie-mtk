@@ -41,21 +41,34 @@ void _mtk_timer_init()
 	sigaction(SIGALRM, &handler, NULL);
 }
 
-int _mtk_timer_event()
+void mtk_timer_block()
 {
 	sigset_t sigset;
+	sigemptyset(&sigset);
+	sigaddset(&sigset, SIGALRM);
+	sigprocmask(SIG_BLOCK, &sigset, NULL);
+}
+
+void mtk_timer_unblock()
+{
+	sigset_t sigset;
+	sigemptyset(&sigset);
+	sigaddset(&sigset, SIGALRM);
+	sigprocmask(SIG_UNBLOCK, &sigset, NULL);
+}
+
+int _mtk_timer_event()
+{
 	struct timer *t;
 	int ret = 0;
 
 	/* block SIGALRM while we handle events
 	 * this is important since mtk_lists don't have any locking */
-	sigemptyset(&sigset);
-	sigaddset(&sigset, SIGALRM);
-	sigprocmask(SIG_BLOCK, &sigset, NULL);
+	mtk_timer_block();
 
 	mtk_list_goto(events, 0);
 	if ((t = mtk_list_remove(events))) {
-		sigprocmask(SIG_UNBLOCK, &sigset, NULL);
+		mtk_timer_unblock();
 		if (t->active && !t->callback(t->data)) {
 			t->active = 0;
 			timer_delete(t->id);
@@ -77,7 +90,7 @@ int _mtk_timer_event()
 				t = mtk_list_next(timers);
 			}
 		}
-		sigprocmask(SIG_UNBLOCK, &sigset, NULL);
+		mtk_timer_unblock();
 	}
 
 	return ret;

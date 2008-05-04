@@ -15,6 +15,14 @@ mtk_list_t *_windows;
 
 void mtk_init()
 {
+	/* fill up class structures */
+	_mtk_object_class_init();
+	_mtk_widget_class_init();
+	_mtk_container_class_init();
+	_mtk_window_class_init();
+	_mtk_text_class_init();
+	_mtk_mpdlist_class_init();
+
 	/* fire off timer thread */
 	_mtk_timer_init();
 
@@ -44,11 +52,11 @@ void _mtk_flush()
 
 /* for use in mtk_event, searches for the window the
  * event applies to and runs the given code for it */
-#define WINDOW_EVENT(type, member, code) \
+#define WINDOW_EVENT(type, member) \
 	{ type *_e = (type*)e; \
 	mtk_list_foreach(_windows, w) { \
-		if (w->id == _e->member) { \
-			code; \
+		if (w->id == _e->member) {
+#define WINDOW_EVENT_END \
 			xcb_flush(_conn); \
 			break; \
 		} \
@@ -70,23 +78,35 @@ static int event()
 
 	switch (e->response_type & ~0x80) {
 	case XCB_BUTTON_PRESS:
-		WINDOW_EVENT(xcb_button_press_event_t, event,
-			_mtk_window_mouse_press(w, _e->event_x, _e->event_y));
+		WINDOW_EVENT(xcb_button_press_event_t, event)
+			call(w,mtk_widget,mouse_press,_e->event_x,_e->event_y);
+			/* temporary hack to force a redraw */
+			call(w,mtk_widget,draw);
+		WINDOW_EVENT_END
 		break;
 	case XCB_BUTTON_RELEASE:
-		WINDOW_EVENT(xcb_button_release_event_t, event,
-			_mtk_window_mouse_release(w, _e->event_x, _e->event_y));
+		WINDOW_EVENT(xcb_button_release_event_t, event)
+			call(w,mtk_widget,mouse_release,_e->event_x,_e->event_y);
+			/* temporary hack to force a redraw */
+			call(w,mtk_widget,draw);
+		WINDOW_EVENT_END
 		break;
 	case XCB_MOTION_NOTIFY:
-		WINDOW_EVENT(xcb_motion_notify_event_t, event,
-			_mtk_window_mouse_move(w, _e->event_x, _e->event_y));
+		WINDOW_EVENT(xcb_motion_notify_event_t, event)
+			call(w,mtk_widget,mouse_move,_e->event_x,_e->event_y);
+			/* temporary hack to force a redraw */
+			call(w,mtk_widget,draw);
+		WINDOW_EVENT_END
 		break;
 	case XCB_EXPOSE:    /* draw or redraw the window */
-		WINDOW_EVENT(xcb_expose_event_t, window, _mtk_window_draw(w));
+		WINDOW_EVENT(xcb_expose_event_t, window)
+			call(w,mtk_widget,draw);
+		WINDOW_EVENT_END
 		break;
 	case XCB_CONFIGURE_NOTIFY:
-		WINDOW_EVENT(xcb_configure_notify_event_t, window,
-			_mtk_window_resize(w, _e->width, _e->height));
+		WINDOW_EVENT(xcb_configure_notify_event_t, window)
+			call(w,mtk_window,resize, _e->width, _e->height);
+		WINDOW_EVENT_END
 		break;
 	default:
 		/* ignore everything else */
@@ -100,8 +120,8 @@ static int event()
 void mtk_main()
 {
 	int xev, tev;
-	/* pause for a 100th of a second between polls */
-	struct timespec pause = {.tv_sec = 0, .tv_nsec = 1000000};
+	/* pause for a 10th of a second between polls */
+	struct timespec pause = {.tv_sec = 0, .tv_nsec = 100000000};
 	mtk_window_t *w;
 
 	while (1) {
@@ -112,7 +132,7 @@ void mtk_main()
 			/* FIXME: force a full redraw on timer events.
 			 * this is silly but I don't have a better way yet */
 			mtk_list_foreach(_windows, w) {
-				_mtk_window_draw(w);
+				call(w,mtk_widget,draw);
 				xcb_flush(_conn);
 			}
 		}

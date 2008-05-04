@@ -32,21 +32,23 @@ static void draw(mtk_widget_t *widget)
 	cairo_destroy(cr);
 }
 
-mtk_text_t* mtk_text_new(int x, int y, int w, int h, char *t)
+static void set_text(mtk_text_t *this, char *text)
 {
-	mtk_text_t *text = xmalloc0(sizeof(mtk_text_t));
-
-	_mtk_widget_new(MTK_WIDGET(text), x, y, w, h);
-	MTK_WIDGET(text)->draw = draw;
-	mtk_text_set(text, t);
-
-	return text;
+	free(this->text);
+	assert(text);
+	this->text = strdup(text);
+	assert(this->text);
 }
 
-void mtk_text_set(mtk_text_t *text, char *t)
+mtk_text_t* mtk_text_new(size_t size, int x, int y, int w, int h, char *text)
 {
-	free(text->text);
-	assert(t);
-	text->text = strdup(t);
-	assert(text->text);
+	mtk_text_t *this = MTK_TEXT(mtk_widget_new(size, x, y, w, h));
+	SET_CLASS(this, mtk_text);
+	set_text(this, text);
+	return this;
 }
+
+METHOD_TABLE_INIT(mtk_text, mtk_widget)
+	METHOD(mtk_text, set_text)	= set_text;
+	METHOD(mtk_widget, draw)	= draw;
+METHOD_TABLE_END

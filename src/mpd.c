@@ -5,22 +5,17 @@
 #include <charlie.h>
 #include <mtk.h>
 
-struct status {
-	PARENT(mtk_container);
-	mtk_text_t *title;
-	mtk_text_t *artist;
-	mtk_text_t *album;
-} *status_widget;
-
 static mpd_Connection *conn;
 
 #define die_on_mpd_error() die_on(conn->error, "%s\n", conn->errorStr)
 
-static int updatestatus(void *nill)
+static int updatestatus(void *data)
 {
 	mpd_Status *status;
 	mpd_InfoEntity *entity;
+	mpd_status_t *widget = data;
 
+	mtk_timer_block();
 	mpd_sendCommandListOkBegin(conn);
 	mpd_sendStatusCommand(conn);
 	mpd_sendCurrentSongCommand(conn);
@@ -36,13 +31,13 @@ static int updatestatus(void *nill)
 		mpd_Song *song = entity->info.song;
 
 		if (song->title)
-			mtk_text_set(status_widget->title, song->title);
+			call(widget->title,mtk_text,set_text, song->title);
 		else
-			mtk_text_set(status_widget->title, song->file);
+			call(widget->title,mtk_text,set_text, song->file);
 		if (song->artist)
-			mtk_text_set(status_widget->artist, song->artist);
+			call(widget->artist,mtk_text,set_text, song->artist);
 		if (song->album)
-			mtk_text_set(status_widget->album, song->album);
+			call(widget->album,mtk_text,set_text, song->album);
 	}
 
 	if (entity)
@@ -51,6 +46,7 @@ static int updatestatus(void *nill)
 	mpd_freeStatus(status);
 	mpd_finishCommand(conn);
 	die_on_mpd_error();
+	mtk_timer_unblock();
 
 	return 1;
 }
@@ -75,6 +71,8 @@ static void updatedir(mtk_list_t *list, void *data)
 	mtk_list_t* playlist = mtk_list_new();
 	char *path;
 	int pos;
+
+	mtk_timer_block();
 
 	if (dir)
 		if (strstr(dir->info.directory->path, "../") ==
@@ -122,6 +120,8 @@ static void updatedir(mtk_list_t *list, void *data)
 
 	mpd_finishCommand(conn);
 	die_on_mpd_error();
+
+	mtk_timer_unblock();
 }
 
 static int clicked(void **data, mtk_list_t *list, int pos)
@@ -172,25 +172,35 @@ static int clicked(void **data, mtk_list_t *list, int pos)
 	return 0;
 }
 
-mtk_widget_t* mpd_dirlist_new(int x, int y, int w, int h) {
-	return mtk_mpdlist_new(x, y, w, h, updatedir, clicked, NULL);
+mpd_dirlist_t* mpd_dirlist_new(size_t size, int x, int y, int w, int h)
+{
+	mpd_dirlist_t* this = MPD_DIRLIST(
+		mtk_mpdlist_new(size, x, y, w, h, updatedir, clicked, NULL));
+	SET_CLASS(this, mpd_dirlist);
+
+	return this;
 }
 
-mtk_widget_t* mpd_status_new(int x, int y, int w, int h) {
-	status_widget = xmalloc0(sizeof(struct status));
+METHOD_TABLE_INIT(mpd_dirlist, mtk_mpdlist)
+METHOD_TABLE_END
 
-	_mtk_container_new(MTK_CONTAINER(status_widget), x,y,w,h);
-	status_widget->title = mtk_text_new(0,0,w,UNIT*0.5,"foobar");
-	status_widget->artist = mtk_text_new(0,UNIT*0.5,w,UNIT*0.5,"foobaz");
-	status_widget->album = mtk_text_new(0,UNIT,w,UNIT*0.5,"whee");
-	mtk_container_add(MTK_CONTAINER(status_widget),
-			  MTK_WIDGET(status_widget->title));
-	mtk_container_add(MTK_CONTAINER(status_widget),
-			  MTK_WIDGET(status_widget->artist));
-	mtk_container_add(MTK_CONTAINER(status_widget),
-			  MTK_WIDGET(status_widget->album));
+mpd_status_t* mpd_status_new(size_t size, int x, int y, int w, int h)
+{
+	mpd_status_t *this = MPD_STATUS(mtk_container_new(size, x, y, w, h));
 
-	updatestatus(NULL);
-	mtk_timer_add(1.0, updatestatus, NULL);
-	return MTK_WIDGET(status_widget);
+	SET_CLASS(this, mpd_status);
+	this->title = new(mtk_text, 0, 0, w, UNIT*0.5, "foobar");
+	this->artist = new(mtk_text, 0, UNIT*0.5, w, UNIT*0.5, "foobaz");
+	this->album = new(mtk_text, 0, UNIT, w, UNIT*0.5, "whee");
+	call(this,mtk_container,add_widget, MTK_WIDGET(this->title));
+	call(this,mtk_container,add_widget, MTK_WIDGET(this->artist));
+	call(this,mtk_container,add_widget, MTK_WIDGET(this->album));
+
+	updatestatus(this);
+	mtk_timer_add(1.0, updatestatus, this);
+
+	return this;
 }
+
+METHOD_TABLE_INIT(mpd_status, mtk_container)
+METHOD_TABLE_END

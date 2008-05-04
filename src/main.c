@@ -6,17 +6,19 @@
 int main (int argc, char *argv[])
 {
 	mtk_window_t *window;
-	mtk_widget_t *mpdlist;
-	mtk_widget_t *mpdstatus;
+	mpd_dirlist_t *mpdlist;
+	mpd_status_t *mpdstatus;
 
 	mtk_init();
 	mpd_init();
+	_mpd_dirlist_class_init();
+	_mpd_status_class_init();
 
-	window = mtk_window_new(WIDTH, HEIGHT);
-	mpdlist = mpd_dirlist_new(WIDTH*0.35, 0, WIDTH*0.65, HEIGHT);
-	mpdstatus = mpd_status_new(0, 0, WIDTH*0.35, HEIGHT);
-	mtk_window_add(window, mpdlist);
-	mtk_window_add(window, mpdstatus);
+	window = new(mtk_window, WIDTH, HEIGHT);
+	mpdlist = new(mpd_dirlist, WIDTH*0.35, 0, WIDTH*0.65, HEIGHT);
+	mpdstatus = new(mpd_status, 0, 0, WIDTH*0.35, HEIGHT);
+	call(window,mtk_container,add_widget, MTK_WIDGET(mpdlist));
+	call(window,mtk_container,add_widget, MTK_WIDGET(mpdstatus));
 
 	mtk_main();
 

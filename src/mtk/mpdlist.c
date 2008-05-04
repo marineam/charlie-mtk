@@ -6,25 +6,9 @@
 
 #include "private.h"
 
-struct mpdlist {
-	PARENT(mtk_widget);
-	mtk_list_t* list;
-	int timed_scroll;
-	int timed_active;
-	int slide_scroll;
-	int slide_start;
-	int slide_offset;
-	int slide_scroll_moved;
-	int scroll_top;
-	cairo_surface_t *scroll_surface;
-	void (*updatelist)(mtk_list_t *list, void *data);
-	int (*clicked)(void **data, mtk_list_t *list, int pos);
-	void *data;
-};
-
 static void update(mtk_widget_t *widget)
 {
-	struct mpdlist *mpdlist = (struct mpdlist*)widget;
+	mtk_mpdlist_t *mpdlist = (mtk_mpdlist_t*)widget;
 	cairo_t *cr = cairo_create(mpdlist->scroll_surface);
 	cairo_pattern_t *pat;
 	cairo_text_extents_t te;
@@ -74,7 +58,7 @@ static void update(mtk_widget_t *widget)
 
 static void draw(mtk_widget_t *widget)
 {
-	struct mpdlist *mpdlist = (struct mpdlist*)widget;
+	mtk_mpdlist_t *mpdlist = (mtk_mpdlist_t*)widget;
 	cairo_t *cr;
 	cairo_pattern_t *pat;
 
@@ -133,7 +117,7 @@ static void draw(mtk_widget_t *widget)
 }
 
 /* cleans things up after mouse events */
-static void scroll_fixup(struct mpdlist *mpdlist)
+static void scroll_fixup(mtk_mpdlist_t *mpdlist)
 {
 	/* extreme scroll positions, max is the top, min bottom */
 	int min = 0;
@@ -167,7 +151,7 @@ static void scroll_fixup(struct mpdlist *mpdlist)
 
 static int timed_draw(void *data)
 {
-	struct mpdlist *mpdlist = data;
+	mtk_mpdlist_t *mpdlist = data;
 
 	scroll_fixup(mpdlist);
 	draw((mtk_widget_t*)data);
@@ -182,7 +166,7 @@ static int timed_draw(void *data)
 
 static void mouse_press(mtk_widget_t *widget, int x, int y)
 {
-	struct mpdlist *mpdlist = (struct mpdlist*)widget;
+	mtk_mpdlist_t *mpdlist = (mtk_mpdlist_t*)widget;
 
 	if (y <= UNIT) {
 		mpdlist->slide_scroll = 0;
@@ -213,7 +197,7 @@ static void mouse_press(mtk_widget_t *widget, int x, int y)
 
 static void mouse_release(mtk_widget_t *widget, int x, int y)
 {
-	struct mpdlist *mpdlist = (struct mpdlist*)widget;
+	mtk_mpdlist_t *mpdlist = (mtk_mpdlist_t*)widget;
 
 	if (!mpdlist->slide_scroll)
 		return;
@@ -258,7 +242,7 @@ static void mouse_release(mtk_widget_t *widget, int x, int y)
 
 static void mouse_move(mtk_widget_t *widget, int x, int y)
 {
-	struct mpdlist *mpdlist = (struct mpdlist*)widget;
+	mtk_mpdlist_t *mpdlist = (mtk_mpdlist_t*)widget;
 
 	if (!mpdlist->slide_scroll)
 		return;
@@ -274,25 +258,29 @@ static void mouse_move(mtk_widget_t *widget, int x, int y)
 	draw(widget);
 }
 
-mtk_widget_t* mtk_mpdlist_new(int x, int y, int w, int h,
-	void (*updatelist)(mtk_list_t *list, void *data),
-	int (*clicked)(void **data, mtk_list_t *list, int pos),
-	void *data)
+mtk_mpdlist_t* mtk_mpdlist_new(size_t size, int x, int y, int w, int h,
+		void (*updatelist)(mtk_list_t *list, void *data),
+		int (*clicked)(void **data, mtk_list_t *list, int pos),
+		void *data)
 {
-	struct mpdlist *mpdlist = xmalloc0(sizeof(struct mpdlist));
+	mtk_mpdlist_t *mpdlist = MTK_MPDLIST(mtk_widget_new(size, x, y, w, h));
 
-	_mtk_widget_new(MTK_WIDGET(mpdlist), x, y, w, h);
+	SET_CLASS(mpdlist, mtk_mpdlist);
+
 	mpdlist->scroll_surface =
 		cairo_image_surface_create(CAIRO_FORMAT_RGB24, WIDTH, 4000);
-	MTK_WIDGET(mpdlist)->update = update;
-	MTK_WIDGET(mpdlist)->draw = draw;
-	MTK_WIDGET(mpdlist)->mouse_press = mouse_press;
-	MTK_WIDGET(mpdlist)->mouse_release = mouse_release;
-	MTK_WIDGET(mpdlist)->mouse_move = mouse_move;
 	mpdlist->list = mtk_list_new();
 	mpdlist->data = data;
 	mpdlist->updatelist = updatelist;
 	mpdlist->clicked = clicked;
 
-	return (mtk_widget_t*)mpdlist;
+	return mpdlist;
 }
+
+METHOD_TABLE_INIT(mtk_mpdlist, mtk_widget)
+	METHOD(mtk_widget, update)		= update;
+	METHOD(mtk_widget, draw)		= draw;
+	METHOD(mtk_widget, mouse_press)		= mouse_press;
+	METHOD(mtk_widget, mouse_release)	= mouse_release;
+	METHOD(mtk_widget, mouse_move)		= mouse_move;
+METHOD_TABLE_END

@@ -20,15 +20,15 @@ static void init(mtk_widget_t* c, mtk_widget_t* parent)
 	mtk_widget_t *w;
 
 	if (parent)
-		MTK_CONTAINER(c)->parent_init(c, parent);
+		super(c,mtk_widget,init,parent);
 	assert(c->surface);
 
 	mtk_list_foreach(MTK_CONTAINER(c)->widgets, w) {
-		w->init(w, c);
+		call(w,mtk_widget,init,c);
 	}
 
 	MTK_CONTAINER(c)->ran_init = 1;
-	c->draw(c);
+	call(c,mtk_widget,draw);
 }
 
 static void draw_widget(mtk_container_t* c, mtk_widget_t* widget) {
@@ -42,14 +42,14 @@ static void draw_widget(mtk_container_t* c, mtk_widget_t* widget) {
 	cairo_destroy(cr);
 }
 
-void mtk_container_add(mtk_container_t* c, mtk_widget_t* widget)
+static void add_widget(mtk_container_t* c, mtk_widget_t* widget)
 {
 	mtk_list_append(c->widgets, widget);
 
 	if (c->ran_init) {
 		/* only init child if the container's init has run */
-		assert(widget->init);
-		widget->init(widget, MTK_WIDGET(c));
+		assert(call_defined(widget,mtk_widget,init));
+		call(widget,mtk_widget,init, MTK_WIDGET(c));
 	}
 
 	draw_widget(c, widget);
@@ -74,8 +74,8 @@ static void mouse_press(mtk_widget_t *c, int x, int y)
 	mtk_widget_t *w;
 
 	FOREACH_AT_XY(MTK_CONTAINER(c)->widgets, w, x, y)
-		if (w->mouse_press)
-			w->mouse_press(w, x-w->x, y-w->y);
+		if (call_defined(w,mtk_widget,mouse_press))
+			call(w,mtk_widget,mouse_press, x-w->x, y-w->y);
 }
 
 static void mouse_release(mtk_widget_t *c, int x, int y)
@@ -83,8 +83,8 @@ static void mouse_release(mtk_widget_t *c, int x, int y)
 	mtk_widget_t *w;
 
 	FOREACH_AT_XY(MTK_CONTAINER(c)->widgets, w, x, y)
-		if (w->mouse_release)
-			w->mouse_release(w, x-w->x, y-w->y);
+		if (call_defined(w,mtk_widget,mouse_release))
+			call(w,mtk_widget,mouse_release, x-w->x, y-w->y);
 }
 
 static void mouse_move(mtk_widget_t *c, int x, int y)
@@ -92,26 +92,24 @@ static void mouse_move(mtk_widget_t *c, int x, int y)
 	mtk_widget_t *w;
 
 	FOREACH_AT_XY(MTK_CONTAINER(c)->widgets, w, x, y)
-		if (w->mouse_move)
-			w->mouse_move(w, x-w->x, y-w->y);
+		if (call_defined(w,mtk_widget,mouse_move))
+			call(w,mtk_widget,mouse_move, x-w->x, y-w->y);
 }
 
-void _mtk_container_new(mtk_container_t *c, int x, int y, int w, int h)
+mtk_container_t* mtk_container_new(size_t size, int x, int y, int w, int h)
 {
-	_mtk_widget_new(MTK_WIDGET(c), x, y, w, h);
-	MTK_WIDGET(c)->draw = draw;
-	MTK_WIDGET(c)->mouse_press = mouse_press;
-	MTK_WIDGET(c)->mouse_release = mouse_release;
-	MTK_WIDGET(c)->mouse_move = mouse_move;
+	mtk_container_t *c = MTK_CONTAINER(mtk_widget_new(size, x, y, w, h));
+	SET_CLASS(c, mtk_container);
 	c->widgets = mtk_list_new();
-	c->parent_init = MTK_WIDGET(c)->init;
-	MTK_WIDGET(c)->init = init;
-}
 
-mtk_container_t* mtk_container_new(int x, int y, int w, int h)
-{
-	mtk_container_t *c = xmalloc0(sizeof(mtk_container_t));
-	_mtk_container_new(c, x, y, w, h);
 	return c;
 }
 
+METHOD_TABLE_INIT(mtk_container, mtk_widget)
+	METHOD(mtk_widget, init)		= init;
+	METHOD(mtk_widget, draw)		= draw;
+	METHOD(mtk_widget, mouse_press)		= mouse_press;
+	METHOD(mtk_widget, mouse_release)	= mouse_release;
+	METHOD(mtk_widget, mouse_move)		= mouse_move;
+	METHOD(mtk_container, add_widget)	= add_widget;
+METHOD_TABLE_END

@@ -1,4 +1,3 @@
-#include <time.h>
 #include <mtk.h>
 
 int timer(void * data)
@@ -10,13 +9,13 @@ int timer(void * data)
 int main (int argc, char *argv[])
 {
 	mtk_window_t *window;
-	mtk_widget_t *clickarea;
+	mtk_widget_t *widget;
 
 	mtk_init();
 
-	window = mtk_window_new(640, 480);
-	clickarea = mtk_clickarea_new(0, 0, 640, 480);
-	mtk_window_add(window, clickarea);
+	window = new(mtk_window,640, 480);
+	widget = MTK_WIDGET(new(mtk_text, 0, 0, 640, 480, "WHEE"));
+	call(window, mtk_container, add_widget, widget);
 
 	mtk_timer_add(0.5, timer, "I'm a timer!");
 

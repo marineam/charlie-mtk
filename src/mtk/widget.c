@@ -14,19 +14,34 @@ static void init(mtk_widget_t* widget, mtk_widget_t* parent)
 			CAIRO_CONTENT_COLOR,
 			widget->w, widget->h);
 
-	if (widget->update)
-		widget->update(widget);
+	if (call_defined(widget,mtk_widget,update))
+		call(widget,mtk_widget,update);
 
-	assert(widget->draw);
-	widget->draw(widget);
+	assert(call_defined(widget,mtk_widget,draw));
+	call(widget,mtk_widget,draw);
 }
 
-void _mtk_widget_new(mtk_widget_t *widget, int x, int y, int w, int h)
+void set_geometry(mtk_widget_t *this, int x, int y, int w, int h)
 {
-	widget->x = x;
-	widget->y = y;
-	widget->w = w;
-	widget->h = h;
-	widget->init = init;
+	this->x = x;
+	this->y = y;
+	this->w = w;
+	this->h = h;
 }
 
+mtk_widget_t* mtk_widget_new(size_t size, int x, int y, int w, int h)
+{
+	mtk_widget_t* this = MTK_WIDGET(mtk_object_new(size));
+	SET_CLASS(this, mtk_widget);
+	this->x = x;
+	this->y = y;
+	this->w = w;
+	this->h = h;
+
+	return this;
+}
+
+METHOD_TABLE_INIT(mtk_widget, mtk_object)
+	mtk_widget.init = init;
+	mtk_widget.set_geometry = set_geometry;
+METHOD_TABLE_END

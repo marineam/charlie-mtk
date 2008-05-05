@@ -3,7 +3,6 @@
 #include <time.h>
 #include <signal.h>
 #include <stdlib.h>
-//#include <limits.h>
 #include <string.h>
 #include <mtk.h>
 #include "private.h"
@@ -38,14 +37,14 @@ void _mtk_timer_init()
 	handler.sa_flags = SA_SIGINFO;
 	sigemptyset(&handler.sa_mask);
 
-	sigaction(SIGALRM, &handler, NULL);
+	sigaction(TIMER_SIG, &handler, NULL);
 }
 
 void mtk_timer_block()
 {
 	sigset_t sigset;
 	sigemptyset(&sigset);
-	sigaddset(&sigset, SIGALRM);
+	sigaddset(&sigset, TIMER_SIG);
 	sigprocmask(SIG_BLOCK, &sigset, NULL);
 }
 
@@ -53,7 +52,7 @@ void mtk_timer_unblock()
 {
 	sigset_t sigset;
 	sigemptyset(&sigset);
-	sigaddset(&sigset, SIGALRM);
+	sigaddset(&sigset, TIMER_SIG);
 	sigprocmask(SIG_UNBLOCK, &sigset, NULL);
 }
 
@@ -109,7 +108,7 @@ void mtk_timer_add(double interval, int(*callback)(void *data), void *data)
 	 * struct timer directly to the signal handler */
 	memset(&sigev, 0, sizeof(sigev));
 	sigev.sigev_notify = SIGEV_SIGNAL;
-	sigev.sigev_signo = SIGALRM;
+	sigev.sigev_signo = TIMER_SIG;
 	sigev.sigev_value.sival_ptr = t;
 
 	timer_create(CLOCK_REALTIME, &sigev, &t->id);

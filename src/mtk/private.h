@@ -3,6 +3,8 @@
 
 #include <mtk.h>
 
+#define TIMER_SIG SIGRTMIN
+
 extern int _screen_num;
 extern xcb_connection_t *_conn;
 extern xcb_screen_t *_screen;

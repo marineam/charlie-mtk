@@ -36,7 +36,6 @@ mtk_window_t* mtk_window_new(size_t size, int w, int h)
 
 	mtk_widget(window)->surface = cairo_xcb_surface_create(_conn,
 		window->id, _visual, w, h);
-	xcb_flush(_conn);
 
 	mtk_list_append(_windows, window);
 

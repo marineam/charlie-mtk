@@ -114,6 +114,8 @@ static void draw(mtk_widget_t *widget)
 	cairo_paint(cr);
 
 	cairo_destroy(cr);
+
+	super(widget,mtk_mpdlist,mtk_widget,draw);
 }
 
 /* cleans things up after mouse events */

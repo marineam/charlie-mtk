@@ -15,7 +15,6 @@ static int updatestatus(void *data)
 	mpd_InfoEntity *entity;
 	mpd_status_t *widget = data;
 
-	mtk_timer_block();
 	mpd_sendCommandListOkBegin(conn);
 	mpd_sendStatusCommand(conn);
 	mpd_sendCurrentSongCommand(conn);
@@ -46,7 +45,6 @@ static int updatestatus(void *data)
 	mpd_freeStatus(status);
 	mpd_finishCommand(conn);
 	die_on_mpd_error();
-	mtk_timer_unblock();
 
 	return 1;
 }
@@ -71,8 +69,6 @@ static void updatedir(mtk_list_t *list, void *data)
 	mtk_list_t* playlist = mtk_list_new();
 	char *path;
 	int pos;
-
-	mtk_timer_block();
 
 	if (dir)
 		if (strstr(dir->info.directory->path, "../") ==
@@ -120,8 +116,6 @@ static void updatedir(mtk_list_t *list, void *data)
 
 	mpd_finishCommand(conn);
 	die_on_mpd_error();
-
-	mtk_timer_unblock();
 }
 
 static int clicked(void **data, mtk_list_t *list, int pos)
@@ -163,12 +157,10 @@ static int clicked(void **data, mtk_list_t *list, int pos)
 		return 1;
 	}
 	else if (entity->type == MPD_INFO_ENTITY_TYPE_SONG) {
-		mtk_timer_block();
 		mpd_sendPlayCommand(conn, entity->info.song->pos);
 		die_on_mpd_error();
 		mpd_finishCommand(conn);
 		die_on_mpd_error();
-		mtk_timer_unblock();
 	}
 
 	return 0;

@@ -11,8 +11,6 @@ extern xcb_screen_t *_screen;
 extern xcb_visualtype_t *_visual;
 extern mtk_list_t *_windows;
 
-void _mtk_flush();
-
 void _mtk_event_init();
 void _mtk_timer_init();
 void _mtk_timer_cleanup();

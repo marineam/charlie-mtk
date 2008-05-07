@@ -45,6 +45,7 @@ static void draw_widget(mtk_container_t* c, mtk_widget_t* widget) {
 static void add_widget(mtk_container_t* c, mtk_widget_t* widget)
 {
 	mtk_list_append(c->widgets, widget);
+	call(widget,mtk_widget,set_parent, mtk_widget(c));
 
 	if (c->ran_init) {
 		/* only init child if the container's init has run */
@@ -67,6 +68,8 @@ static void draw(mtk_widget_t *c)
 
 	mtk_list_foreach(mtk_container(c)->widgets, w)
 		draw_widget(mtk_container(c), w);
+
+	super(c,mtk_container,mtk_widget,draw);
 }
 
 static void mouse_press(mtk_widget_t *c, int x, int y)

@@ -16,6 +16,7 @@
 CLASS(mtk_widget, mtk_object)
 	int x, y, w, h;
 	struct mtk_window *window;
+	struct mtk_widget *parent;
 	cairo_surface_t *surface;
 METHODS(mtk_widget, mtk_object, int x, int y, int w, int h)
 	void (*init)(mtk_widget_t *this, mtk_widget_t* parent);
@@ -25,6 +26,7 @@ METHODS(mtk_widget, mtk_object, int x, int y, int w, int h)
 	void (*mouse_release)(mtk_widget_t *this, int x, int y);
 	void (*mouse_move)(mtk_widget_t *this, int x, int y);
 	void (*set_geometry)(mtk_widget_t *this, int x, int y, int w, int h);
+	void (*set_parent)(mtk_widget_t *this, mtk_widget_t *parent);
 END
 
 CLASS(mtk_container, mtk_widget)

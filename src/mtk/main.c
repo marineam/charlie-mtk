@@ -4,6 +4,8 @@
 #include <cairo.h>
 #include <cairo-xcb.h>
 #include <stdlib.h>
+#include <signal.h>
+#include <sys/select.h>
 #include <mtk.h>
 #include "private.h"
 
@@ -15,6 +17,12 @@ mtk_list_t *_windows;
 
 void mtk_init()
 {
+	sigset_t timer;
+
+	sigemptyset(&timer);
+	sigaddset(&timer, TIMER_SIG);
+	sigprocmask(SIG_BLOCK, &timer, NULL);
+
 	/* fill up class structures */
 	_mtk_object_class_init();
 	_mtk_widget_class_init();
@@ -23,7 +31,8 @@ void mtk_init()
 	_mtk_text_class_init();
 	_mtk_mpdlist_class_init();
 
-	/* fire off timer thread */
+	/* start of event and timer subsystems */
+	_mtk_event_init();
 	_mtk_timer_init();
 
 	/* open connection with the server */
@@ -35,19 +44,12 @@ void mtk_init()
 	_visual = xcb_aux_get_visualtype(_conn, _screen_num,
 		_screen->root_visual);
 
-	xcb_flush(_conn);
-
 	_windows = mtk_list_new();
 }
 
 void mtk_cleanup()
 {
 	xcb_disconnect(_conn);
-}
-
-void _mtk_flush()
-{
-	xcb_flush(_conn);
 }
 
 /* for use in mtk_event, searches for the window the
@@ -67,7 +69,7 @@ static int event()
 	xcb_generic_event_t *e;
 	mtk_window_t *w = NULL;
 
-	e = xcb_wait_for_event(_conn);
+	e = xcb_poll_for_event(_conn);
 
 	if (xcb_connection_has_error(_conn))
 		return -1;
@@ -120,33 +122,28 @@ void mtk_main()
 {
 	int xfd, nfds;
 	fd_set xfd_set;
-	mtk_window_t *w;
-	sigset_t sigset;
+	sigset_t signals;
 
-	sigemptyset(&sigset);
-	sigaddset(&sigset, TIMER_SIG);
-	sigprocmask(SIG_BLOCK, &sigset, NULL);
+	sigprocmask(SIG_SETMASK, NULL, &signals);
+	sigdelset(&signals, TIMER_SIG);
 
 	xfd = xcb_get_file_descriptor(_conn);
-	nfds = xfd;
+	nfds = xfd+1;
 	FD_ZERO(&xfd_set);
-	FD_SET(xfd, &rfds);
+	FD_SET(xfd, &xfd_set);
 
 	while (1) {
-		pselect(nfds, &xfd_set, &xfd_set, NULL, NULL
-		if ((xev = event()) < 0)
-			break;
+		xcb_flush(_conn);
 
-		if ((tev = _mtk_timer_event())) {
-			/* FIXME: force a full redraw on timer events.
-			 * this is silly but I don't have a better way yet */
-		mtk_list_foreach(_windows, w) {
-			call(w,mtk_widget,draw);
-		}
+		if (xcb_connection_has_error(_conn))
+			return;
 
-		if (!xev && !tev) {
-			/* no events that time, so lets just idle a bit */
-			nanosleep(&pause,NULL);
-		}
+		/* pause until X sends something or we get a signal */
+		if (pselect(nfds, &xfd_set, NULL, NULL, NULL, &signals) >0)
+			while (event()>0);
+
+		mtk_event_process();
+
+		_mtk_timer_cleanup();
 	}
 }

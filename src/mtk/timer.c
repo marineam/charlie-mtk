@@ -22,18 +22,17 @@ struct timer {
 };
 
 static mtk_list_t *timers;
-static mtk_list_t *events;
+static int try_cleanup = 0;
 
 static void event(void *data)
 {
 	struct timer *t = data;
 
-	mtk_timer_block();
-
 	if (t->active && !t->callback(t->data)) {
 		t->active = 0;
 		timer_delete(t->id);
 		clock_gettime(CLOCK_REALTIME, &t->lastfire);
+		try_cleanup = 1;
 	}
 }
 
@@ -51,7 +50,6 @@ void _mtk_timer_init()
 	struct sigaction handler;
 
 	timers = mtk_list_new();
-	events = mtk_list_new();
 
 	handler.sa_sigaction = timer_handler;
 	handler.sa_flags = SA_SIGINFO;
@@ -65,6 +63,11 @@ void _mtk_timer_cleanup()
 	struct timer *t;
 	struct timespec now;
 
+	if (!try_cleanup)
+		return;
+
+	try_cleanup = 0;
+
 	clock_gettime(CLOCK_REALTIME, &now);
 	t = mtk_list_goto(timers, 0);
 	while (t) {
@@ -77,22 +80,6 @@ void _mtk_timer_cleanup()
 			t = mtk_list_next(timers);
 		}
 	}
-}
-
-void mtk_timer_block()
-{
-	sigset_t sigset;
-	sigemptyset(&sigset);
-	sigaddset(&sigset, TIMER_SIG);
-	sigprocmask(SIG_BLOCK, &sigset, NULL);
-}
-
-void mtk_timer_unblock()
-{
-	sigset_t sigset;
-	sigemptyset(&sigset);
-	sigaddset(&sigset, TIMER_SIG);
-	sigprocmask(SIG_UNBLOCK, &sigset, NULL);
 }
 
 void mtk_timer_add(double interval, int(*callback)(void *data), void *data)

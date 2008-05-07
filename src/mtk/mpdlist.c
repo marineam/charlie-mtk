@@ -278,9 +278,9 @@ mtk_mpdlist_t* mtk_mpdlist_new(size_t size, int x, int y, int w, int h,
 }
 
 METHOD_TABLE_INIT(mtk_mpdlist, mtk_widget)
-	METHOD(mtk_widget, update)		= update;
-	METHOD(mtk_widget, draw)		= draw;
-	METHOD(mtk_widget, mouse_press)		= mouse_press;
-	METHOD(mtk_widget, mouse_release)	= mouse_release;
-	METHOD(mtk_widget, mouse_move)		= mouse_move;
+	METHOD(update);
+	METHOD(draw);
+	METHOD(mouse_press);
+	METHOD(mouse_release);
+	METHOD(mouse_move);
 METHOD_TABLE_END

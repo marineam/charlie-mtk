@@ -46,7 +46,8 @@ struct mtk_object_class {
 		name##_class *_class = &_##name##_class; \
 		memcpy(_class, &_##parent##_class, sizeof(parent##_class)); \
 		_class->_super = &_##parent##_class;
-#define METHOD(name,func) ((name##_class*)_class)->func
+#define _METHOD(method,func) _class->method = func
+#define METHOD(method) _METHOD(method,method)
 #define METHOD_TABLE_END }
 
 #define SET_CLASS(this, class) (this->_class = &_##class##_class)

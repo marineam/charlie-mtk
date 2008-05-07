@@ -106,10 +106,10 @@ mtk_container_t* mtk_container_new(size_t size, int x, int y, int w, int h)
 }
 
 METHOD_TABLE_INIT(mtk_container, mtk_widget)
-	METHOD(mtk_widget, init)		= init;
-	METHOD(mtk_widget, draw)		= draw;
-	METHOD(mtk_widget, mouse_press)		= mouse_press;
-	METHOD(mtk_widget, mouse_release)	= mouse_release;
-	METHOD(mtk_widget, mouse_move)		= mouse_move;
-	METHOD(mtk_container, add_widget)	= add_widget;
+	METHOD(init);
+	METHOD(draw);
+	METHOD(mouse_press);
+	METHOD(mouse_release);
+	METHOD(mouse_move);
+	METHOD(add_widget);
 METHOD_TABLE_END

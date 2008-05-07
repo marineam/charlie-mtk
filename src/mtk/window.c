@@ -57,5 +57,5 @@ static void resize(mtk_window_t *window, int w, int h)
 }
 
 METHOD_TABLE_INIT(mtk_window, mtk_container)
-	METHOD(mtk_window, resize) = resize;
+	METHOD(resize);
 METHOD_TABLE_END

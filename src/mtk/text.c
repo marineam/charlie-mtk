@@ -49,6 +49,6 @@ mtk_text_t* mtk_text_new(size_t size, int x, int y, int w, int h, char *text)
 }
 
 METHOD_TABLE_INIT(mtk_text, mtk_widget)
-	METHOD(mtk_text, set_text)	= set_text;
-	METHOD(mtk_widget, draw)	= draw;
+	METHOD(set_tex);
+	METHOD(draw);
 METHOD_TABLE_END

@@ -163,10 +163,12 @@ static int clicked(void **data, mtk_list_t *list, int pos)
 		return 1;
 	}
 	else if (entity->type == MPD_INFO_ENTITY_TYPE_SONG) {
+		mtk_timer_block();
 		mpd_sendPlayCommand(conn, entity->info.song->pos);
 		die_on_mpd_error();
 		mpd_finishCommand(conn);
 		die_on_mpd_error();
+		mtk_timer_unblock();
 	}
 
 	return 0;

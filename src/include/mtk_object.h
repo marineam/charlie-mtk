@@ -47,9 +47,9 @@ struct mtk_object_class {
 
 #define new(name,args...) \
 	name##_new(sizeof(name##_t), ## args)
+/* FIXME: super is kinda broken */
 #define super(obj,name,func,args...) \
-	((name##_class*)((mtk_object_class*)((mtk_object_t*)obj)->_class)->_super)->func \
-		((name##_t*)obj, ## args)
+	name.func((name##_t*)obj, ## args)
 #define call(obj,name,func,args...) \
 	((name##_class*)((mtk_object_t*)obj)->_class)->func \
 		((name##_t*)obj, ## args)

@@ -42,6 +42,6 @@ mtk_widget_t* mtk_widget_new(size_t size, int x, int y, int w, int h)
 }
 
 METHOD_TABLE_INIT(mtk_widget, mtk_object)
-	mtk_widget.init = init;
-	mtk_widget.set_geometry = set_geometry;
+	METHOD(mtk_widget, init) = init;
+	METHOD(mtk_widget, set_geometry) = set_geometry;
 METHOD_TABLE_END

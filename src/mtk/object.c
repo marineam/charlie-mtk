@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <mtk.h>
 
-mtk_object_class mtk_object;
+mtk_object_class _mtk_object_class;
 
 mtk_object_t* mtk_object_new(size_t size)
 {
@@ -17,5 +17,5 @@ static void objfree(mtk_object_t* obj)
 
 void _mtk_object_class_init()
 {
-	mtk_object.free = objfree;
+	_mtk_object_class.free = objfree;
 }

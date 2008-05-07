@@ -20,7 +20,7 @@ static void init(mtk_widget_t* c, mtk_widget_t* parent)
 	mtk_widget_t *w;
 
 	if (parent)
-		super(c,mtk_widget,init,parent);
+		super(c,mtk_container,mtk_widget,init,parent);
 	assert(c->surface);
 
 	mtk_list_foreach(MTK_CONTAINER(c)->widgets, w) {

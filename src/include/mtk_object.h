@@ -12,7 +12,7 @@ void _mtk_object_class_init();
 typedef struct mtk_object_class mtk_object_class;
 extern struct mtk_object_class mtk_object;
 struct mtk_object_class {
-	struct mtk_object_class *_super;
+	void *_super;
 	void (*free)(mtk_object_t* obj);
 };
 
@@ -21,7 +21,10 @@ struct mtk_object_class {
 #define CLASS(name, parent) \
 	typedef struct name name##_t; \
 	struct name { \
-		struct parent _parent;
+		union { \
+			struct name##_class *_class; \
+			struct parent _parent; \
+		};
 
 #define METHODS(name, parent, newargs...) \
 	}; \
@@ -30,7 +33,10 @@ struct mtk_object_class {
 	typedef struct name##_class name##_class; \
 	extern name##_class name; \
 	struct name##_class { \
-		parent##_class _parent; \
+		union { \
+			struct parent##_class *_super; \
+			parent##_class; \
+		};
 
 #define END };
 
@@ -38,8 +44,8 @@ struct mtk_object_class {
 	name##_class name; \
 	void _##name##_class_init() { \
 		name##_class *_class = &name; \
-		memcpy(&_class->_parent, &parent, sizeof(parent##_class)); \
-		((mtk_object_class*)_class)->_super = (mtk_object_class*)&parent;
+		memcpy(_class, &parent, sizeof(parent##_class)); \
+		_class->_super = &parent;
 #define METHOD(name,func) ((name##_class*)_class)->func
 #define METHOD_TABLE_END }
 
@@ -48,12 +54,11 @@ struct mtk_object_class {
 #define new(name,args...) \
 	name##_new(sizeof(name##_t), ## args)
 /* FIXME: super is kinda broken */
-#define super(obj,name,func,args...) \
-	name.func((name##_t*)obj, ## args)
+#define super(obj,name,super,func,args...) \
+	name._super->func((super##_t*)(obj), ## args)
 #define call(obj,name,func,args...) \
-	((name##_class*)((mtk_object_t*)obj)->_class)->func \
-		((name##_t*)obj, ## args)
+	(obj)->_class->func((name##_t*)(obj), ## args)
 #define call_defined(obj,name,func) \
-	(((name##_class*)((mtk_object_t*)obj)->_class)->func != NULL)
+	((obj)->_class->func != NULL)
 
 #endif

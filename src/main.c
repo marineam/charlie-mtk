@@ -17,8 +17,8 @@ int main (int argc, char *argv[])
 	window = new(mtk_window, WIDTH, HEIGHT);
 	mpdlist = new(mpd_dirlist, WIDTH*0.35, 0, WIDTH*0.65, HEIGHT);
 	mpdstatus = new(mpd_status, 0, 0, WIDTH*0.35, HEIGHT);
-	call(window,mtk_container,add_widget, MTK_WIDGET(mpdlist));
-	call(window,mtk_container,add_widget, MTK_WIDGET(mpdstatus));
+	call(window,mtk_container,add_widget, mtk_widget(mpdlist));
+	call(window,mtk_container,add_widget, mtk_widget(mpdstatus));
 
 	mtk_main();
 

@@ -9,7 +9,7 @@
 
 mtk_window_t* mtk_window_new(size_t size, int w, int h)
 {
-	mtk_window_t *window = MTK_WINDOW(mtk_container_new(size, 0, 0, w, h));
+	mtk_window_t *window = mtk_window(mtk_container_new(size, 0, 0, w, h));
 	xcb_params_cw_t values;
 	uint32_t mask;
 
@@ -34,7 +34,7 @@ mtk_window_t* mtk_window_new(size_t size, int w, int h)
 	/* show the window */
 	xcb_map_window(_conn, window->id);
 
-	MTK_WIDGET(window)->surface = cairo_xcb_surface_create(_conn,
+	mtk_widget(window)->surface = cairo_xcb_surface_create(_conn,
 		window->id, _visual, w, h);
 	xcb_flush(_conn);
 
@@ -47,11 +47,11 @@ mtk_window_t* mtk_window_new(size_t size, int w, int h)
 
 static void resize(mtk_window_t *window, int w, int h)
 {
-	if (w == MTK_WIDGET(window)->w && h == MTK_WIDGET(window)->h)
+	if (w == mtk_widget(window)->w && h == mtk_widget(window)->h)
 		return; /* no change in size */
-	cairo_xcb_surface_set_size(MTK_WIDGET(window)->surface, w, h);
-	MTK_WIDGET(window)->w = w;
-	MTK_WIDGET(window)->h = h;
+	cairo_xcb_surface_set_size(mtk_widget(window)->surface, w, h);
+	mtk_widget(window)->w = w;
+	mtk_widget(window)->h = h;
 	/* TODO: reisize and signal child widgets somehow? */
 	call(window,mtk_widget,draw);
 }

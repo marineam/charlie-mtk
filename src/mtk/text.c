@@ -8,7 +8,7 @@
 
 static void draw(mtk_widget_t *widget)
 {
-	mtk_text_t *text = MTK_TEXT(widget);
+	mtk_text_t *text = mtk_text(widget);
 	cairo_t *cr = cairo_create(widget->surface);
 	cairo_text_extents_t te;
 
@@ -42,13 +42,13 @@ static void set_text(mtk_text_t *this, char *text)
 
 mtk_text_t* mtk_text_new(size_t size, int x, int y, int w, int h, char *text)
 {
-	mtk_text_t *this = MTK_TEXT(mtk_widget_new(size, x, y, w, h));
+	mtk_text_t *this = mtk_text(mtk_widget_new(size, x, y, w, h));
 	SET_CLASS(this, mtk_text);
 	set_text(this, text);
 	return this;
 }
 
 METHOD_TABLE_INIT(mtk_text, mtk_widget)
-	METHOD(set_tex);
+	METHOD(set_text);
 	METHOD(draw);
 METHOD_TABLE_END

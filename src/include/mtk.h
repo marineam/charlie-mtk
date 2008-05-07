@@ -26,7 +26,6 @@ METHODS(mtk_widget, mtk_object, int x, int y, int w, int h)
 	void (*mouse_move)(mtk_widget_t *this, int x, int y);
 	void (*set_geometry)(mtk_widget_t *this, int x, int y, int w, int h);
 END
-#define MTK_WIDGET(o) ((mtk_widget_t*)o)
 
 CLASS(mtk_container, mtk_widget)
 	mtk_list_t *widgets;
@@ -34,7 +33,6 @@ CLASS(mtk_container, mtk_widget)
 METHODS(mtk_container, mtk_widget, int x, int y, int w, int h)
 	void (*add_widget)(mtk_container_t *this, mtk_widget_t *widget);
 END
-#define MTK_CONTAINER(o) ((mtk_container_t*)o)
 
 CLASS(mtk_window, mtk_container)
 	xcb_window_t id;
@@ -42,7 +40,6 @@ CLASS(mtk_window, mtk_container)
 METHODS(mtk_window, mtk_container, int w, int h)
 	void (*resize)(mtk_window_t* this, int w, int h);
 END
-#define MTK_WINDOW(o) ((mtk_window_t*)o)
 
 CLASS(mtk_text, mtk_widget)
 	char *text;
@@ -50,7 +47,6 @@ CLASS(mtk_text, mtk_widget)
 METHODS(mtk_text, mtk_widget, int x, int y, int w, int h, char *text)
 	void (*set_text)(mtk_text_t *this, char *text);
 END
-#define MTK_TEXT(o) ((mtk_text_t*)o)
 
 CLASS(mtk_mpdlist, mtk_widget)
 	mtk_list_t* list;
@@ -70,7 +66,6 @@ METHODS(mtk_mpdlist, mtk_widget, int x, int y, int w, int h,
 		int (*clicked)(void **data, mtk_list_t *list, int pos),
 		void *data)
 END
-#define MTK_MPDLIST(o) ((mtk_mpdlist_t*)o)
 
 /* main.c */
 void mtk_init();

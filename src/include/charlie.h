@@ -7,7 +7,6 @@
 CLASS(mpd_dirlist, mtk_mpdlist)
 METHODS(mpd_dirlist, mtk_mpdlist, int x, int y, int w, int h)
 END
-#define MPD_DIRLIST(o) ((mpd_dirlist_t*)o)
 
 CLASS(mpd_status, mtk_container)
 	mtk_text_t *title;
@@ -15,7 +14,6 @@ CLASS(mpd_status, mtk_container)
 	mtk_text_t *album;
 METHODS(mpd_status, mtk_container, int x, int y, int w, int h)
 END
-#define MPD_STATUS(o) ((mpd_status_t*)o)
 
 void mpd_init();
 

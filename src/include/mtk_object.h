@@ -9,14 +9,13 @@ struct mtk_object {
 };
 mtk_object_t* mtk_object_new(size_t size);
 void _mtk_object_class_init();
+static inline mtk_object_t* mtk_object(void *o) { return o; }
 typedef struct mtk_object_class mtk_object_class;
 extern struct mtk_object_class _mtk_object_class;
 struct mtk_object_class {
 	void *_super;
 	void (*free)(mtk_object_t* obj);
 };
-
-#define MTK_OBJECT(o) ((mtk_object_t*)o)
 
 #define CLASS(name, parent) \
 	typedef struct name name##_t; \
@@ -30,6 +29,7 @@ struct mtk_object_class {
 	}; \
 	name##_t* name##_new(size_t size, ## newargs); \
 	void _##name##_class_init(); \
+	static inline name##_t* name(void *o) { return o; } \
 	typedef struct name##_class name##_class; \
 	extern name##_class _##name##_class; \
 	struct name##_class { \
@@ -54,7 +54,6 @@ struct mtk_object_class {
 
 #define new(name,args...) \
 	name##_new(sizeof(name##_t), ## args)
-/* FIXME: super is kinda broken */
 #define super(obj,name,super,func,args...) \
 	_##name##_class._super->func((super##_t*)(obj), ## args)
 #define call(obj,name,func,args...) \

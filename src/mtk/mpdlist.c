@@ -122,7 +122,7 @@ static void scroll_fixup(mtk_mpdlist_t *mpdlist)
 	/* extreme scroll positions, max is the top, min bottom */
 	int min = 0;
 	int max = (mtk_list_length(mpdlist->list) * UNIT) -
-		(MTK_WIDGET(mpdlist)->h - 2*UNIT);
+		(mtk_widget(mpdlist)->h - 2*UNIT);
 
 	if (max <= min) {
 		mpdlist->timed_scroll = 0;
@@ -263,7 +263,7 @@ mtk_mpdlist_t* mtk_mpdlist_new(size_t size, int x, int y, int w, int h,
 		int (*clicked)(void **data, mtk_list_t *list, int pos),
 		void *data)
 {
-	mtk_mpdlist_t *mpdlist = MTK_MPDLIST(mtk_widget_new(size, x, y, w, h));
+	mtk_mpdlist_t *mpdlist = mtk_mpdlist(mtk_widget_new(size, x, y, w, h));
 
 	SET_CLASS(mpdlist, mtk_mpdlist);
 

@@ -14,7 +14,7 @@ int main (int argc, char *argv[])
 	mtk_init();
 
 	window = new(mtk_window,640, 480);
-	widget = MTK_WIDGET(new(mtk_text, 0, 0, 640, 480, "WHEE"));
+	widget = mtk_widget(new(mtk_text, 0, 0, 640, 480, "WHEE"));
 	call(window, mtk_container, add_widget, widget);
 
 	mtk_timer_add(0.5, timer, "I'm a timer!");

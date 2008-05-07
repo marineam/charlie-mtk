@@ -31,7 +31,7 @@ void set_geometry(mtk_widget_t *this, int x, int y, int w, int h)
 
 mtk_widget_t* mtk_widget_new(size_t size, int x, int y, int w, int h)
 {
-	mtk_widget_t* this = MTK_WIDGET(mtk_object_new(size));
+	mtk_widget_t* this = mtk_widget(mtk_object_new(size));
 	SET_CLASS(this, mtk_widget);
 	this->x = x;
 	this->y = y;

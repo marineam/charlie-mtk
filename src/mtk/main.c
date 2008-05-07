@@ -57,7 +57,6 @@ void _mtk_flush()
 	mtk_list_foreach(_windows, w) { \
 		if (w->id == _e->member) {
 #define WINDOW_EVENT_END \
-			xcb_flush(_conn); \
 			break; \
 		} \
 	} \
@@ -68,7 +67,7 @@ static int event()
 	xcb_generic_event_t *e;
 	mtk_window_t *w = NULL;
 
-	e = xcb_poll_for_event(_conn);
+	e = xcb_wait_for_event(_conn);
 
 	if (xcb_connection_has_error(_conn))
 		return -1;
@@ -119,22 +118,30 @@ static int event()
 
 void mtk_main()
 {
-	int xev, tev;
-	/* pause for a 10th of a second between polls */
-	struct timespec pause = {.tv_sec = 0, .tv_nsec = 100000000};
+	int xfd, nfds;
+	fd_set xfd_set;
 	mtk_window_t *w;
+	sigset_t sigset;
+
+	sigemptyset(&sigset);
+	sigaddset(&sigset, TIMER_SIG);
+	sigprocmask(SIG_BLOCK, &sigset, NULL);
+
+	xfd = xcb_get_file_descriptor(_conn);
+	nfds = xfd;
+	FD_ZERO(&xfd_set);
+	FD_SET(xfd, &rfds);
 
 	while (1) {
+		pselect(nfds, &xfd_set, &xfd_set, NULL, NULL
 		if ((xev = event()) < 0)
 			break;
 
 		if ((tev = _mtk_timer_event())) {
 			/* FIXME: force a full redraw on timer events.
 			 * this is silly but I don't have a better way yet */
-			mtk_list_foreach(_windows, w) {
-				call(w,mtk_widget,draw);
-				xcb_flush(_conn);
-			}
+		mtk_list_foreach(_windows, w) {
+			call(w,mtk_widget,draw);
 		}
 
 		if (!xev && !tev) {

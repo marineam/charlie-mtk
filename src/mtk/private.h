@@ -13,7 +13,8 @@ extern mtk_list_t *_windows;
 
 void _mtk_flush();
 
+void _mtk_event_init();
 void _mtk_timer_init();
-int _mtk_timer_event();
+void _mtk_timer_cleanup();
 
 #endif

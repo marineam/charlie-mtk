@@ -7,22 +7,42 @@
 #include <mtk.h>
 #include "private.h"
 
+/* for some reason this is provided for timeval but not timespec */
+# define timescmp(a, b, CMP) 						      \
+  (((a)->tv_sec == (b)->tv_sec) ? 					      \
+   ((a)->tv_nsec CMP (b)->tv_nsec) : 					      \
+   ((a)->tv_sec CMP (b)->tv_sec))
+
 struct timer {
 	timer_t id;
 	int active;
 	void *data;
 	int (*callback)(void *data);
+	struct timespec lastfire;
 };
 
 static mtk_list_t *timers;
 static mtk_list_t *events;
+
+static void event(void *data)
+{
+	struct timer *t = data;
+
+	mtk_timer_block();
+
+	if (t->active && !t->callback(t->data)) {
+		t->active = 0;
+		timer_delete(t->id);
+		clock_gettime(CLOCK_REALTIME, &t->lastfire);
+	}
+}
 
 static void timer_handler(int sig, siginfo_t *info, void *data)
 {
 	/* Only handle signals from timers */
 	if (info->si_code == SI_TIMER) {
 		assert(info->si_ptr);
-		mtk_list_append(events, info->si_ptr);
+		mtk_event_add(event, info->si_ptr);
 	}
 }
 
@@ -40,6 +60,25 @@ void _mtk_timer_init()
 	sigaction(TIMER_SIG, &handler, NULL);
 }
 
+void _mtk_timer_cleanup()
+{
+	struct timer *t;
+	struct timespec now;
+
+	clock_gettime(CLOCK_REALTIME, &now);
+	t = mtk_list_goto(timers, 0);
+	while (t) {
+		if (!t->active && timescmp(&t->lastfire, &now, <)) {
+			free(t);
+			mtk_list_remove(timers);
+			t = mtk_list_current(timers);
+		}
+		else {
+			t = mtk_list_next(timers);
+		}
+	}
+}
+
 void mtk_timer_block()
 {
 	sigset_t sigset;
@@ -54,45 +93,6 @@ void mtk_timer_unblock()
 	sigemptyset(&sigset);
 	sigaddset(&sigset, TIMER_SIG);
 	sigprocmask(SIG_UNBLOCK, &sigset, NULL);
-}
-
-int _mtk_timer_event()
-{
-	struct timer *t;
-	int ret = 0;
-
-	/* block SIGALRM while we handle events
-	 * this is important since mtk_lists don't have any locking */
-	mtk_timer_block();
-
-	mtk_list_goto(events, 0);
-	if ((t = mtk_list_remove(events))) {
-		mtk_timer_unblock();
-		if (t->active && !t->callback(t->data)) {
-			t->active = 0;
-			timer_delete(t->id);
-		}
-		_mtk_flush();
-		ret = 1;
-	}
-	else {
-		/* there were no pending events so it should
-		 * now be safe to free unactive timers */
-		t = mtk_list_goto(timers, 0);
-		while (t) {
-			if (!t->active) {
-				free(t);
-				mtk_list_remove(timers);
-				t = mtk_list_current(timers);
-			}
-			else {
-				t = mtk_list_next(timers);
-			}
-		}
-		mtk_timer_unblock();
-	}
-
-	return ret;
 }
 
 void mtk_timer_add(double interval, int(*callback)(void *data), void *data)

@@ -25,7 +25,6 @@ void mtk_event_process()
 	while((e = mtk_list_remove(events))) {
 		e->callback(e->data);
 		free(e);
-		_mtk_flush();
 	}
 }
 

@@ -62,9 +62,9 @@ CLASS(mtk_mpdlist, mtk_widget)
 	int (*clicked)(void **data, mtk_list_t *list, int pos);
 	void *data;
 METHODS(mtk_mpdlist, mtk_widget, int x, int y, int w, int h,
-		void (*updatelist)(mtk_list_t *list, void *data),
-		int (*clicked)(void **data, mtk_list_t *list, int pos),
-		void *data)
+	void (*updatelist)(mtk_list_t *list, void *data),
+	int (*clicked)(void **data, mtk_list_t *list, int pos),
+	void *data)
 END
 
 /* main.c */

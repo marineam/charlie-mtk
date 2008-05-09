@@ -10,6 +10,9 @@ static int scroller(void *data)
 {
 	mtk_text_t *this = data;
 
+	if (this->scroll_stop)
+		return 0;
+
 	this->scroll -= 1;
 	call(this,mtk_widget,draw);
 
@@ -18,7 +21,11 @@ static int scroller(void *data)
 
 static int start_scroll(void *data)
 {
-	mtk_timer_add(1.0/30, scroller, data);
+	mtk_text_t *this = data;
+
+	this->scroll_stop = 0;
+	mtk_timer_add(1.0/30, scroller, this);
+
 	return 0;
 }
 
@@ -42,8 +49,10 @@ static void draw(mtk_widget_t *widget)
 	cairo_font_extents(cr, &fe);
 	cairo_text_extents(cr, text->text, &te);
 
-	if (text->scroll + te.width + widget->h*2 < 0)
+	if (text->scroll + te.width + widget->h*2 < 0) {
 		text->scroll = 0;
+		text->scroll_stop = 1;
+	}
 
 	if (!text->scroll && te.width > widget->w)
 		mtk_timer_add(2.0, start_scroll, widget);
@@ -74,6 +83,8 @@ static void set_text(mtk_text_t *this, char *text)
 		free(this->text);
 		this->text = strdup(text);
 		assert(this->text);
+		this->scroll = 0;
+		this->scroll_stop = 1;
 		call(this,mtk_widget,draw);
 	}
 }

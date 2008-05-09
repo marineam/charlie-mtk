@@ -6,26 +6,59 @@
 
 #include "private.h"
 
+static int scroller(void *data)
+{
+	mtk_text_t *this = data;
+
+	this->scroll -= 1;
+	call(this,mtk_widget,draw);
+
+	return this->scroll ? 1 : 0;
+}
+
+static int start_scroll(void *data)
+{
+	mtk_timer_add(1.0/30, scroller, data);
+	return 0;
+}
+
+
 static void draw(mtk_widget_t *widget)
 {
 	mtk_text_t *text = mtk_text(widget);
 	cairo_t *cr = cairo_create(widget->surface);
+	cairo_font_extents_t fe;
 	cairo_text_extents_t te;
+
+	assert(text->text);
+
+	cairo_select_font_face(cr, "Sans",
+		CAIRO_FONT_SLANT_NORMAL,
+		CAIRO_FONT_WEIGHT_NORMAL);
+	cairo_set_font_size(cr, widget->h);
+	cairo_font_extents(cr, &fe);
+	/* adjust font size so h == fe.height */
+	cairo_set_font_size(cr, widget->h * (widget->h/fe.height));
+	cairo_font_extents(cr, &fe);
+	cairo_text_extents(cr, text->text, &te);
+
+	if (text->scroll + te.width + widget->h*2 < 0)
+		text->scroll = 0;
+
+	if (!text->scroll && te.width > widget->w)
+		mtk_timer_add(2.0, start_scroll, widget);
 
 	cairo_set_source_rgb(cr, 1, 1, 1);
 	cairo_rectangle(cr, 0, 0, widget->w, widget->h);
 	cairo_fill(cr);
 
-	if (text->text) {
-		cairo_set_source_rgb(cr, 0, 0, 0);
-		cairo_select_font_face(cr, "Sans",
-			CAIRO_FONT_SLANT_NORMAL,
-			CAIRO_FONT_WEIGHT_NORMAL);
-		cairo_set_font_size(cr, widget->h);
+	cairo_set_source_rgb(cr, 0, 0, 0);
+	cairo_move_to(cr, text->scroll, fe.ascent);
+	cairo_show_text(cr, text->text);
 
-		cairo_text_extents(cr, text->text, &te);
-
-		cairo_move_to(cr, 0, widget->h*0.5 + te.height*0.5);
+	if (te.width > widget->w &&
+	    text->scroll + te.width + widget->h*2 < widget->w) {
+		cairo_move_to(cr, text->scroll+te.width+widget->h*2, fe.ascent);
 		cairo_show_text(cr, text->text);
 	}
 

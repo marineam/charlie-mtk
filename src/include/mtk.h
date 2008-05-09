@@ -45,9 +45,16 @@ END
 
 CLASS(mtk_text, mtk_widget)
 	char *text;
-	double size;
+	int scroll;
 METHODS(mtk_text, mtk_widget, int x, int y, int w, int h, char *text)
 	void (*set_text)(mtk_text_t *this, char *text);
+END
+
+CLASS(mtk_image, mtk_widget)
+	char *path;
+	cairo_surface_t *image;
+METHODS(mtk_image, mtk_widget, int x, int y, int w, int h, char *path)
+	void (*set_image)(mtk_image_t *this, char *path);
 END
 
 CLASS(mtk_mpdlist, mtk_widget)

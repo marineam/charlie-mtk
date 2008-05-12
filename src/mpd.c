@@ -183,7 +183,7 @@ mpd_status_t* mpd_status_new(size_t size, int x, int y, int w, int h)
 	mpd_status_t *this = mpd_status(mtk_container_new(size, x, y, w, h));
 
 	SET_CLASS(this, mpd_status);
-	this->art = new(mtk_image, 0, 0, UNIT*1.5, UNIT*1.5, "album.png");
+	this->art = new(mtk_image, 0, 0, UNIT*1.5, UNIT*1.5, "album-test.png");
 	this->title = new(mtk_text, UNIT*1.5, 0, w-UNIT, UNIT*0.5, "foobar");
 	this->artist = new(mtk_text, UNIT*1.5, UNIT*0.5, w, UNIT*0.5, "foobaz");
 	this->album = new(mtk_text, UNIT*1.5, UNIT, w, UNIT*0.5, "whee");

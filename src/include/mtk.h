@@ -39,6 +39,12 @@ METHODS(mtk_container, mtk_widget)
 	void (*add_widget)(mtk_container_t *this, mtk_widget_t *widget);
 END
 
+CLASS(mtk_viewer, mtk_container)
+	mtk_widget_t* current;
+	int slide;
+METHODS(mtk_viewer, mtk_container)
+END
+
 CLASS(mtk_window, mtk_container)
 	xcb_window_t id;
 	//cairo_surface_t *surface;

@@ -30,6 +30,7 @@ void mtk_init()
 	_mtk_window_class_init();
 	_mtk_hpack_class_init();
 	_mtk_vpack_class_init();
+	_mtk_viewer_class_init();
 	_mtk_text_class_init();
 	_mtk_image_class_init();
 	_mtk_mpdlist_class_init();

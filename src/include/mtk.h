@@ -25,7 +25,10 @@ METHODS(mtk_widget, mtk_object)
 	void (*mouse_press)(mtk_widget_t *this, int x, int y);
 	void (*mouse_release)(mtk_widget_t *this, int x, int y);
 	void (*mouse_move)(mtk_widget_t *this, int x, int y);
-	void (*set_geometry)(mtk_widget_t *this, int x, int y, int w, int h);
+	void (*set_coord)(mtk_widget_t *this, int x, int y);
+	void (*set_size)(mtk_widget_t *this, int w, int h);
+	void (*get_coord)(mtk_widget_t *this, int *x, int *y);
+	void (*get_size)(mtk_widget_t *this, int *w, int *h);
 	void (*set_parent)(mtk_widget_t *this, mtk_widget_t *parent);
 END
 
@@ -40,16 +43,17 @@ CLASS(mtk_window, mtk_container)
 	xcb_window_t id;
 	//cairo_surface_t *surface;
 METHODS(mtk_window, mtk_container, int w, int h)
-	void (*resize)(mtk_window_t* this, int w, int h);
 END
 
 CLASS(mtk_hpack, mtk_container)
+	mtk_list_t *order;
 METHODS(mtk_hpack, mtk_container)
 	void (*pack_left)(mtk_hpack_t *this, mtk_widget_t *widget, int w);
 	void (*pack_right)(mtk_hpack_t *this, mtk_widget_t *widget, int w);
 END
 
 CLASS(mtk_vpack, mtk_container)
+	mtk_list_t *order;
 METHODS(mtk_vpack, mtk_container)
 	void (*pack_top)(mtk_vpack_t *this, mtk_widget_t *widget, int h);
 	void (*pack_bottom)(mtk_vpack_t *this, mtk_widget_t *widget, int h);

@@ -28,6 +28,8 @@ void mtk_init()
 	_mtk_widget_class_init();
 	_mtk_container_class_init();
 	_mtk_window_class_init();
+	_mtk_hpack_class_init();
+	_mtk_vpack_class_init();
 	_mtk_text_class_init();
 	_mtk_image_class_init();
 	_mtk_mpdlist_class_init();
@@ -107,7 +109,7 @@ static int event()
 		break;
 	case XCB_CONFIGURE_NOTIFY:
 		WINDOW_EVENT(xcb_configure_notify_event_t, window)
-			call(w,mtk_window,resize, _e->width, _e->height);
+			call(w,mtk_widget,set_size, _e->width, _e->height);
 		WINDOW_EVENT_END
 		break;
 	default:

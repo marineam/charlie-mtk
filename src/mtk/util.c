@@ -88,6 +88,14 @@ void mtk_list_append(mtk_list_t *l, void* d)
 	list_audit(l);
 }
 
+void mtk_list_prepend(mtk_list_t *l, void* d)
+{
+	l->current_node = NULL;
+	l->current_index = 0;
+	mtk_list_insert(l,d);
+	list_audit(l);
+}
+
 void mtk_list_insert(mtk_list_t *l, void* d)
 {
 	mtk_list_node_t *n = xmalloc0(sizeof(mtk_list_node_t));

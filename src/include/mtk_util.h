@@ -21,6 +21,7 @@ char* entityname(mpd_InfoEntity *entity);
 
 mtk_list_t* mtk_list_new();
 void mtk_list_append(mtk_list_t *l, void* d);
+void mtk_list_prepend(mtk_list_t *l, void* d);
 void mtk_list_insert(mtk_list_t *l, void* d);
 void* mtk_list_replace(mtk_list_t *l, void* d);
 void* mtk_list_remove(mtk_list_t *l);
@@ -43,10 +44,23 @@ static inline int mtk_list_length(mtk_list_t *l) {
 void* xmalloc(size_t size);
 void* xmalloc0(size_t size);
 
+#define warn(fmt, args...) \
+	fprintf(stderr, "%s:%d " fmt, __FILE__, __LINE__, ## args)
+
+#define die(fmt, args...) \
+	do { \
+		warn(fmt, ## args); \
+		exit(1); \
+	} while(0)
+
+#define warn_on(x, fmt, args...) \
+	if (x) { \
+		warn(fmt, ## args); \
+	}
+
 #define die_on(x, fmt, args...) \
 	if (x) { \
-		fprintf(stderr, "%s:%d " fmt, __FILE__, __LINE__, ## args); \
-		exit(1); \
+		die(fmt, ## args); \
 	}
 
 #endif

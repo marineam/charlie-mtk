@@ -9,11 +9,13 @@
 
 mtk_window_t* mtk_window_new(size_t size, int w, int h)
 {
-	mtk_window_t *window = mtk_window(mtk_container_new(size, 0, 0, w, h));
+	mtk_window_t *window = mtk_window(mtk_container_new(size));
 	xcb_params_cw_t values;
 	uint32_t mask;
 
 	SET_CLASS(window, mtk_window);
+
+	call(window,mtk_widget,set_geometry, 0, 0, w, h);
 
 	/* create window */
 	window->id = xcb_generate_id(_conn);

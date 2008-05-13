@@ -45,9 +45,9 @@ static void set_image(mtk_image_t *this, char *path)
 	}
 }
 
-mtk_image_t* mtk_image_new(size_t size, int x, int y, int w, int h, char *path)
+mtk_image_t* mtk_image_new(size_t size, char *path)
 {
-	mtk_image_t *this = mtk_image(mtk_widget_new(size, x, y, w, h));
+	mtk_image_t *this = mtk_image(mtk_widget_new(size));
 	SET_CLASS(this, mtk_image);
 	assert(path);
 	this->path = strdup(path);

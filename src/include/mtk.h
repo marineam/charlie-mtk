@@ -18,7 +18,7 @@ CLASS(mtk_widget, mtk_object)
 	struct mtk_window *window;
 	struct mtk_widget *parent;
 	cairo_surface_t *surface;
-METHODS(mtk_widget, mtk_object, int x, int y, int w, int h)
+METHODS(mtk_widget, mtk_object)
 	void (*init)(mtk_widget_t *this, mtk_widget_t* parent);
 	void (*draw)(mtk_widget_t *this); /* children must implement this */
 	void (*update)(mtk_widget_t *this);
@@ -32,7 +32,7 @@ END
 CLASS(mtk_container, mtk_widget)
 	mtk_list_t *widgets;
 	int ran_init;
-METHODS(mtk_container, mtk_widget, int x, int y, int w, int h)
+METHODS(mtk_container, mtk_widget)
 	void (*add_widget)(mtk_container_t *this, mtk_widget_t *widget);
 END
 
@@ -43,18 +43,30 @@ METHODS(mtk_window, mtk_container, int w, int h)
 	void (*resize)(mtk_window_t* this, int w, int h);
 END
 
+CLASS(mtk_hpack, mtk_container)
+METHODS(mtk_hpack, mtk_container)
+	void (*pack_left)(mtk_hpack_t *this, mtk_widget_t *widget, int w);
+	void (*pack_right)(mtk_hpack_t *this, mtk_widget_t *widget, int w);
+END
+
+CLASS(mtk_vpack, mtk_container)
+METHODS(mtk_vpack, mtk_container)
+	void (*pack_top)(mtk_vpack_t *this, mtk_widget_t *widget, int h);
+	void (*pack_bottom)(mtk_vpack_t *this, mtk_widget_t *widget, int h);
+END
+
 CLASS(mtk_text, mtk_widget)
 	char *text;
 	int scroll;
 	int scroll_stop;
-METHODS(mtk_text, mtk_widget, int x, int y, int w, int h, char *text)
+METHODS(mtk_text, mtk_widget, char *text)
 	void (*set_text)(mtk_text_t *this, char *text);
 END
 
 CLASS(mtk_image, mtk_widget)
 	char *path;
 	cairo_surface_t *image;
-METHODS(mtk_image, mtk_widget, int x, int y, int w, int h, char *path)
+METHODS(mtk_image, mtk_widget, char *path)
 	void (*set_image)(mtk_image_t *this, char *path);
 END
 
@@ -71,7 +83,7 @@ CLASS(mtk_mpdlist, mtk_widget)
 	void (*updatelist)(mtk_list_t *list, void *data);
 	int (*clicked)(void **data, mtk_list_t *list, int pos);
 	void *data;
-METHODS(mtk_mpdlist, mtk_widget, int x, int y, int w, int h,
+METHODS(mtk_mpdlist, mtk_widget,
 	void (*updatelist)(mtk_list_t *list, void *data),
 	int (*clicked)(void **data, mtk_list_t *list, int pos),
 	void *data)

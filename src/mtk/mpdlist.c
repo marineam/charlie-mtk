@@ -260,12 +260,12 @@ static void mouse_move(mtk_widget_t *widget, int x, int y)
 	draw(widget);
 }
 
-mtk_mpdlist_t* mtk_mpdlist_new(size_t size, int x, int y, int w, int h,
+mtk_mpdlist_t* mtk_mpdlist_new(size_t size,
 		void (*updatelist)(mtk_list_t *list, void *data),
 		int (*clicked)(void **data, mtk_list_t *list, int pos),
 		void *data)
 {
-	mtk_mpdlist_t *mpdlist = mtk_mpdlist(mtk_widget_new(size, x, y, w, h));
+	mtk_mpdlist_t *mpdlist = mtk_mpdlist(mtk_widget_new(size));
 
 	SET_CLASS(mpdlist, mtk_mpdlist);
 

@@ -42,14 +42,10 @@ static void set_parent(mtk_widget_t *this, mtk_widget_t *parent)
 	this->parent = parent;
 }
 
-mtk_widget_t* mtk_widget_new(size_t size, int x, int y, int w, int h)
+mtk_widget_t* mtk_widget_new(size_t size)
 {
 	mtk_widget_t* this = mtk_widget(mtk_object_new(size));
 	SET_CLASS(this, mtk_widget);
-	this->x = x;
-	this->y = y;
-	this->w = w;
-	this->h = h;
 
 	return this;
 }

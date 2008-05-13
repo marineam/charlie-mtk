@@ -89,9 +89,9 @@ static void set_text(mtk_text_t *this, char *text)
 	}
 }
 
-mtk_text_t* mtk_text_new(size_t size, int x, int y, int w, int h, char *text)
+mtk_text_t* mtk_text_new(size_t size, char *text)
 {
-	mtk_text_t *this = mtk_text(mtk_widget_new(size, x, y, w, h));
+	mtk_text_t *this = mtk_text(mtk_widget_new(size));
 	SET_CLASS(this, mtk_text);
 	assert(text);
 	this->text = strdup(text);

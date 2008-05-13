@@ -52,8 +52,6 @@ static void add_widget(mtk_container_t* c, mtk_widget_t* widget)
 		assert(call_defined(widget,mtk_widget,init));
 		call(widget,mtk_widget,init, mtk_widget(c));
 	}
-
-	draw_widget(c, widget);
 }
 
 static void draw(mtk_widget_t *c)
@@ -99,9 +97,9 @@ static void mouse_move(mtk_widget_t *c, int x, int y)
 			call(w,mtk_widget,mouse_move, x-w->x, y-w->y);
 }
 
-mtk_container_t* mtk_container_new(size_t size, int x, int y, int w, int h)
+mtk_container_t* mtk_container_new(size_t size)
 {
-	mtk_container_t *c = mtk_container(mtk_widget_new(size, x, y, w, h));
+	mtk_container_t *c = mtk_container(mtk_widget_new(size));
 	SET_CLASS(c, mtk_container);
 	c->widgets = mtk_list_new();
 

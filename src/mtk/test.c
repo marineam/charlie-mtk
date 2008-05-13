@@ -18,7 +18,6 @@ int main (int argc, char *argv[])
 	window = new(mtk_window,640, 480);
 	vpack = new(mtk_vpack);
 
-	call(vpack,mtk_widget,set_size, 640, 480);
 	call(window, mtk_container, add_widget, mtk_widget(vpack));
 
 	txt1 = new(mtk_text, "I'm on the top");

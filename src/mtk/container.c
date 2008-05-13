@@ -47,6 +47,11 @@ static void add_widget(mtk_container_t* c, mtk_widget_t* widget)
 	mtk_list_append(c->widgets, widget);
 	call(widget,mtk_widget,set_parent, mtk_widget(c));
 
+	/* if size is 0 auto-fit the widget */
+	if (!widget->w || !widget->h)
+		call(widget,mtk_widget,set_size,
+			mtk_widget(c)->w, mtk_widget(c)->h);
+
 	if (c->ran_init) {
 		/* only init child if the container's init has run */
 		assert(call_defined(widget,mtk_widget,init));

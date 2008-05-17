@@ -6,6 +6,7 @@
 int main (int argc, char *argv[])
 {
 	mtk_window_t *window;
+	mtk_hpack_t *hpack;
 	mpd_dirlist_t *mpdlist;
 	mpd_status_t *mpdstatus;
 
@@ -15,10 +16,12 @@ int main (int argc, char *argv[])
 	_mpd_status_class_init();
 
 	window = new(mtk_window, WIDTH, HEIGHT);
-	mpdlist = new(mpd_dirlist, WIDTH*0.35, 0, WIDTH*0.65, HEIGHT);
-	mpdstatus = new(mpd_status, 0, 0, WIDTH*0.35, HEIGHT);
-	call(window,mtk_container,add_widget, mtk_widget(mpdlist));
-	call(window,mtk_container,add_widget, mtk_widget(mpdstatus));
+	hpack = new(mtk_hpack);
+	call(window,mtk_container,add_widget, mtk_widget(hpack));
+	mpdlist = new(mpd_dirlist);
+	mpdstatus = new(mpd_status);
+	call(hpack,mtk_hpack,pack_left, mtk_widget(mpdlist), 0);
+	call(hpack,mtk_hpack,pack_left, mtk_widget(mpdstatus), UNIT*5);
 
 	mtk_main();
 

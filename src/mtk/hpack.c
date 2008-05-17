@@ -26,7 +26,8 @@ static void repack(mtk_hpack_t *this)
 		resizeable = mtk_list_length(this->order);
 	}
 
-	resize = mtk_widget(this)->w / resizeable;
+	if (resizeable)
+		resize = size / resizeable;
 
 	mtk_list_foreach(this->order, i) {
 		int newsize;

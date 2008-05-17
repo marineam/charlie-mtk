@@ -90,7 +90,7 @@ void mtk_list_append(mtk_list_t *l, void* d)
 
 void mtk_list_prepend(mtk_list_t *l, void* d)
 {
-	l->current_node = NULL;
+	l->current_node = l->first;
 	l->current_index = 0;
 	mtk_list_insert(l,d);
 	list_audit(l);

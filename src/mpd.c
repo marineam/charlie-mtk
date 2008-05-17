@@ -166,10 +166,10 @@ static int clicked(void **data, mtk_list_t *list, int pos)
 	return 0;
 }
 
-mpd_dirlist_t* mpd_dirlist_new(size_t size, int x, int y, int w, int h)
+mpd_dirlist_t* mpd_dirlist_new(size_t size)
 {
 	mpd_dirlist_t* this = mpd_dirlist(
-		mtk_mpdlist_new(size, x, y, w, h, updatedir, clicked, NULL));
+		mtk_mpdlist_new(size, updatedir, clicked, NULL));
 	SET_CLASS(this, mpd_dirlist);
 
 	return this;
@@ -178,16 +178,34 @@ mpd_dirlist_t* mpd_dirlist_new(size_t size, int x, int y, int w, int h)
 METHOD_TABLE_INIT(mpd_dirlist, mtk_mpdlist)
 METHOD_TABLE_END
 
-mpd_status_t* mpd_status_new(size_t size, int x, int y, int w, int h)
+static void status_size(mtk_widget_t *widget, int w, int h)
 {
-	mpd_status_t *this = mpd_status(mtk_container_new(size, x, y, w, h));
+	mpd_status_t *this = mpd_status(widget);
+
+	super(this,mpd_status,mtk_widget,set_size, w, h);
+
+	call(this->title,mtk_widget,set_size, w-UNIT, UNIT*0.5);
+	call(this->artist,mtk_widget,set_size, w-UNIT, UNIT*0.5);
+	call(this->album,mtk_widget,set_size, w-UNIT, UNIT*0.5);
+}
+
+mpd_status_t* mpd_status_new(size_t size)
+{
+	mpd_status_t *this = mpd_status(mtk_container_new(size));
 
 	SET_CLASS(this, mpd_status);
-	this->art = new(mtk_image, 0, 0, UNIT*1.5, UNIT*1.5, "album-test.png");
-	this->title = new(mtk_text, UNIT*1.5, 0, w-UNIT, UNIT*0.5, "foobar");
-	this->artist = new(mtk_text, UNIT*1.5, UNIT*0.5, w, UNIT*0.5, "foobaz");
-	this->album = new(mtk_text, UNIT*1.5, UNIT, w, UNIT*0.5, "whee");
+
+	this->art = new(mtk_image, "album-test.png");
+	call(this->art,mtk_widget,set_coord, 0, 0);
+	call(this->art,mtk_widget,set_size, UNIT*1.5, UNIT*1.5);
 	call(this,mtk_container,add_widget, mtk_widget(this->art));
+
+	this->title = new(mtk_text, "");
+	this->artist = new(mtk_text, "");
+	this->album = new(mtk_text, "");
+	call(this->title,mtk_widget,set_coord, UNIT*1.5, 0);
+	call(this->artist,mtk_widget,set_coord, UNIT*1.5, UNIT*0.5);
+	call(this->album,mtk_widget,set_coord, UNIT*1.5, UNIT);
 	call(this,mtk_container,add_widget, mtk_widget(this->title));
 	call(this,mtk_container,add_widget, mtk_widget(this->artist));
 	call(this,mtk_container,add_widget, mtk_widget(this->album));
@@ -199,4 +217,5 @@ mpd_status_t* mpd_status_new(size_t size, int x, int y, int w, int h)
 }
 
 METHOD_TABLE_INIT(mpd_status, mtk_container)
+	_METHOD(set_size, status_size);
 METHOD_TABLE_END

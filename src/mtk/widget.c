@@ -47,6 +47,9 @@ static void set_size(mtk_widget_t *this, int w, int h)
 		assert(this->parent);
 		cairo_surface_destroy(this->surface);
 		init(this, this->parent);
+		if (call_defined(this,mtk_widget,update))
+			call(this,mtk_widget,update);
+		call(this,mtk_widget,draw);
 	}
 }
 

@@ -5,7 +5,7 @@
 
 /* mpd.c */
 CLASS(mpd_dirlist, mtk_mpdlist)
-METHODS(mpd_dirlist, mtk_mpdlist, int x, int y, int w, int h)
+METHODS(mpd_dirlist, mtk_mpdlist)
 END
 
 CLASS(mpd_status, mtk_container)
@@ -13,7 +13,7 @@ CLASS(mpd_status, mtk_container)
 	mtk_text_t *artist;
 	mtk_text_t *album;
 	mtk_image_t *art;
-METHODS(mpd_status, mtk_container, int x, int y, int w, int h)
+METHODS(mpd_status, mtk_container)
 END
 
 void mpd_init();

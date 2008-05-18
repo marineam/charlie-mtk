@@ -151,7 +151,7 @@ static void scroll_fixup(mtk_mpdlist_t *mpdlist)
 	}
 }
 
-static int timed_draw(void *data)
+static bool timed_draw(void *data)
 {
 	mtk_mpdlist_t *mpdlist = data;
 
@@ -159,11 +159,11 @@ static int timed_draw(void *data)
 	draw((mtk_widget_t*)data);
 
 	if (mpdlist->scroll_top == mpdlist->timed_scroll) {
-		mpdlist->timed_active = 0;
-		return 0;
+		mpdlist->timed_active = false;
+		return false;
 	}
 	else
-		return 1;
+		return true;
 }
 
 static void mouse_press(mtk_widget_t *widget, int x, int y)
@@ -171,23 +171,23 @@ static void mouse_press(mtk_widget_t *widget, int x, int y)
 	mtk_mpdlist_t *mpdlist = (mtk_mpdlist_t*)widget;
 
 	if (y <= UNIT) {
-		mpdlist->slide_scroll = 0;
+		mpdlist->slide_scroll = false;
 		mpdlist->timed_scroll -= (widget->h/2 - (widget->h/2)%UNIT);
 		if (!mpdlist->timed_active) {
-			mpdlist->timed_active = 1;
+			mpdlist->timed_active = true;
 			mtk_timer_add(0.08, timed_draw, mpdlist);
 		}
 	}
 	else if (y > widget->h-UNIT) {
-		mpdlist->slide_scroll = 0;
+		mpdlist->slide_scroll = false;
 		mpdlist->timed_scroll += (widget->h/2 - (widget->h/2)%UNIT);
 		if (!mpdlist->timed_active) {
-			mpdlist->timed_active = 1;
+			mpdlist->timed_active = true;
 			mtk_timer_add(0.08, timed_draw, mpdlist);
 		}
 	}
 	else {
-		mpdlist->slide_scroll = 1;
+		mpdlist->slide_scroll = true;
 		mpdlist->timed_scroll = mpdlist->scroll_top;
 		mpdlist->slide_start = mpdlist->scroll_top;
 		mpdlist->slide_offset = y;
@@ -230,13 +230,13 @@ static void mouse_release(mtk_widget_t *widget, int x, int y)
 				UNIT - abs(mpdlist->timed_scroll) % UNIT;
 
 		if (!mpdlist->timed_active) {
-			mpdlist->timed_active = 1;
+			mpdlist->timed_active = true;
 			mtk_timer_add(0.08, timed_draw, mpdlist);
 		}
 	}
 
-	mpdlist->slide_scroll = 0;
-	mpdlist->slide_scroll_moved = 0;
+	mpdlist->slide_scroll = false;
+	mpdlist->slide_scroll_moved = false;
 
 	scroll_fixup(mpdlist);
 	draw(widget);
@@ -254,7 +254,7 @@ static void mouse_move(mtk_widget_t *widget, int x, int y)
 
 	mpdlist->scroll_top = mpdlist->slide_start - y + mpdlist->slide_offset;
 	mpdlist->timed_scroll = mpdlist->scroll_top;
-	mpdlist->slide_scroll_moved = 1;
+	mpdlist->slide_scroll_moved = true;
 
 	scroll_fixup(mpdlist);
 	draw(widget);

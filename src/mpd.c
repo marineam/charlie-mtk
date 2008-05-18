@@ -9,7 +9,7 @@ static mpd_Connection *conn;
 
 #define die_on_mpd_error() die_on(conn->error, "%s\n", conn->errorStr)
 
-static int updatestatus(void *data)
+static bool updatestatus(void *data)
 {
 	mpd_Status *status;
 	mpd_InfoEntity *entity;
@@ -46,7 +46,7 @@ static int updatestatus(void *data)
 	mpd_finishCommand(conn);
 	die_on_mpd_error();
 
-	return 1;
+	return true;
 }
 
 void mpd_init()

@@ -15,24 +15,24 @@
 
 struct timer {
 	timer_t id;
-	int active;
+	bool active;
 	void *data;
-	int (*callback)(void *data);
+	bool (*callback)(void *data);
 	struct timespec lastfire;
 };
 
 static mtk_list_t *timers;
-static int try_cleanup = 0;
+static bool try_cleanup;
 
 static void event(void *data)
 {
 	struct timer *t = data;
 
 	if (t->active && !t->callback(t->data)) {
-		t->active = 0;
+		t->active = false;
 		timer_delete(t->id);
 		clock_gettime(CLOCK_REALTIME, &t->lastfire);
-		try_cleanup = 1;
+		try_cleanup = true;
 	}
 }
 
@@ -66,7 +66,7 @@ void _mtk_timer_cleanup()
 	if (!try_cleanup)
 		return;
 
-	try_cleanup = 0;
+	try_cleanup = false;
 
 	clock_gettime(CLOCK_REALTIME, &now);
 	t = mtk_list_goto(timers, 0);
@@ -82,7 +82,7 @@ void _mtk_timer_cleanup()
 	}
 }
 
-void mtk_timer_add(double interval, int(*callback)(void *data), void *data)
+void mtk_timer_add(double interval, bool(*callback)(void *data), void *data)
 {
 	struct timer *t = xmalloc(sizeof(struct timer));
 	struct sigevent sigev;
@@ -99,7 +99,7 @@ void mtk_timer_add(double interval, int(*callback)(void *data), void *data)
 	sigev.sigev_value.sival_ptr = t;
 
 	timer_create(CLOCK_REALTIME, &sigev, &t->id);
-	t->active = 1;
+	t->active = true;
 	t->callback = callback;
 	t->data = data;
 

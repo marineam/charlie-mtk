@@ -27,7 +27,7 @@ static void init(mtk_widget_t* c, mtk_widget_t* parent)
 		call(w,mtk_widget,init,c);
 	}
 
-	mtk_container(c)->ran_init = 1;
+	mtk_container(c)->ran_init = true;
 	call(c,mtk_widget,draw);
 }
 

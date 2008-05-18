@@ -1,6 +1,7 @@
 #ifndef MTK_H
 #define MTK_H
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <xcb/xcb.h>
@@ -34,8 +35,8 @@ END
 
 CLASS(mtk_container, mtk_widget)
 	mtk_list_t *widgets;
-	int ran_init;
-	int event_stacking;
+	bool ran_init;
+	bool event_stacking;
 METHODS(mtk_container, mtk_widget)
 	void (*add_widget)(mtk_container_t *this, mtk_widget_t *widget);
 	void (*reorder_top)(mtk_container_t *this, mtk_widget_t *widget);
@@ -70,7 +71,7 @@ END
 CLASS(mtk_text, mtk_widget)
 	char *text;
 	int scroll;
-	int scroll_stop;
+	bool scroll_stop;
 METHODS(mtk_text, mtk_widget, char *text)
 	void (*set_text)(mtk_text_t *this, char *text);
 END
@@ -85,11 +86,11 @@ END
 CLASS(mtk_mpdlist, mtk_widget)
 	mtk_list_t* list;
 	int timed_scroll;
-	int timed_active;
-	int slide_scroll;
+	bool timed_active;
+	bool slide_scroll;
+	bool slide_scroll_moved;
 	int slide_start;
 	int slide_offset;
-	int slide_scroll_moved;
 	int scroll_top;
 	cairo_surface_t *scroll_surface;
 	void (*updatelist)(mtk_list_t *list, void *data);
@@ -111,7 +112,7 @@ void mtk_event_add(void(*callback)(void *data), void *data);
 void mtk_event_process();
 
 /* timer.c */
-void mtk_timer_add(double interval, int(*callback)(void *data), void *data);
+void mtk_timer_add(double interval, bool(*callback)(void *data), void *data);
 /* Hack to make libmpdclient not shit itself by blocking SIGALRM */
 void mtk_timer_block();
 void mtk_timer_unblock();

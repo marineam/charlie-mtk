@@ -6,7 +6,7 @@
 
 #include "private.h"
 
-static int scroller(void *data)
+static bool scroller(void *data)
 {
 	mtk_text_t *this = data;
 
@@ -16,17 +16,17 @@ static int scroller(void *data)
 	this->scroll -= 1;
 	call(this,mtk_widget,draw);
 
-	return this->scroll ? 1 : 0;
+	return this->scroll ? true : false;
 }
 
-static int start_scroll(void *data)
+static bool start_scroll(void *data)
 {
 	mtk_text_t *this = data;
 
-	this->scroll_stop = 0;
+	this->scroll_stop = false;
 	mtk_timer_add(1.0/30, scroller, this);
 
-	return 0;
+	return false;
 }
 
 
@@ -51,7 +51,7 @@ static void draw(mtk_widget_t *widget)
 
 	if (text->scroll + te.width + widget->h*2 < 0) {
 		text->scroll = 0;
-		text->scroll_stop = 1;
+		text->scroll_stop = true;
 	}
 
 	if (!text->scroll && te.width > widget->w)
@@ -84,7 +84,7 @@ static void set_text(mtk_text_t *this, char *text)
 		this->text = strdup(text);
 		assert(this->text);
 		this->scroll = 0;
-		this->scroll_stop = 1;
+		this->scroll_stop = true;
 		call(this,mtk_widget,draw);
 	}
 }

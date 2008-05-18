@@ -1,9 +1,9 @@
 #include <mtk.h>
 
-int timer(void * data)
+bool timer(void * data)
 {
 	printf("%s\n", (char*)data);
-	return 1;
+	return true;
 }
 
 int main (int argc, char *argv[])

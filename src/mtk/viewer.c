@@ -4,35 +4,40 @@
 
 #include "private.h"
 
-/* for checking a widget is at a location */
-#define IF_AT_XY(w,x,y) \
-	if (x >= w->x && y >= w->y && \
-	    x <= w->x + w->w && y <= w->y + w->h)
+CLASS(_slider, mtk_widget)
+METHODS(_slider, mtk_widget)
+END
 
-static void draw(mtk_widget_t *widget)
+static void slider_draw(mtk_widget_t *this)
 {
-	mtk_widget_t *child = mtk_viewer(widget)->current;
-	cairo_t *cr;
+	cairo_t *cr = cairo_create(this->surface);
+	cairo_pattern_t *pat;
 
-	if (!mtk_container(widget)->ran_init) {
-		/* the container's draw method is called during init, but we
-		 * must wait till init is over */
-		return;
-	}
+	pat = cairo_pattern_create_linear(0, 0, this->w, 0);
+	cairo_pattern_add_color_stop_rgb(pat, 0.0, 0.6, 0.6, 0.9);
+	cairo_pattern_add_color_stop_rgb(pat, 1.0, 1.0, 1.0, 1.0);
+	cairo_rectangle(cr, 0, 0, this->w, this->h);
+	cairo_set_source(cr, pat);
+	cairo_fill(cr);
+	cairo_pattern_destroy(pat);
 
-	if (child) {
-		cr = cairo_create(widget->surface);
-		cairo_rectangle(cr, child->x, child->y, child->w, child->h);
-		cairo_clip(cr);
-		cairo_set_source_surface(cr, child->surface, child->x, child->y);
-		cairo_paint(cr);
+	/*cairo_move_to(cr, widget->w/2.0-UNIT*0.25, UNIT*0.75);
+	cairo_line_to(cr, widget->w/2.0, UNIT*0.25);
+	cairo_line_to(cr, widget->w/2.0+UNIT*0.25, UNIT*0.75);
+	cairo_close_path(cr);
 
-		cairo_destroy(cr);
-	}
+	if (mpdlist->scroll_top == 0)
+		cairo_set_source_rgba(cr, 0.0, 0.0, 0.9, 0.2);
+	else if (mpdlist->scroll_top > mpdlist->timed_scroll)
+		cairo_set_source_rgba(cr, 0.0, 0.0, 0.9, 0.9);
+	else
+		cairo_set_source_rgba(cr, 0.0, 0.0, 0.9, 0.7);
+	cairo_fill(cr);*/
 
-	super(widget,mtk_container,mtk_widget,draw);
+	cairo_destroy(cr);
 }
 
+/*
 static void add_widget(mtk_container_t *c, mtk_widget_t *w)
 {
 	mtk_viewer_t *v = mtk_viewer(c);
@@ -42,45 +47,38 @@ static void add_widget(mtk_container_t *c, mtk_widget_t *w)
 
 	super(c,mtk_viewer,mtk_container,add_widget,w);
 }
+*/
 
-static void mouse_press(mtk_widget_t *c, int x, int y)
+static void set_size(mtk_widget_t *this, int w, int h)
 {
-	mtk_widget_t *w = mtk_viewer(c)->current;
-
-	IF_AT_XY(w, x, y)
-		if (call_defined(w,mtk_widget,mouse_press))
-			call(w,mtk_widget,mouse_press, x-w->x, y-w->y);
+	super(this,mtk_viewer,mtk_widget,set_size, w, h);
+	call(mtk_viewer(this)->slider,mtk_widget,set_size, UNIT, h);
 }
 
-static void mouse_release(mtk_widget_t *c, int x, int y)
+_slider_t* _slider_new(size_t size)
 {
-	mtk_widget_t *w = mtk_viewer(c)->current;
-
-	IF_AT_XY(w, x, y)
-		if (call_defined(w,mtk_widget,mouse_release))
-			call(w,mtk_widget,mouse_release, x-w->x, y-w->y);
-}
-
-static void mouse_move(mtk_widget_t *c, int x, int y)
-{
-	mtk_widget_t *w = mtk_viewer(c)->current;
-
-	IF_AT_XY(w, x, y)
-		if (call_defined(w,mtk_widget,mouse_move))
-			call(w,mtk_widget,mouse_move, x-w->x, y-w->y);
+	_slider_t *this = _slider(mtk_widget_new(size));
+	SET_CLASS(this, _slider);
+	return this;
 }
 
 mtk_viewer_t* mtk_viewer_new(size_t size)
 {
 	mtk_viewer_t *this = mtk_viewer(mtk_container_new(size));
 	SET_CLASS(this, mtk_viewer);
+
+	this->slider = mtk_widget(new(_slider));
+	call(this,mtk_container,add_widget, this->slider);
+
 	return this;
 }
 
+METHOD_TABLE_INIT(_slider, mtk_widget)
+	_METHOD(draw, slider_draw);
+METHOD_TABLE_END
+
 METHOD_TABLE_INIT(mtk_viewer, mtk_container)
-	METHOD(draw);
-	METHOD(mouse_press);
-	METHOD(mouse_release);
-	METHOD(mouse_move);
-	METHOD(add_widget);
+	METHOD(set_size);
+	//METHOD(add_widget);
+	__slider_class_init();
 METHOD_TABLE_END

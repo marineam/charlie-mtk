@@ -59,6 +59,22 @@ static void add_widget(mtk_container_t* c, mtk_widget_t* widget)
 	}
 }
 
+static void reorder_top(mtk_container_t* c, mtk_widget_t* widget)
+{
+	mtk_widget_t *w;
+
+	w = mtk_list_goto(c->widgets, 0);
+	while (w && w != widget)
+		w = mtk_list_next(c->widgets);
+
+	assert(w && w == widget);
+
+	if (mtk_list_index(c->widgets) != 0) {
+		mtk_list_remove(c->widgets);
+		mtk_list_prepend(c->widgets, w);
+	}
+}
+
 static void draw(mtk_widget_t *c)
 {
 	mtk_widget_t *w;
@@ -69,7 +85,7 @@ static void draw(mtk_widget_t *c)
 		return;
 	}
 
-	mtk_list_foreach(mtk_container(c)->widgets, w)
+	mtk_list_foreach_rev(mtk_container(c)->widgets, w)
 		draw_widget(mtk_container(c), w);
 
 	super(c,mtk_container,mtk_widget,draw);
@@ -79,27 +95,36 @@ static void mouse_press(mtk_widget_t *c, int x, int y)
 {
 	mtk_widget_t *w;
 
-	FOREACH_AT_XY(mtk_container(c)->widgets, w, x, y)
+	FOREACH_AT_XY(mtk_container(c)->widgets, w, x, y) {
 		if (call_defined(w,mtk_widget,mouse_press))
 			call(w,mtk_widget,mouse_press, x-w->x, y-w->y);
+		if (!mtk_container(c)->event_stacking)
+			break;
+	}
 }
 
 static void mouse_release(mtk_widget_t *c, int x, int y)
 {
 	mtk_widget_t *w;
 
-	FOREACH_AT_XY(mtk_container(c)->widgets, w, x, y)
+	FOREACH_AT_XY(mtk_container(c)->widgets, w, x, y) {
 		if (call_defined(w,mtk_widget,mouse_release))
 			call(w,mtk_widget,mouse_release, x-w->x, y-w->y);
+		if (!mtk_container(c)->event_stacking)
+			break;
+	}
 }
 
 static void mouse_move(mtk_widget_t *c, int x, int y)
 {
 	mtk_widget_t *w;
 
-	FOREACH_AT_XY(mtk_container(c)->widgets, w, x, y)
+	FOREACH_AT_XY(mtk_container(c)->widgets, w, x, y) {
 		if (call_defined(w,mtk_widget,mouse_move))
 			call(w,mtk_widget,mouse_move, x-w->x, y-w->y);
+		if (!mtk_container(c)->event_stacking)
+			break;
+	}
 }
 
 mtk_container_t* mtk_container_new(size_t size)
@@ -118,4 +143,5 @@ METHOD_TABLE_INIT(mtk_container, mtk_widget)
 	METHOD(mouse_release);
 	METHOD(mouse_move);
 	METHOD(add_widget);
+	METHOD(reorder_top);
 METHOD_TABLE_END

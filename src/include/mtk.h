@@ -35,12 +35,14 @@ END
 CLASS(mtk_container, mtk_widget)
 	mtk_list_t *widgets;
 	int ran_init;
+	int event_stacking;
 METHODS(mtk_container, mtk_widget)
 	void (*add_widget)(mtk_container_t *this, mtk_widget_t *widget);
+	void (*reorder_top)(mtk_container_t *this, mtk_widget_t *widget);
 END
 
 CLASS(mtk_viewer, mtk_container)
-	mtk_widget_t* current;
+	mtk_widget_t *slider;
 	int slide;
 METHODS(mtk_viewer, mtk_container)
 END

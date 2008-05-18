@@ -32,6 +32,10 @@ static inline void* mtk_list_current(mtk_list_t *l) {
 	return l->current_node? l->current_node->data : NULL;
 }
 
+static inline int mtk_list_index(mtk_list_t *l) {
+	return l->current_index;
+}
+
 static inline int mtk_list_length(mtk_list_t *l) {
 	return l->count;
 }
@@ -40,6 +44,11 @@ static inline int mtk_list_length(mtk_list_t *l) {
 	for (mtk_list_node_t *__n = (l)->first; \
 		(d)=__n?__n->data:(d), __n; \
 		__n = __n->next)
+
+#define mtk_list_foreach_rev(l,d) \
+	for (mtk_list_node_t *__n = (l)->last; \
+		(d)=__n?__n->data:(d), __n; \
+		__n = __n->prev)
 
 void* xmalloc(size_t size);
 void* xmalloc0(size_t size);

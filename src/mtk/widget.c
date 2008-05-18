@@ -16,16 +16,19 @@ static void init(mtk_widget_t* widget, mtk_widget_t* parent)
 	if (call_defined(widget,mtk_widget,update))
 		call(widget,mtk_widget,update);
 
-	assert(call_defined(widget,mtk_widget,draw));
-	call(widget,mtk_widget,draw);
+	call(widget,mtk_widget,redraw);
 }
 
 static void draw(mtk_widget_t* this)
 {
-	/* do nothing, this function should be overridden to do that
-	 * however we do want to redraw our parent */
+	this->redraw = false;
+}
+
+static void redraw(mtk_widget_t* this)
+{
+	this->redraw = true;
 	if (this->parent)
-		call(this->parent,mtk_widget,draw);
+		call(this->parent,mtk_widget,redraw);
 }
 
 static void set_coord(mtk_widget_t *this, int x, int y)
@@ -35,7 +38,7 @@ static void set_coord(mtk_widget_t *this, int x, int y)
 
 	/* we only need to redraw the parent for coord changes */
 	if (this->parent)
-		call(this->parent,mtk_widget,draw);
+		call(this->parent,mtk_widget,redraw);
 }
 
 static void set_size(mtk_widget_t *this, int w, int h)
@@ -43,13 +46,9 @@ static void set_size(mtk_widget_t *this, int w, int h)
 	this->w = w;
 	this->h = h;
 
-	if (this->surface) {
-		assert(this->parent);
+	if (this->surface && this->parent) {
 		cairo_surface_destroy(this->surface);
 		init(this, this->parent);
-		if (call_defined(this,mtk_widget,update))
-			call(this,mtk_widget,update);
-		call(this,mtk_widget,draw);
 	}
 }
 
@@ -85,6 +84,7 @@ mtk_widget_t* mtk_widget_new(size_t size)
 METHOD_TABLE_INIT(mtk_widget, mtk_object)
 	METHOD(init);
 	METHOD(draw);
+	METHOD(redraw);
 	METHOD(set_coord);
 	METHOD(set_size);
 	METHOD(get_coord);

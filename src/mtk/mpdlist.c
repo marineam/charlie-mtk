@@ -156,7 +156,8 @@ static bool timed_draw(void *data)
 	mtk_mpdlist_t *mpdlist = data;
 
 	scroll_fixup(mpdlist);
-	draw((mtk_widget_t*)data);
+	call(mpdlist,mtk_widget,redraw);
+	call(mpdlist,mtk_widget,draw); // hack so the following code works
 
 	if (mpdlist->scroll_top == mpdlist->timed_scroll) {
 		mpdlist->timed_active = false;
@@ -194,7 +195,7 @@ static void mouse_press(mtk_widget_t *widget, int x, int y)
 	}
 
 	scroll_fixup(mpdlist);
-	draw(widget);
+	call(mpdlist,mtk_widget,redraw);
 }
 
 static void mouse_release(mtk_widget_t *widget, int x, int y)
@@ -239,7 +240,7 @@ static void mouse_release(mtk_widget_t *widget, int x, int y)
 	mpdlist->slide_scroll_moved = false;
 
 	scroll_fixup(mpdlist);
-	draw(widget);
+	call(mpdlist,mtk_widget,redraw);
 }
 
 static void mouse_move(mtk_widget_t *widget, int x, int y)
@@ -257,7 +258,7 @@ static void mouse_move(mtk_widget_t *widget, int x, int y)
 	mpdlist->slide_scroll_moved = true;
 
 	scroll_fixup(mpdlist);
-	draw(widget);
+	call(mpdlist,mtk_widget,redraw);
 }
 
 mtk_mpdlist_t* mtk_mpdlist_new(size_t size,

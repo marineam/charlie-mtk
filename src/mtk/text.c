@@ -14,7 +14,7 @@ static bool scroller(void *data)
 		return 0;
 
 	this->scroll -= 1;
-	call(this,mtk_widget,draw);
+	call(this,mtk_widget,redraw);
 
 	return this->scroll ? true : false;
 }
@@ -85,7 +85,7 @@ static void set_text(mtk_text_t *this, char *text)
 		assert(this->text);
 		this->scroll = 0;
 		this->scroll_stop = true;
-		call(this,mtk_widget,draw);
+		call(this,mtk_widget,redraw);
 	}
 }
 

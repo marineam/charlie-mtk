@@ -71,6 +71,13 @@ void pack_right(mtk_hpack_t *this, mtk_widget_t *widget, int w)
 	repack(this);
 }
 
+static void set_size(mtk_widget_t *this, int w, int h)
+{
+	/* skip over mtk_container's set_size */
+	super(this,mtk_container,mtk_widget,set_size, w, h);
+	repack((mtk_hpack_t*)this);
+}
+
 mtk_hpack_t* mtk_hpack_new(size_t size)
 {
 	mtk_hpack_t *this = mtk_hpack(mtk_container_new(size));
@@ -84,4 +91,5 @@ mtk_hpack_t* mtk_hpack_new(size_t size)
 METHOD_TABLE_INIT(mtk_hpack, mtk_container)
 	METHOD(pack_left);
 	METHOD(pack_right);
+	METHOD(set_size);
 METHOD_TABLE_END

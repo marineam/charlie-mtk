@@ -41,7 +41,7 @@ static void set_image(mtk_image_t *this, char *path)
 		this->path = strdup(path);
 		cairo_surface_destroy(this->image);
 		this->image = cairo_image_surface_create_from_png(path);
-		call(this,mtk_widget,draw);
+		call(this,mtk_widget,redraw);
 	}
 }
 

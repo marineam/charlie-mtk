@@ -85,27 +85,21 @@ static int event()
 	case XCB_BUTTON_PRESS:
 		WINDOW_EVENT(xcb_button_press_event_t, event)
 			call(w,mtk_widget,mouse_press,_e->event_x,_e->event_y);
-			/* temporary hack to force a redraw */
-			call(w,mtk_widget,draw);
 		WINDOW_EVENT_END
 		break;
 	case XCB_BUTTON_RELEASE:
 		WINDOW_EVENT(xcb_button_release_event_t, event)
 			call(w,mtk_widget,mouse_release,_e->event_x,_e->event_y);
-			/* temporary hack to force a redraw */
-			call(w,mtk_widget,draw);
 		WINDOW_EVENT_END
 		break;
 	case XCB_MOTION_NOTIFY:
 		WINDOW_EVENT(xcb_motion_notify_event_t, event)
 			call(w,mtk_widget,mouse_move,_e->event_x,_e->event_y);
-			/* temporary hack to force a redraw */
-			call(w,mtk_widget,draw);
 		WINDOW_EVENT_END
 		break;
 	case XCB_EXPOSE:    /* draw or redraw the window */
 		WINDOW_EVENT(xcb_expose_event_t, window)
-			call(w,mtk_widget,draw);
+			call(w,mtk_widget,redraw);
 		WINDOW_EVENT_END
 		break;
 	case XCB_CONFIGURE_NOTIFY:
@@ -137,6 +131,8 @@ void mtk_main()
 	FD_SET(xfd, &xfd_set);
 
 	while (1) {
+		mtk_event_process();
+		_mtk_timer_cleanup();
 		xcb_flush(_conn);
 
 		if (xcb_connection_has_error(_conn))
@@ -145,9 +141,5 @@ void mtk_main()
 		/* pause until X sends something or we get a signal */
 		if (pselect(nfds, &xfd_set, NULL, NULL, NULL, &signals) >0)
 			while (event()>0);
-
-		mtk_event_process();
-
-		_mtk_timer_cleanup();
 	}
 }

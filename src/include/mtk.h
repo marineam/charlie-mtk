@@ -16,12 +16,14 @@
  * by the corresponding class implementation in mtk or a child class */
 CLASS(mtk_widget, mtk_object)
 	int x, y, w, h;
+	bool redraw;
 	struct mtk_window *window;
 	struct mtk_widget *parent;
 	cairo_surface_t *surface;
 METHODS(mtk_widget, mtk_object)
 	void (*init)(mtk_widget_t *this, mtk_widget_t* parent);
 	void (*draw)(mtk_widget_t *this); /* children must implement this */
+	void (*redraw)(mtk_widget_t *this);
 	void (*update)(mtk_widget_t *this);
 	void (*mouse_press)(mtk_widget_t *this, int x, int y);
 	void (*mouse_release)(mtk_widget_t *this, int x, int y);

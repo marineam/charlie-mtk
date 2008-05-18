@@ -182,7 +182,8 @@ static void status_size(mtk_widget_t *widget, int w, int h)
 {
 	mpd_status_t *this = mpd_status(widget);
 
-	super(this,mpd_status,mtk_widget,set_size, w, h);
+	/* skip mtk container */
+	super(this,mtk_container,mtk_widget,set_size, w, h);
 
 	call(this->title,mtk_widget,set_size, w-UNIT, UNIT*0.5);
 	call(this->artist,mtk_widget,set_size, w-UNIT, UNIT*0.5);

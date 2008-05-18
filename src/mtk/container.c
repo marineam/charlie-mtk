@@ -28,11 +28,16 @@ static void init(mtk_widget_t* c, mtk_widget_t* parent)
 	}
 
 	mtk_container(c)->ran_init = true;
-	call(c,mtk_widget,draw);
 }
 
-static void draw_widget(mtk_container_t* c, mtk_widget_t* widget) {
-	cairo_t *cr = cairo_create(mtk_widget(c)->surface);
+static void draw_widget(mtk_container_t* c, mtk_widget_t* widget)
+{
+	cairo_t *cr;
+
+	if (widget->redraw)
+		call(widget,mtk_widget,draw);
+
+	cr = cairo_create(mtk_widget(c)->surface);
 
 	cairo_rectangle(cr, widget->x, widget->y, widget->w, widget->h);
 	cairo_clip(cr);
@@ -79,12 +84,6 @@ static void draw(mtk_widget_t *c)
 {
 	mtk_widget_t *w;
 
-	if (!mtk_container(c)->ran_init) {
-		/* the container's draw method is called during init, but we
-		 * must wait till init is over */
-		return;
-	}
-
 	mtk_list_foreach_rev(mtk_container(c)->widgets, w)
 		draw_widget(mtk_container(c), w);
 
@@ -127,6 +126,16 @@ static void mouse_move(mtk_widget_t *c, int x, int y)
 	}
 }
 
+static void set_size(mtk_widget_t *this, int w, int h)
+{
+	mtk_widget_t *widget;
+
+	super(this,mtk_container,mtk_widget,set_size, w, h);
+
+	mtk_list_foreach(mtk_container(this)->widgets, widget)
+		call(widget,mtk_widget,set_size, w, h);
+}
+
 mtk_container_t* mtk_container_new(size_t size)
 {
 	mtk_container_t *c = mtk_container(mtk_widget_new(size));
@@ -142,6 +151,7 @@ METHOD_TABLE_INIT(mtk_container, mtk_widget)
 	METHOD(mouse_press);
 	METHOD(mouse_release);
 	METHOD(mouse_move);
+	METHOD(set_size);
 	METHOD(add_widget);
 	METHOD(reorder_top);
 METHOD_TABLE_END

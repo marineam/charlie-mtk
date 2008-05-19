@@ -46,8 +46,11 @@ END
 
 CLASS(mtk_viewer, mtk_container)
 	mtk_widget_t *slider;
+	mtk_widget_t *base;
 	int slide;
 METHODS(mtk_viewer, mtk_container)
+	void (*slide_in)(mtk_viewer_t *this, mtk_widget_t *widget);
+	void (*slide_out)(mtk_viewer_t *this);
 END
 
 CLASS(mtk_window, mtk_container)

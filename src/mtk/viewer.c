@@ -37,22 +37,35 @@ static void slider_draw(mtk_widget_t *this)
 	cairo_destroy(cr);
 }
 
-/*
 static void add_widget(mtk_container_t *c, mtk_widget_t *w)
 {
 	mtk_viewer_t *v = mtk_viewer(c);
 
-	if (!v->current)
-		v->current = w;
-
-	super(c,mtk_viewer,mtk_container,add_widget,w);
+	if (!v->base) {
+		v->base = w;
+		call(w,mtk_widget,set_size,mtk_widget(c)->w,mtk_widget(c)->h);
+		super(c,mtk_viewer,mtk_container,add_widget,w);
+		call(c,mtk_container,reorder_top, w);
+	}
+	else {
+		call(w,mtk_widget,set_size,mtk_widget(c)->w-UNIT,mtk_widget(c)->h);
+		call(w,mtk_widget,set_coord,UNIT,0);
+		super(c,mtk_viewer,mtk_container,add_widget,w);
+	}
 }
-*/
 
 static void set_size(mtk_widget_t *this, int w, int h)
 {
 	super(this,mtk_viewer,mtk_widget,set_size, w, h);
 	call(mtk_viewer(this)->slider,mtk_widget,set_size, UNIT, h);
+}
+
+static void slide_in(mtk_viewer_t *this, mtk_widget_t *w)
+{
+	call(this,mtk_container,reorder_top, w);
+	if (w != this->base)
+		call(this,mtk_container,reorder_top, this->slider);
+	call(this,mtk_widget,redraw);
 }
 
 _slider_t* _slider_new(size_t size)
@@ -68,7 +81,7 @@ mtk_viewer_t* mtk_viewer_new(size_t size)
 	SET_CLASS(this, mtk_viewer);
 
 	this->slider = mtk_widget(new(_slider));
-	call(this,mtk_container,add_widget, this->slider);
+	super(this,mtk_viewer,mtk_container,add_widget, this->slider);
 
 	return this;
 }
@@ -79,6 +92,8 @@ METHOD_TABLE_END
 
 METHOD_TABLE_INIT(mtk_viewer, mtk_container)
 	METHOD(set_size);
-	//METHOD(add_widget);
+	METHOD(slide_in);
+	//METHOD(slide_out);
+	METHOD(add_widget);
 	__slider_class_init();
 METHOD_TABLE_END

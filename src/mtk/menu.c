@@ -44,8 +44,14 @@ static void draw(void *vthis)
 	cairo_set_font_size(cr, UNIT * (UNIT/fe.height));
 	cairo_font_extents(cr, &fe);
 
+	cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
 	mtk_list_foreach(mtk_menu(this)->menu, item) {
-		cairo_set_source_rgb(cr, 0, 0, 0);
+		if (mtk_menu(this)->top == item->widget) {
+			cairo_set_source_rgb(cr, 0.8, 0.9, 1.0);
+			cairo_rectangle(cr, 0, y, mtk_menu(this)->slide, UNIT);
+			cairo_fill(cr);
+			cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+		}
 		cairo_move_to(cr,
 			mtk_menu(this)->slide - mtk_menu(this)->slide_max,
 			y + fe.ascent);

@@ -17,11 +17,11 @@ int main (int argc, char *argv[])
 
 	window = new(mtk_window, WIDTH, HEIGHT);
 	view = new(mtk_menu);
-	call(window,mtk_container,add_widget, mtk_widget(view));
+	call(window,add_widget, mtk_widget(view));
 	mpdlist = new(mpd_dirlist);
 	mpdstatus = new(mpd_status);
-	call(view,mtk_menu,add_item, mtk_widget(mpdlist), "Library");
-	call(view,mtk_menu,add_item, mtk_widget(mpdstatus), "Status");
+	call(view,add_item, mtk_widget(mpdlist), "Library");
+	call(view,add_item, mtk_widget(mpdstatus), "Status");
 
 	mtk_main();
 

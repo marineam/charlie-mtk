@@ -14,7 +14,7 @@ static bool scroller(void *data)
 		return 0;
 
 	this->scroll -= 1;
-	call(this,mtk_widget,redraw);
+	call(this,redraw);
 
 	return this->scroll ? true : false;
 }
@@ -30,9 +30,10 @@ static bool start_scroll(void *data)
 }
 
 
-static void draw(mtk_widget_t *widget)
+static void draw(void *this)
 {
-	mtk_text_t *text = mtk_text(widget);
+	mtk_widget_t *widget = this;
+	mtk_text_t *text = this;
 	cairo_t *cr = cairo_create(widget->surface);
 	cairo_font_extents_t fe;
 	cairo_text_extents_t te;
@@ -73,11 +74,13 @@ static void draw(mtk_widget_t *widget)
 
 	cairo_destroy(cr);
 
-	super(widget,mtk_text,mtk_widget,draw);
+	super(widget,mtk_text,draw);
 }
 
-static void set_text(mtk_text_t *this, char *text)
+static void set_text(void *vthis, char *text)
 {
+	mtk_text_t *this = vthis;
+
 	assert(text);
 	if (strcmp(this->text, text)) {
 		free(this->text);
@@ -85,7 +88,7 @@ static void set_text(mtk_text_t *this, char *text)
 		assert(this->text);
 		this->scroll = 0;
 		this->scroll_stop = true;
-		call(this,mtk_widget,redraw);
+		call(this,redraw);
 	}
 }
 

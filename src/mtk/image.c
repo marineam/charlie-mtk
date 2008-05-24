@@ -5,9 +5,10 @@
 
 #include "private.h"
 
-static void draw(mtk_widget_t *widget)
+static void draw(void *this)
 {
-	mtk_image_t *image = mtk_image(widget);
+	mtk_widget_t *widget = this;
+	mtk_image_t *image = this;
 	cairo_t *cr = cairo_create(widget->surface);
 	int w, h;
 	double scale;
@@ -30,18 +31,20 @@ static void draw(mtk_widget_t *widget)
 
 	cairo_destroy(cr);
 
-	super(widget,mtk_image,mtk_widget,draw);
+	super(widget,mtk_image,draw);
 }
 
-static void set_image(mtk_image_t *this, char *path)
+static void set_image(void *vthis, char *path)
 {
+	mtk_image_t *this = vthis;
+
 	assert(path);
 	if (strcmp(this->path, path)) {
 		free(this->path);
 		this->path = strdup(path);
 		cairo_surface_destroy(this->image);
 		this->image = cairo_image_surface_create_from_png(path);
-		call(this,mtk_widget,redraw);
+		call(this,redraw);
 	}
 }
 

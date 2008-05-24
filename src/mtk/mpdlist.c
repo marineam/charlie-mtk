@@ -6,9 +6,10 @@
 
 #include "private.h"
 
-static void update(mtk_widget_t *widget)
+static void update(void *this)
 {
-	mtk_mpdlist_t *mpdlist = (mtk_mpdlist_t*)widget;
+	mtk_widget_t *widget = this;
+	mtk_mpdlist_t *mpdlist = this;
 	cairo_t *cr = cairo_create(mpdlist->scroll_surface);
 	cairo_pattern_t *pat;
 	cairo_text_extents_t te;
@@ -56,9 +57,10 @@ static void update(mtk_widget_t *widget)
 	cairo_destroy(cr);
 }
 
-static void draw(mtk_widget_t *widget)
+static void draw(void *this)
 {
-	mtk_mpdlist_t *mpdlist = (mtk_mpdlist_t*)widget;
+	mtk_widget_t *widget = this;
+	mtk_mpdlist_t *mpdlist = this;
 	cairo_t *cr;
 	cairo_pattern_t *pat;
 
@@ -115,7 +117,7 @@ static void draw(mtk_widget_t *widget)
 
 	cairo_destroy(cr);
 
-	super(widget,mtk_mpdlist,mtk_widget,draw);
+	super(widget,mtk_mpdlist,draw);
 }
 
 /* cleans things up after mouse events */
@@ -156,8 +158,8 @@ static bool timed_draw(void *data)
 	mtk_mpdlist_t *mpdlist = data;
 
 	scroll_fixup(mpdlist);
-	call(mpdlist,mtk_widget,redraw);
-	call(mpdlist,mtk_widget,draw); // hack so the following code works
+	call(mpdlist,redraw);
+	call(mpdlist,draw); // hack so the following code works
 
 	if (mpdlist->scroll_top == mpdlist->timed_scroll) {
 		mpdlist->timed_active = false;
@@ -167,9 +169,10 @@ static bool timed_draw(void *data)
 		return true;
 }
 
-static void mouse_press(mtk_widget_t *widget, int x, int y)
+static void mouse_press(void *this, int x, int y)
 {
-	mtk_mpdlist_t *mpdlist = (mtk_mpdlist_t*)widget;
+	mtk_widget_t *widget = this;
+	mtk_mpdlist_t *mpdlist = this;
 
 	if (y <= UNIT) {
 		mpdlist->slide_scroll = false;
@@ -195,12 +198,12 @@ static void mouse_press(mtk_widget_t *widget, int x, int y)
 	}
 
 	scroll_fixup(mpdlist);
-	call(mpdlist,mtk_widget,redraw);
+	call(mpdlist,redraw);
 }
 
-static void mouse_release(mtk_widget_t *widget, int x, int y)
+static void mouse_release(void *this, int x, int y)
 {
-	mtk_mpdlist_t *mpdlist = (mtk_mpdlist_t*)widget;
+	mtk_mpdlist_t *mpdlist = this;
 
 	if (!mpdlist->slide_scroll)
 		return;
@@ -214,7 +217,7 @@ static void mouse_release(mtk_widget_t *widget, int x, int y)
 			    mpdlist->list, pos)) {
 				mpdlist->timed_scroll = 0;
 				mpdlist->scroll_top = 0;
-				update(widget);
+				call(mpdlist,update);
 			}
 		}
 	}
@@ -240,12 +243,12 @@ static void mouse_release(mtk_widget_t *widget, int x, int y)
 	mpdlist->slide_scroll_moved = false;
 
 	scroll_fixup(mpdlist);
-	call(mpdlist,mtk_widget,redraw);
+	call(mpdlist,redraw);
 }
 
-static void mouse_move(mtk_widget_t *widget, int x, int y)
+static void mouse_move(void *this, int x, int y)
 {
-	mtk_mpdlist_t *mpdlist = (mtk_mpdlist_t*)widget;
+	mtk_mpdlist_t *mpdlist = this;
 
 	if (!mpdlist->slide_scroll)
 		return;
@@ -258,7 +261,7 @@ static void mouse_move(mtk_widget_t *widget, int x, int y)
 	mpdlist->slide_scroll_moved = true;
 
 	scroll_fixup(mpdlist);
-	call(mpdlist,mtk_widget,redraw);
+	call(mpdlist,redraw);
 }
 
 mtk_mpdlist_t* mtk_mpdlist_new(size_t size,

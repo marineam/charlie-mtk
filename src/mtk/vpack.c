@@ -37,45 +37,47 @@ static void repack(mtk_vpack_t *this)
 		else
 			newsize = resize;
 
-		call(i->widget,mtk_widget,set_coord, 0, offset);
-		call(i->widget,mtk_widget,set_size,
-				mtk_widget(this)->w, newsize);
+		call(i->widget,set_coord, 0, offset);
+		call(i->widget,set_size, mtk_widget(this)->w, newsize);
 
 		offset += newsize;
 	}
 }
 
-void pack_top(mtk_vpack_t *this, mtk_widget_t *widget, int h)
+void pack_top(void *vthis, mtk_widget_t *widget, int h)
 {
+	mtk_vpack_t *this = vthis;
 	struct item *item = xmalloc(sizeof(struct item));
 
 	item->widget = widget;
 	item->size = h;
 	mtk_list_prepend(this->order, item);
 
-	super(this,mtk_hpack,mtk_container,add_widget,widget);
+	super(this,mtk_hpack,add_widget, widget);
 
 	repack(this);
 }
 
-void pack_bottom(mtk_vpack_t *this, mtk_widget_t *widget, int h)
+void pack_bottom(void *vthis, mtk_widget_t *widget, int h)
 {
+	mtk_vpack_t *this = vthis;
 	struct item *item = xmalloc(sizeof(struct item));
 
 	item->widget = widget;
 	item->size = h;
 	mtk_list_append(this->order, item);
 
-	super(this,mtk_hpack,mtk_container,add_widget,widget);
+	super(this,mtk_hpack,add_widget, widget);
 
 	repack(this);
 }
 
-static void set_size(mtk_widget_t *this, int w, int h)
+static void set_size(void *vthis, int w, int h)
 {
+	mtk_vpack_t *this = vthis;
 	/* skip over mtk_container's set_size */
-	super(this,mtk_container,mtk_widget,set_size, w, h);
-	repack((mtk_vpack_t*)this);
+	super(this,mtk_container,set_size, w, h);
+	repack(this);
 }
 
 mtk_vpack_t* mtk_vpack_new(size_t size)

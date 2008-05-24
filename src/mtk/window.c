@@ -42,7 +42,7 @@ mtk_window_t* mtk_window_new(size_t size, int w, int h)
 
 	mtk_list_append(_windows, window);
 
-	call(window,mtk_widget,init, NULL);
+	call(window,init, NULL);
 
 	return window;
 }
@@ -51,11 +51,13 @@ static void start_draw(void *data)
 {
 	mtk_window_t *w = data;
 
-	call(w,mtk_widget,draw);
+	call(w,draw);
 }
 
-static void redraw(mtk_widget_t *this)
+static void redraw(void *vthis)
 {
+	mtk_widget_t *this = vthis;
+
 	if (this->redraw)
 		return;
 
@@ -63,15 +65,17 @@ static void redraw(mtk_widget_t *this)
 	mtk_event_add(start_draw, this);
 }
 
-static void set_size(mtk_widget_t *this, int w, int h)
+static void set_size(void *vthis, int w, int h)
 {
+	mtk_widget_t *this = vthis;
+
 	if (this->w == w && this->h == h)
 		return;
 
 	assert(this->surface);
 	cairo_xcb_surface_set_size(this->surface, w, h);
 
-	super(this,mtk_window,mtk_widget,set_size, w, h);
+	super(this,mtk_window,set_size, w, h);
 }
 
 METHOD_TABLE_INIT(mtk_window, mtk_container)

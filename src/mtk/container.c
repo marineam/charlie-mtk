@@ -15,27 +15,30 @@
 
 /* This overrides the normal widget init method to run
  * init on all child widgets as well as itself */
-static void init(mtk_widget_t* c, mtk_widget_t* parent)
+static void init(void *this, mtk_widget_t* parent)
 {
+	mtk_container_t *c = this;
 	mtk_widget_t *w;
 
 	if (parent)
-		super(c,mtk_container,mtk_widget,init,parent);
-	assert(c->surface);
+		super(c,mtk_container,init,parent);
 
-	mtk_list_foreach(mtk_container(c)->widgets, w) {
-		call(w,mtk_widget,init,c);
+	assert(mtk_widget(c)->surface);
+
+	mtk_list_foreach(c->widgets, w) {
+		call(w,init, mtk_widget(c));
 	}
 
-	mtk_container(c)->ran_init = true;
+	c->ran_init = true;
 }
 
-static void draw_widget(mtk_container_t* c, mtk_widget_t* widget)
+static void draw_widget(void *this, mtk_widget_t* widget)
 {
+	mtk_container_t *c = this;
 	cairo_t *cr;
 
 	if (widget->redraw)
-		call(widget,mtk_widget,draw);
+		call(widget,draw);
 
 	cr = cairo_create(mtk_widget(c)->surface);
 
@@ -47,25 +50,27 @@ static void draw_widget(mtk_container_t* c, mtk_widget_t* widget)
 	cairo_destroy(cr);
 }
 
-static void add_widget(mtk_container_t* c, mtk_widget_t* widget)
+static void add_widget(void *this, mtk_widget_t* widget)
 {
+	mtk_container_t *c = this;
+
 	mtk_list_append(c->widgets, widget);
-	call(widget,mtk_widget,set_parent, mtk_widget(c));
+	call(widget,set_parent, mtk_widget(c));
 
 	/* if size is 0 auto-fit the widget */
 	if (!widget->w || !widget->h)
-		call(widget,mtk_widget,set_size,
-			mtk_widget(c)->w, mtk_widget(c)->h);
+		call(widget,set_size, mtk_widget(c)->w, mtk_widget(c)->h);
 
 	if (c->ran_init) {
 		/* only init child if the container's init has run */
-		assert(call_defined(widget,mtk_widget,init));
-		call(widget,mtk_widget,init, mtk_widget(c));
+		assert(call_defined(widget,init));
+		call(widget,init, mtk_widget(c));
 	}
 }
 
-static void reorder_top(mtk_container_t* c, mtk_widget_t* widget)
+static void reorder_top(void *this, mtk_widget_t* widget)
 {
+	mtk_container_t *c = this;
 	mtk_widget_t *w;
 
 	w = mtk_list_goto(c->widgets, 0);
@@ -80,60 +85,65 @@ static void reorder_top(mtk_container_t* c, mtk_widget_t* widget)
 	}
 }
 
-static void draw(mtk_widget_t *c)
+static void draw(void *this)
 {
+	mtk_container_t *c = this;
 	mtk_widget_t *w;
 
-	mtk_list_foreach_rev(mtk_container(c)->widgets, w)
-		draw_widget(mtk_container(c), w);
+	mtk_list_foreach_rev(c->widgets, w)
+		draw_widget(c, w);
 
-	super(c,mtk_container,mtk_widget,draw);
+	super(c,mtk_container,draw);
 }
 
-static void mouse_press(mtk_widget_t *c, int x, int y)
+static void mouse_press(void *this, int x, int y)
 {
+	mtk_widget_t *c = this;
 	mtk_widget_t *w;
 
 	FOREACH_AT_XY(mtk_container(c)->widgets, w, x, y) {
-		if (call_defined(w,mtk_widget,mouse_press))
-			call(w,mtk_widget,mouse_press, x-w->x, y-w->y);
+		if (call_defined(w,mouse_press))
+			call(w,mouse_press, x-w->x, y-w->y);
 		if (!mtk_container(c)->event_stacking)
 			break;
 	}
 }
 
-static void mouse_release(mtk_widget_t *c, int x, int y)
+static void mouse_release(void *this, int x, int y)
 {
+	mtk_widget_t *c = this;
 	mtk_widget_t *w;
 
 	FOREACH_AT_XY(mtk_container(c)->widgets, w, x, y) {
-		if (call_defined(w,mtk_widget,mouse_release))
-			call(w,mtk_widget,mouse_release, x-w->x, y-w->y);
+		if (call_defined(w,mouse_release))
+			call(w,mouse_release, x-w->x, y-w->y);
 		if (!mtk_container(c)->event_stacking)
 			break;
 	}
 }
 
-static void mouse_move(mtk_widget_t *c, int x, int y)
+static void mouse_move(void *this, int x, int y)
 {
+	mtk_widget_t *c = this;
 	mtk_widget_t *w;
 
 	FOREACH_AT_XY(mtk_container(c)->widgets, w, x, y) {
-		if (call_defined(w,mtk_widget,mouse_move))
-			call(w,mtk_widget,mouse_move, x-w->x, y-w->y);
+		if (call_defined(w,mouse_move))
+			call(w,mouse_move, x-w->x, y-w->y);
 		if (!mtk_container(c)->event_stacking)
 			break;
 	}
 }
 
-static void set_size(mtk_widget_t *this, int w, int h)
+static void set_size(void *vthis, int w, int h)
 {
+	mtk_widget_t *this = vthis;
 	mtk_widget_t *widget;
 
-	super(this,mtk_container,mtk_widget,set_size, w, h);
+	super(this,mtk_container,set_size, w, h);
 
 	mtk_list_foreach(mtk_container(this)->widgets, widget)
-		call(widget,mtk_widget,set_size, w, h);
+		call(widget,set_size, w, h);
 }
 
 mtk_container_t* mtk_container_new(size_t size)

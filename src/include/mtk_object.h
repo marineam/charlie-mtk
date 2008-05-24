@@ -14,7 +14,7 @@ typedef struct mtk_object_class mtk_object_class;
 extern struct mtk_object_class _mtk_object_class;
 struct mtk_object_class {
 	void *_super;
-	void (*free)(mtk_object_t* obj);
+	void (*free)(void *this);
 };
 
 #define CLASS(name, parent) \
@@ -54,11 +54,11 @@ struct mtk_object_class {
 
 #define new(name,args...) \
 	name##_new(sizeof(name##_t), ## args)
-#define super(obj,name,super,func,args...) \
-	_##name##_class._super->func((super##_t*)(obj), ## args)
-#define call(obj,name,func,args...) \
-	(obj)->_class->func((name##_t*)(obj), ## args)
-#define call_defined(obj,name,func) \
+#define super(obj,name,func,args...) \
+	_##name##_class._super->func((obj), ## args)
+#define call(obj,func,args...) \
+	(obj)->_class->func((obj), ## args)
+#define call_defined(obj,func) \
 	((obj)->_class->func != NULL)
 
 #endif

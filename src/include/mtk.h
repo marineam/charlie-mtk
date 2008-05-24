@@ -21,18 +21,18 @@ CLASS(mtk_widget, mtk_object)
 	struct mtk_widget *parent;
 	cairo_surface_t *surface;
 METHODS(mtk_widget, mtk_object)
-	void (*init)(mtk_widget_t *this, mtk_widget_t* parent);
-	void (*draw)(mtk_widget_t *this); /* children must implement this */
-	void (*redraw)(mtk_widget_t *this);
-	void (*update)(mtk_widget_t *this);
-	void (*mouse_press)(mtk_widget_t *this, int x, int y);
-	void (*mouse_release)(mtk_widget_t *this, int x, int y);
-	void (*mouse_move)(mtk_widget_t *this, int x, int y);
-	void (*set_coord)(mtk_widget_t *this, int x, int y);
-	void (*set_size)(mtk_widget_t *this, int w, int h);
-	void (*get_coord)(mtk_widget_t *this, int *x, int *y);
-	void (*get_size)(mtk_widget_t *this, int *w, int *h);
-	void (*set_parent)(mtk_widget_t *this, mtk_widget_t *parent);
+	void (*init)(void *this, mtk_widget_t* parent);
+	void (*draw)(void *this); /* children must implement this */
+	void (*redraw)(void *this);
+	void (*update)(void *this);
+	void (*mouse_press)(void *this, int x, int y);
+	void (*mouse_release)(void *this, int x, int y);
+	void (*mouse_move)(void *this, int x, int y);
+	void (*set_coord)(void *this, int x, int y);
+	void (*set_size)(void *this, int w, int h);
+	void (*get_coord)(void *this, int *x, int *y);
+	void (*get_size)(void *this, int *w, int *h);
+	void (*set_parent)(void *this, mtk_widget_t *parent);
 END
 
 CLASS(mtk_container, mtk_widget)
@@ -40,8 +40,8 @@ CLASS(mtk_container, mtk_widget)
 	bool ran_init;
 	bool event_stacking;
 METHODS(mtk_container, mtk_widget)
-	void (*add_widget)(mtk_container_t *this, mtk_widget_t *widget);
-	void (*reorder_top)(mtk_container_t *this, mtk_widget_t *widget);
+	void (*add_widget)(void *this, mtk_widget_t *widget);
+	void (*reorder_top)(void *this, mtk_widget_t *widget);
 END
 
 CLASS(mtk_menu, mtk_container)
@@ -50,7 +50,7 @@ CLASS(mtk_menu, mtk_container)
 	int slide_dir;
 	bool slide_active;
 METHODS(mtk_menu, mtk_container)
-	void (*add_item)(mtk_menu_t *this, mtk_widget_t *widget, char *text);
+	void (*add_item)(void *this, mtk_widget_t *widget, char *text);
 END
 
 CLASS(mtk_window, mtk_container)
@@ -62,15 +62,15 @@ END
 CLASS(mtk_hpack, mtk_container)
 	mtk_list_t *order;
 METHODS(mtk_hpack, mtk_container)
-	void (*pack_left)(mtk_hpack_t *this, mtk_widget_t *widget, int w);
-	void (*pack_right)(mtk_hpack_t *this, mtk_widget_t *widget, int w);
+	void (*pack_left)(void *this, mtk_widget_t *widget, int w);
+	void (*pack_right)(void *this, mtk_widget_t *widget, int w);
 END
 
 CLASS(mtk_vpack, mtk_container)
 	mtk_list_t *order;
 METHODS(mtk_vpack, mtk_container)
-	void (*pack_top)(mtk_vpack_t *this, mtk_widget_t *widget, int h);
-	void (*pack_bottom)(mtk_vpack_t *this, mtk_widget_t *widget, int h);
+	void (*pack_top)(void *this, mtk_widget_t *widget, int h);
+	void (*pack_bottom)(void *this, mtk_widget_t *widget, int h);
 END
 
 CLASS(mtk_text, mtk_widget)
@@ -78,14 +78,14 @@ CLASS(mtk_text, mtk_widget)
 	int scroll;
 	bool scroll_stop;
 METHODS(mtk_text, mtk_widget, char *text)
-	void (*set_text)(mtk_text_t *this, char *text);
+	void (*set_text)(void *this, char *text);
 END
 
 CLASS(mtk_image, mtk_widget)
 	char *path;
 	cairo_surface_t *image;
 METHODS(mtk_image, mtk_widget, char *path)
-	void (*set_image)(mtk_image_t *this, char *path);
+	void (*set_image)(void *this, char *path);
 END
 
 CLASS(mtk_mpdlist, mtk_widget)

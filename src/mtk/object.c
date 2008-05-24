@@ -10,7 +10,7 @@ mtk_object_t* mtk_object_new(size_t size)
 	return this;
 }
 
-static void objfree(mtk_object_t* obj)
+static void objfree(void* obj)
 {
 	free(obj);
 }

@@ -18,13 +18,13 @@ int main (int argc, char *argv[])
 	window = new(mtk_window,640, 480);
 	vpack = new(mtk_vpack);
 
-	call(window, mtk_container, add_widget, mtk_widget(vpack));
+	call(window,add_widget, mtk_widget(vpack));
 
 	txt1 = new(mtk_text, "I'm on the top");
 	txt2 = new(mtk_text, "The bottom is sooo much better");
 
-	call(vpack, mtk_vpack, pack_bottom, mtk_widget(txt1), 0);
-	call(vpack, mtk_vpack, pack_bottom, mtk_widget(txt2), 0);
+	call(vpack,pack_bottom, mtk_widget(txt1), 0);
+	call(vpack,pack_bottom, mtk_widget(txt2), 0);
 
 	mtk_timer_add(0.5, timer, "I'm a timer!");
 

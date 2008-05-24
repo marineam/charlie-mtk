@@ -5,44 +5,52 @@
 
 #include "private.h"
 
-static void init(mtk_widget_t* widget, mtk_widget_t* parent)
+static void init(void *this, mtk_widget_t* parent)
 {
+	mtk_widget_t *widget = this;
+
 	assert(parent->surface);
 	widget->surface = cairo_surface_create_similar(
 			parent->surface,
 			CAIRO_CONTENT_COLOR,
 			widget->w, widget->h);
 
-	if (call_defined(widget,mtk_widget,update))
-		call(widget,mtk_widget,update);
+	if (call_defined(widget,update))
+		call(widget,update);
 
-	call(widget,mtk_widget,redraw);
+	call(widget,redraw);
 }
 
-static void draw(mtk_widget_t* this)
+static void draw(void* this)
 {
-	this->redraw = false;
+	mtk_widget(this)->redraw = false;
 }
 
-static void redraw(mtk_widget_t* this)
+static void redraw(void* vthis)
 {
+	mtk_widget_t *this = vthis;
+
 	this->redraw = true;
 	if (this->parent)
-		call(this->parent,mtk_widget,redraw);
+		call(this->parent,redraw);
 }
 
-static void set_coord(mtk_widget_t *this, int x, int y)
+static void set_coord(void *vthis, int x, int y)
 {
+	mtk_widget_t *this = vthis;
+
 	this->x = x;
 	this->y = y;
 
 	/* we only need to redraw the parent for coord changes */
 	if (this->parent)
-		call(this->parent,mtk_widget,redraw);
+		call(this->parent,redraw);
 }
 
-static void set_size(mtk_widget_t *this, int w, int h)
+static void set_size(void *vthis, int w, int h)
 {
+	mtk_widget_t *this = vthis;
+
 	this->w = w;
 	this->h = h;
 
@@ -52,25 +60,29 @@ static void set_size(mtk_widget_t *this, int w, int h)
 	}
 }
 
-static void get_coord(mtk_widget_t *this, int *x, int *y)
+static void get_coord(void *vthis, int *x, int *y)
 {
+	mtk_widget_t *this = vthis;
+
 	if (x)
 		*x = this->x;
 	if (y)
 		*y = this->y;
 }
 
-static void get_size(mtk_widget_t *this, int *w, int *h)
+static void get_size(void *vthis, int *w, int *h)
 {
+	mtk_widget_t *this = vthis;
+
 	if (w)
 		*w = this->w;
 	if (h)
 		*h = this->h;
 }
 
-static void set_parent(mtk_widget_t *this, mtk_widget_t *parent)
+static void set_parent(void *this, mtk_widget_t *parent)
 {
-	this->parent = parent;
+	mtk_widget(this)->parent = parent;
 }
 
 mtk_widget_t* mtk_widget_new(size_t size)

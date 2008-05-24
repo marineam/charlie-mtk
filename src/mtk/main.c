@@ -84,27 +84,27 @@ static int event()
 	switch (e->response_type & ~0x80) {
 	case XCB_BUTTON_PRESS:
 		WINDOW_EVENT(xcb_button_press_event_t, event)
-			call(w,mtk_widget,mouse_press,_e->event_x,_e->event_y);
+			call(w,mouse_press,_e->event_x,_e->event_y);
 		WINDOW_EVENT_END
 		break;
 	case XCB_BUTTON_RELEASE:
 		WINDOW_EVENT(xcb_button_release_event_t, event)
-			call(w,mtk_widget,mouse_release,_e->event_x,_e->event_y);
+			call(w,mouse_release,_e->event_x,_e->event_y);
 		WINDOW_EVENT_END
 		break;
 	case XCB_MOTION_NOTIFY:
 		WINDOW_EVENT(xcb_motion_notify_event_t, event)
-			call(w,mtk_widget,mouse_move,_e->event_x,_e->event_y);
+			call(w,mouse_move,_e->event_x,_e->event_y);
 		WINDOW_EVENT_END
 		break;
 	case XCB_EXPOSE:    /* draw or redraw the window */
 		WINDOW_EVENT(xcb_expose_event_t, window)
-			call(w,mtk_widget,redraw);
+			call(w,redraw);
 		WINDOW_EVENT_END
 		break;
 	case XCB_CONFIGURE_NOTIFY:
 		WINDOW_EVENT(xcb_configure_notify_event_t, window)
-			call(w,mtk_widget,set_size, _e->width, _e->height);
+			call(w,set_size, _e->width, _e->height);
 		WINDOW_EVENT_END
 		break;
 	default:

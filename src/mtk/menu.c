@@ -9,15 +9,17 @@ struct item {
 	mtk_widget_t *widget;
 };
 
-static void draw(mtk_widget_t *this)
+static void draw(void *vthis)
 {
+	mtk_widget_t *this = vthis;
+
 	cairo_t *cr;
 	cairo_pattern_t *pat;
 	cairo_font_extents_t fe;
 	struct item *item;
 	int y = 0;
 
-	super(this,mtk_menu,mtk_widget,draw);
+	super(this,mtk_menu,draw);
 
 	cr = cairo_create(this->surface);
 	pat = cairo_pattern_create_linear(mtk_menu(this)->slide, 0,
@@ -66,32 +68,36 @@ static void draw(mtk_widget_t *this)
 	cairo_destroy(cr);
 }
 
-static void add_widget(mtk_container_t *c, mtk_widget_t *w)
+static void add_widget(void *this, mtk_widget_t *w)
 {
-	call(w,mtk_widget,set_size,mtk_widget(c)->w-UNIT,mtk_widget(c)->h);
-	call(w,mtk_widget,set_coord,UNIT,0);
-	super(c,mtk_menu,mtk_container,add_widget,w);
+	mtk_widget_t *c = this;
+
+	call(w,set_size, c->w-UNIT, c->h);
+	call(w,set_coord, UNIT, 0);
+	super(c,mtk_menu,add_widget, w);
 }
 
-static void add_item(mtk_menu_t *this, mtk_widget_t *widget, char *text)
+static void add_item(void *vthis, mtk_widget_t *widget, char *text)
 {
+	mtk_menu_t *this = vthis;
 	struct item *item = xmalloc(sizeof(struct item));
 
-	call(this,mtk_container,add_widget, widget);
+	call(this,add_widget, widget);
 	item->text = strdup(text);
 	item->widget = widget;
 	mtk_list_append(this->menu, item);
 }
 
-static void set_size(mtk_widget_t *this, int w, int h)
+static void set_size(void *vthis, int w, int h)
 {
+	mtk_container_t *this = vthis;
 	mtk_widget_t *widget;
 
 	/* Skip mtk_container's set_size */
-	super(this,mtk_container,mtk_widget,set_size, w, h);
+	super(this,mtk_container,set_size, w, h);
 
-	mtk_list_foreach(mtk_container(this)->widgets, widget)
-		call(widget,mtk_widget,set_size, w-UNIT, h);
+	mtk_list_foreach(this->widgets, widget)
+		call(widget,set_size, w-UNIT, h);
 }
 
 static bool slider(void *data)
@@ -100,7 +106,7 @@ static bool slider(void *data)
 
 	this->slide += this->slide_dir;
 
-	call(this,mtk_widget,redraw);
+	call(this,redraw);
 
 	if (this->slide < 0)
 		this->slide = 0;
@@ -113,16 +119,16 @@ static bool slider(void *data)
 		return true;
 }
 
-static void mouse_press(mtk_widget_t *this, int x, int y)
+static void mouse_press(void *this, int x, int y)
 {
-	mtk_menu_t *m = mtk_menu(this);
+	mtk_menu_t *m = this;
 
 	if (x < m->slide) {
 		int pos = y/UNIT;
 		struct item *item = mtk_list_goto(m->menu, pos);
 
 		if (item) {
-			call(m,mtk_container,reorder_top,item->widget);
+			call(m,reorder_top,item->widget);
 			m->slide_dir *= -1;
 			if (!m->slide_active) {
 				m->slide_active = true;
@@ -138,23 +144,23 @@ static void mouse_press(mtk_widget_t *this, int x, int y)
 		}
 	}
 	else
-		super(m,mtk_menu,mtk_widget,mouse_press, x, y);
+		super(m,mtk_menu,mouse_press, x, y);
 }
 
-static void mouse_release(mtk_widget_t *this, int x, int y)
+static void mouse_release(void *this, int x, int y)
 {
-	mtk_menu_t *m = mtk_menu(this);
+	mtk_menu_t *m = this;
 
 	if (x >= m->slide + UNIT)
-		super(m,mtk_menu,mtk_widget,mouse_release, x, y);
+		super(m,mtk_menu,mouse_release, x, y);
 }
 
-static void mouse_move(mtk_widget_t *this, int x, int y)
+static void mouse_move(void *this, int x, int y)
 {
-	mtk_menu_t *m = mtk_menu(this);
+	mtk_menu_t *m = this;
 
 	if (x >= m->slide + UNIT)
-		super(m,mtk_menu,mtk_widget,mouse_move, x, y);
+		super(m,mtk_menu,mouse_move, x, y);
 }
 
 mtk_menu_t* mtk_menu_new(size_t size)

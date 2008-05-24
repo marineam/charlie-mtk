@@ -4,22 +4,51 @@
 
 #include "private.h"
 
-CLASS(_slider, mtk_widget)
-METHODS(_slider, mtk_widget)
-END
+struct item {
+	char *text;
+	mtk_widget_t *widget;
+};
 
-static void slider_draw(mtk_widget_t *this)
+static void draw(mtk_widget_t *this)
 {
-	cairo_t *cr = cairo_create(this->surface);
+	cairo_t *cr;
 	cairo_pattern_t *pat;
+	cairo_font_extents_t fe;
+	struct item *item;
+	int y = 0;
 
-	pat = cairo_pattern_create_linear(0, 0, this->w, 0);
-	cairo_pattern_add_color_stop_rgb(pat, 0.0, 0.6, 0.6, 0.9);
-	cairo_pattern_add_color_stop_rgb(pat, 1.0, 1.0, 1.0, 1.0);
-	cairo_rectangle(cr, 0, 0, this->w, this->h);
+	super(this,mtk_menu,mtk_widget,draw);
+
+	cr = cairo_create(this->surface);
+	pat = cairo_pattern_create_linear(mtk_menu(this)->slide, 0,
+		mtk_menu(this)->slide+UNIT, 0);
+	cairo_pattern_add_color_stop_rgb(pat, 1.0, 0.6, 0.6, 0.9);
+	cairo_pattern_add_color_stop_rgb(pat, 0.0, 1.0, 1.0, 1.0);
+	cairo_rectangle(cr, mtk_menu(this)->slide, 0, UNIT, this->h);
 	cairo_set_source(cr, pat);
 	cairo_fill(cr);
 	cairo_pattern_destroy(pat);
+
+	cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+	cairo_rectangle(cr, 0, 0, mtk_menu(this)->slide, this->h);
+	cairo_fill(cr);
+
+	cairo_select_font_face(cr, "Sans",
+		CAIRO_FONT_SLANT_NORMAL,
+		CAIRO_FONT_WEIGHT_NORMAL);
+	cairo_set_font_size(cr, UNIT);
+	cairo_font_extents(cr, &fe);
+	/* adjust font size so UNIT == fe.height */
+	cairo_set_font_size(cr, UNIT * (UNIT/fe.height));
+	cairo_font_extents(cr, &fe);
+
+	mtk_list_foreach(mtk_menu(this)->menu, item) {
+		cairo_set_source_rgb(cr, 0, 0, 0);
+		cairo_move_to(cr, mtk_menu(this)->slide - this->w/2,
+			y + fe.ascent);
+		cairo_show_text(cr, item->text);
+		y += UNIT;
+	}
 
 	/*cairo_move_to(cr, widget->w/2.0-UNIT*0.25, UNIT*0.75);
 	cairo_line_to(cr, widget->w/2.0, UNIT*0.25);
@@ -39,61 +68,112 @@ static void slider_draw(mtk_widget_t *this)
 
 static void add_widget(mtk_container_t *c, mtk_widget_t *w)
 {
-	mtk_viewer_t *v = mtk_viewer(c);
+	call(w,mtk_widget,set_size,mtk_widget(c)->w-UNIT,mtk_widget(c)->h);
+	call(w,mtk_widget,set_coord,UNIT,0);
+	super(c,mtk_menu,mtk_container,add_widget,w);
+}
 
-	if (!v->base) {
-		v->base = w;
-		call(w,mtk_widget,set_size,mtk_widget(c)->w,mtk_widget(c)->h);
-		super(c,mtk_viewer,mtk_container,add_widget,w);
-		call(c,mtk_container,reorder_top, w);
-	}
-	else {
-		call(w,mtk_widget,set_size,mtk_widget(c)->w-UNIT,mtk_widget(c)->h);
-		call(w,mtk_widget,set_coord,UNIT,0);
-		super(c,mtk_viewer,mtk_container,add_widget,w);
-	}
+static void add_item(mtk_menu_t *this, mtk_widget_t *widget, char *text)
+{
+	struct item *item = xmalloc(sizeof(struct item));
+
+	call(this,mtk_container,add_widget, widget);
+	item->text = strdup(text);
+	item->widget = widget;
+	mtk_list_append(this->menu, item);
 }
 
 static void set_size(mtk_widget_t *this, int w, int h)
 {
-	super(this,mtk_viewer,mtk_widget,set_size, w, h);
-	call(mtk_viewer(this)->slider,mtk_widget,set_size, UNIT, h);
+	mtk_widget_t *widget;
+
+	/* Skip mtk_container's set_size */
+	super(this,mtk_container,mtk_widget,set_size, w, h);
+
+	mtk_list_foreach(mtk_container(this)->widgets, widget)
+		call(widget,mtk_widget,set_size, w-UNIT, h);
 }
 
-static void slide_in(mtk_viewer_t *this, mtk_widget_t *w)
+static bool slider(void *data)
 {
-	call(this,mtk_container,reorder_top, w);
-	if (w != this->base)
-		call(this,mtk_container,reorder_top, this->slider);
+	mtk_menu_t *this = data;
+
+	this->slide += this->slide_dir;
+
 	call(this,mtk_widget,redraw);
+
+	if (this->slide < 0)
+		this->slide = 0;
+
+	if (this->slide == 0 || this->slide >= mtk_widget(this)->w/2) {
+		this->slide_active = false;
+		return false;
+	}
+	else
+		return true;
 }
 
-_slider_t* _slider_new(size_t size)
+static void mouse_press(mtk_widget_t *this, int x, int y)
 {
-	_slider_t *this = _slider(mtk_widget_new(size));
-	SET_CLASS(this, _slider);
+	mtk_menu_t *m = mtk_menu(this);
+
+	if (x < m->slide) {
+		int pos = y/UNIT;
+		struct item *item = mtk_list_goto(m->menu, pos);
+
+		if (item) {
+			call(m,mtk_container,reorder_top,item->widget);
+			m->slide_dir *= -1;
+			if (!m->slide_active) {
+				m->slide_active = true;
+				mtk_timer_add(0.03, slider, m);
+			}
+		}
+	}
+	else if (x < m->slide + UNIT || (m->slide && x > m->slide)) {
+		m->slide_dir *= -1;
+		if (!m->slide_active) {
+			m->slide_active = true;
+			mtk_timer_add(0.03, slider, m);
+		}
+	}
+	else
+		super(m,mtk_menu,mtk_widget,mouse_press, x, y);
+}
+
+static void mouse_release(mtk_widget_t *this, int x, int y)
+{
+	mtk_menu_t *m = mtk_menu(this);
+
+	if (x >= m->slide + UNIT)
+		super(m,mtk_menu,mtk_widget,mouse_release, x, y);
+}
+
+static void mouse_move(mtk_widget_t *this, int x, int y)
+{
+	mtk_menu_t *m = mtk_menu(this);
+
+	if (x >= m->slide + UNIT)
+		super(m,mtk_menu,mtk_widget,mouse_move, x, y);
+}
+
+mtk_menu_t* mtk_menu_new(size_t size)
+{
+	mtk_menu_t *this = mtk_menu(mtk_container_new(size));
+	SET_CLASS(this, mtk_menu);
+
+	this->menu = mtk_list_new();
+	this->slide_dir = -20;
+
 	return this;
 }
 
-mtk_viewer_t* mtk_viewer_new(size_t size)
-{
-	mtk_viewer_t *this = mtk_viewer(mtk_container_new(size));
-	SET_CLASS(this, mtk_viewer);
-
-	this->slider = mtk_widget(new(_slider));
-	super(this,mtk_viewer,mtk_container,add_widget, this->slider);
-
-	return this;
-}
-
-METHOD_TABLE_INIT(_slider, mtk_widget)
-	_METHOD(draw, slider_draw);
-METHOD_TABLE_END
-
-METHOD_TABLE_INIT(mtk_viewer, mtk_container)
+METHOD_TABLE_INIT(mtk_menu, mtk_container)
+	METHOD(draw);
 	METHOD(set_size);
-	METHOD(slide_in);
-	//METHOD(slide_out);
+	METHOD(mouse_press);
+	METHOD(mouse_release);
+	METHOD(mouse_move);
 	METHOD(add_widget);
-	__slider_class_init();
+	METHOD(add_item);
 METHOD_TABLE_END

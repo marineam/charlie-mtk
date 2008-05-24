@@ -44,13 +44,13 @@ METHODS(mtk_container, mtk_widget)
 	void (*reorder_top)(mtk_container_t *this, mtk_widget_t *widget);
 END
 
-CLASS(mtk_viewer, mtk_container)
-	mtk_widget_t *slider;
-	mtk_widget_t *base;
+CLASS(mtk_menu, mtk_container)
+	mtk_list_t *menu;
 	int slide;
-METHODS(mtk_viewer, mtk_container)
-	void (*slide_in)(mtk_viewer_t *this, mtk_widget_t *widget);
-	void (*slide_out)(mtk_viewer_t *this);
+	int slide_dir;
+	bool slide_active;
+METHODS(mtk_menu, mtk_container)
+	void (*add_item)(mtk_menu_t *this, mtk_widget_t *widget, char *text);
 END
 
 CLASS(mtk_window, mtk_container)

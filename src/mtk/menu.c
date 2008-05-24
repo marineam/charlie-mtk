@@ -46,7 +46,8 @@ static void draw(void *vthis)
 
 	mtk_list_foreach(mtk_menu(this)->menu, item) {
 		cairo_set_source_rgb(cr, 0, 0, 0);
-		cairo_move_to(cr, mtk_menu(this)->slide - this->w/2,
+		cairo_move_to(cr,
+			mtk_menu(this)->slide - mtk_menu(this)->slide_max,
 			y + fe.ascent);
 		cairo_show_text(cr, item->text);
 		y += UNIT;
@@ -81,11 +82,33 @@ static void add_item(void *vthis, mtk_widget_t *widget, char *text)
 {
 	mtk_menu_t *this = vthis;
 	struct item *item = xmalloc(sizeof(struct item));
+	cairo_t *cr;
+	cairo_text_extents_t te;
+	int max = 0;
 
 	call(this,add_widget, widget);
 	item->text = strdup(text);
 	item->widget = widget;
 	mtk_list_append(this->menu, item);
+
+	/* Don't actually draw anything, just calc the max menu width */
+	cr = cairo_create(mtk_widget(this)->surface);
+	cairo_select_font_face(cr, "Sans",
+		CAIRO_FONT_SLANT_NORMAL,
+		CAIRO_FONT_WEIGHT_NORMAL);
+	cairo_set_font_size(cr, UNIT);
+
+
+	mtk_list_foreach(this->menu, item) {
+		cairo_text_extents(cr, item->text, &te);
+		if (te.width > max)
+			max = te.width;
+	}
+
+	assert(max + UNIT <= mtk_widget(this)->w);
+	this->slide_max = max;
+
+	cairo_destroy(cr);
 }
 
 static void set_size(void *vthis, int w, int h)
@@ -111,7 +134,7 @@ static bool slider(void *data)
 	if (this->slide < 0)
 		this->slide = 0;
 
-	if (this->slide == 0 || this->slide >= mtk_widget(this)->w/2) {
+	if (this->slide == 0 || this->slide >= this->slide_max) {
 		this->slide_active = false;
 		return false;
 	}

@@ -46,8 +46,10 @@ END
 
 CLASS(mtk_menu, mtk_container)
 	mtk_list_t *menu;
+	mtk_widget_t *top;
 	int slide;
 	int slide_max;
+	int slide_item;
 	char slide_dir;
 	bool slide_active;
 METHODS(mtk_menu, mtk_container)

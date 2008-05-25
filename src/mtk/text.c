@@ -13,7 +13,7 @@ static bool scroller(void *data)
 	if (this->scroll_stop)
 		return 0;
 
-	this->scroll -= 1;
+	this->scroll -= 2;
 	call(this,redraw);
 
 	return this->scroll ? true : false;
@@ -56,7 +56,7 @@ static void draw(void *this)
 	}
 
 	if (!text->scroll && te.width > widget->w)
-		mtk_timer_add(2.0, start_scroll, widget);
+		mtk_timer_add(4.0, start_scroll, widget);
 
 	cairo_set_source_rgb(cr, 1, 1, 1);
 	cairo_rectangle(cr, 0, 0, widget->w, widget->h);

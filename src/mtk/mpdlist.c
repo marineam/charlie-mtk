@@ -179,7 +179,7 @@ static void mouse_press(void *this, int x, int y)
 		mpdlist->timed_scroll -= (widget->h/2 - (widget->h/2)%UNIT);
 		if (!mpdlist->timed_active) {
 			mpdlist->timed_active = true;
-			mtk_timer_add(0.08, timed_draw, mpdlist);
+			mtk_timer_add(1.0/30, timed_draw, mpdlist);
 		}
 	}
 	else if (y > widget->h-UNIT) {
@@ -187,7 +187,7 @@ static void mouse_press(void *this, int x, int y)
 		mpdlist->timed_scroll += (widget->h/2 - (widget->h/2)%UNIT);
 		if (!mpdlist->timed_active) {
 			mpdlist->timed_active = true;
-			mtk_timer_add(0.08, timed_draw, mpdlist);
+			mtk_timer_add(1.0/30, timed_draw, mpdlist);
 		}
 	}
 	else {
@@ -235,7 +235,7 @@ static void mouse_release(void *this, int x, int y)
 
 		if (!mpdlist->timed_active) {
 			mpdlist->timed_active = true;
-			mtk_timer_add(0.08, timed_draw, mpdlist);
+			mtk_timer_add(1.0/30, timed_draw, mpdlist);
 		}
 	}
 

@@ -22,6 +22,14 @@ static void draw(void *vthis)
 	super(this,mtk_menu,draw);
 
 	cr = cairo_create(this->surface);
+
+	if (mtk_menu(this)->slide_item > mtk_menu(this)->slide + UNIT) {
+		cairo_set_source_rgb(cr, 0.95, 0.95, 0.95);
+		cairo_move_to(cr, mtk_menu(this)->slide_item, 0);
+		cairo_line_to(cr, mtk_menu(this)->slide_item, this->h);
+		cairo_stroke(cr);
+	}
+
 	pat = cairo_pattern_create_linear(mtk_menu(this)->slide, 0,
 		mtk_menu(this)->slide+UNIT, 0);
 	cairo_pattern_add_color_stop_rgb(pat, 1.0, 0.6, 0.6, 0.9);

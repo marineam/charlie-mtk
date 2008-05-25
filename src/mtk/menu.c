@@ -163,7 +163,8 @@ static bool slider(void *data)
 	call(this,redraw);
 
 	/* detect if both sides are done sliding and finish */
-	if ((this->slide == 0 && this->slide_item > mtk_widget(this)->w) ||
+	if ((this->slide == 0 && (this->slide_item > mtk_widget(this)->w ||
+				  this->slide_item == UNIT)) ||
 	    (this->slide == this->slide_max && this->slide_item == UNIT)) {
 		call(this,reorder_top, this->top);
 		this->old = this->top;

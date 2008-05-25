@@ -10,27 +10,25 @@ static void draw(void *this)
 	mtk_widget_t *widget = this;
 	mtk_image_t *image = this;
 	cairo_t *cr = cairo_create(widget->surface);
-	int w, h, x = 0, y = 0;
+	cairo_matrix_t trans;
+	int w, h;
 	double scale;
 
 	w = cairo_image_surface_get_width(image->image);
 	h = cairo_image_surface_get_height(image->image);
 
-	if (w/h) {
+	if (w/h)
 		scale = (double)widget->w/w;
-		y = ((1.0/scale)*widget->h-h)/2;
-	}
-	else {
+	else
 		scale = (double)widget->h/h;
-		x = ((1.0/scale)*widget->w-w)/2;
-	}
 
 	cairo_set_source_rgb(cr, 1, 1, 1);
 	cairo_rectangle(cr, 0, 0, widget->w, widget->h);
 	cairo_fill(cr);
 
-	cairo_scale(cr, scale, scale);
-	cairo_set_source_surface(cr, image->image, x, y);
+	cairo_matrix_init(&trans, scale, 0.0, 0.0, scale, 0, widget->h/2.0);
+	cairo_transform(cr, &trans);
+	cairo_set_source_surface(cr, image->image, 0, -h/2.0);
 	cairo_paint(cr);
 
 	cairo_destroy(cr);

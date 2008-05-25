@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <libmpdclient.h>
 #include <charlie.h>
+#include <cairo.h>
 #include <mtk.h>
 
 static bool updatestatus(void *data)
@@ -45,6 +46,20 @@ static bool updatestatus(void *data)
 	return true;
 }
 
+static void draw(void *vthis)
+{
+	mtk_widget_t *this = vthis;
+	cairo_t *cr = cairo_create(this->surface);
+
+	cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+	cairo_rectangle(cr, 0, 0, this->w, this->h);
+	cairo_fill(cr);
+
+	cairo_destroy(cr);
+
+	super(this,mpd_status,draw);
+}
+
 static void set_size(void *vthis, int w, int h)
 {
 	mpd_status_t *this = vthis;
@@ -52,9 +67,17 @@ static void set_size(void *vthis, int w, int h)
 	/* skip mtk container */
 	super(this,mtk_container,set_size, w, h);
 
-	call(this->title,set_size, w-UNIT, UNIT*0.5);
-	call(this->artist,set_size, w-UNIT, UNIT*0.5);
-	call(this->album,set_size, w-UNIT, UNIT*0.5);
+	call(this->art,set_coord, w*0.1, h*0.1);
+	call(this->art,set_size, w*0.3, h*0.8);
+
+	call(this->title,set_coord, w*0.45, h*0.4);
+	call(this->title,set_size, w*0.5, h*0.08);
+
+	call(this->artist,set_coord, w*0.45, h*0.5);
+	call(this->artist,set_size, w*0.5, h*0.06);
+
+	call(this->album,set_coord, w*0.45, h*0.56);
+	call(this->album,set_size, w*0.5, h*0.06);
 }
 
 mpd_status_t* mpd_status_new(size_t size)
@@ -64,16 +87,11 @@ mpd_status_t* mpd_status_new(size_t size)
 	SET_CLASS(this, mpd_status);
 
 	this->art = new(mtk_image, "album-test.png");
-	call(this->art,set_coord, 0, 0);
-	call(this->art,set_size, UNIT*1.5, UNIT*1.5);
-	call(this,add_widget, mtk_widget(this->art));
-
 	this->title = new(mtk_text, "");
 	this->artist = new(mtk_text, "");
 	this->album = new(mtk_text, "");
-	call(this->title,set_coord, UNIT*1.5, 0);
-	call(this->artist,set_coord, UNIT*1.5, UNIT*0.5);
-	call(this->album,set_coord, UNIT*1.5, UNIT);
+
+	call(this,add_widget, mtk_widget(this->art));
 	call(this,add_widget, mtk_widget(this->title));
 	call(this,add_widget, mtk_widget(this->artist));
 	call(this,add_widget, mtk_widget(this->album));
@@ -85,5 +103,6 @@ mpd_status_t* mpd_status_new(size_t size)
 }
 
 METHOD_TABLE_INIT(mpd_status, mtk_container)
+	METHOD(draw);
 	METHOD(set_size);
 METHOD_TABLE_END

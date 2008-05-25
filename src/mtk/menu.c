@@ -139,11 +139,12 @@ static bool slider(void *data)
 	mtk_menu_t *this = data;
 	int menu_rate, item_rate;
 
-	/* find a rate so both finish sliding at the same time
-	 * use 8 frames, that seems to give a nice speed */
-	menu_rate = this->slide_dir * this->slide_max/8.0;
+	/* find a rate (pixels per frame) to move so both
+	 * finish sliding at the same time. use 5 frames,
+	 * that seems to give a nice speed for my app */
+	menu_rate = this->slide_dir * this->slide_max/5.0;
 	item_rate = -this->slide_dir *
-		(mtk_widget(this)->w-this->slide_max)/8.0;
+		(mtk_widget(this)->w-this->slide_max)/5.0;
 
 	if (this->slide_item > UNIT)
 		this->slide_item += item_rate;
@@ -200,8 +201,11 @@ static void mouse_press(void *this, int x, int y)
 		m->slide_dir *= -1;
 		if (!m->slide_active) {
 			m->slide_active = true;
-			/* 30 frames per second */
-			mtk_timer_add(1.0/30, slider, m);
+			/* 20 frames per second,
+			 * that seems to be a good compromise for nearly
+			 * smooth animation and not causing my slow machine
+			 * to skip while playing music */
+			mtk_timer_add(1.0/20, slider, m);
 		}
 	}
 	else

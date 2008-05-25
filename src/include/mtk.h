@@ -46,7 +46,7 @@ END
 
 CLASS(mtk_menu, mtk_container)
 	mtk_list_t *menu;
-	mtk_widget_t *top;
+	mtk_widget_t *top, *old;
 	int slide;
 	int slide_max;
 	int slide_item;

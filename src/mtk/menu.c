@@ -79,8 +79,10 @@ static void add_widget(void *this, mtk_widget_t *w)
 {
 	mtk_widget_t *c = this;
 
-	if (!mtk_menu(this)->top)
+	if (!mtk_menu(this)->top) {
 		mtk_menu(this)->top = w;
+		mtk_menu(this)->old = w;
+	}
 
 	call(w,set_size, c->w-UNIT, c->h);
 	call(w,set_coord, UNIT, 0);
@@ -135,34 +137,37 @@ static void set_size(void *vthis, int w, int h)
 static bool slider(void *data)
 {
 	mtk_menu_t *this = data;
+	int menu_rate, item_rate;
 
-	/* The logic in here is a little ugly :-(
-	 * All I'm trying to do here is the following:
-	 *  - If we are in the process of sliding in a new widget move it
-	 *  - Unless we are waiting on the above, slide the menu in or out
-	 */
+	/* find a rate so both finish sliding at the same time
+	 * use 8 frames, that seems to give a nice speed */
+	menu_rate = this->slide_dir * this->slide_max/8.0;
+	item_rate = -this->slide_dir *
+		(mtk_widget(this)->w-this->slide_max)/8.0;
 
-	if (this->slide_dir < 0 && this->slide_item > UNIT)
-		this->slide_item += this->slide_dir;
-	else
-		this->slide_item = UNIT;
-
-	if (this->slide_dir > 0 || this->slide_item == UNIT)
-		this->slide += this->slide_dir;
-	else if (this->slide >= this->slide_item - UNIT)
-		this->slide = this->slide_item - UNIT;
+	if (this->slide_item > UNIT)
+		this->slide_item += item_rate;
 
 	if (this->slide_item < UNIT)
 		this->slide_item = UNIT;
 
-	if (this->slide < 0)
+	this->slide += menu_rate;
+
+	if (this->slide > this->slide_max)
+		this->slide = this->slide_max;
+	else if (this->slide < 0)
 		this->slide = 0;
 
-	call(this->top,set_coord, this->slide_item, 0);
+	assert(this->old);
+	call(this->old,set_coord, this->slide_item, 0);
 	call(this,redraw);
 
-	if (this->slide == 0 ||
-	    (this->slide >= this->slide_max && this->slide_item == UNIT)) {
+	/* detect if both sides are done sliding and finish */
+	if ((this->slide == 0 && this->slide_item > mtk_widget(this)->w) ||
+	    (this->slide == this->slide_max && this->slide_item == UNIT)) {
+		call(this,reorder_top, this->top);
+		this->old = this->top;
+		this->slide_item = UNIT;
 		this->slide_active = false;
 		return false;
 	}
@@ -179,10 +184,14 @@ static void mouse_press(void *this, int x, int y)
 		struct item *item = mtk_list_goto(m->menu, pos);
 
 		if (item && m->top != item->widget) {
+			m->old = m->top;
 			m->top = item->widget;
-			m->slide_item = mtk_widget(m)->w;
-			call(item->widget,set_coord, m->slide_item, 0);
+			m->slide_item = UNIT+1;
+			call(m->top,set_coord, UNIT, 0);
+			call(m->old,set_coord, m->slide_item, 0);
+			/* FIXME: can we do the following in one call? */
 			call(m,reorder_top, m->top);
+			call(m,reorder_top, m->old);
 		}
 	}
 
@@ -220,8 +229,7 @@ mtk_menu_t* mtk_menu_new(size_t size)
 	SET_CLASS(this, mtk_menu);
 
 	this->menu = mtk_list_new();
-	/* move things by 60 pixels per frame */
-	this->slide_dir = -60;
+	this->slide_dir = -1;
 
 	return this;
 }

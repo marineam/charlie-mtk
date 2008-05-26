@@ -38,10 +38,10 @@ static void draw(void *vthis)
 	cairo_select_font_face(cr, "Sans",
 		CAIRO_FONT_SLANT_NORMAL,
 		CAIRO_FONT_WEIGHT_NORMAL);
-	cairo_set_font_size(cr, UNIT);
+	cairo_set_font_size(cr, UNIT*0.75);
 	cairo_font_extents(cr, &fe);
-	/* adjust font size so UNIT == fe.height */
-	cairo_set_font_size(cr, UNIT * (UNIT/fe.height));
+	/* adjust font size so UNIT*0.75 == fe.height */
+	cairo_set_font_size(cr, (UNIT*0.75) * ((UNIT*0.75)/fe.height));
 	cairo_font_extents(cr, &fe);
 
 	cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
@@ -54,7 +54,7 @@ static void draw(void *vthis)
 		}
 		cairo_move_to(cr,
 			mtk_menu(this)->slide - mtk_menu(this)->slide_max,
-			y + fe.ascent);
+			y + fe.ascent + UNIT*0.125);
 		cairo_show_text(cr, item->text);
 		y += UNIT;
 	}
@@ -107,8 +107,7 @@ static void add_item(void *vthis, mtk_widget_t *widget, char *text)
 	cairo_select_font_face(cr, "Sans",
 		CAIRO_FONT_SLANT_NORMAL,
 		CAIRO_FONT_WEIGHT_NORMAL);
-	cairo_set_font_size(cr, UNIT);
-
+	cairo_set_font_size(cr, UNIT*0.75);
 
 	mtk_list_foreach(this->menu, item) {
 		cairo_text_extents(cr, item->text, &te);

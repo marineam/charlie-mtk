@@ -20,8 +20,8 @@ int main (int argc, char *argv[])
 	call(window,add_widget, mtk_widget(view));
 	mpdlist = new(mpd_dirlist);
 	mpdstatus = new(mpd_status);
-	call(view,add_item, mtk_widget(mpdlist), "Library");
-	call(view,add_item, mtk_widget(mpdstatus), "Status");
+	call(view,add_item, mtk_widget(mpdstatus), "Currently Playing");
+	call(view,add_item, mtk_widget(mpdlist), "Music Library");
 
 	mtk_main();
 

@@ -23,7 +23,9 @@ static bool updatestatus(void *data)
 	mpd_nextListOkCommand(conn);
 
 	entity = mpd_getNextInfoEntity(conn);
-	if (entity && entity->type == MPD_INFO_ENTITY_TYPE_SONG) {
+	if (entity && entity->type == MPD_INFO_ENTITY_TYPE_SONG &&
+	   (status->state == MPD_STATUS_STATE_PLAY ||
+	    status->state == MPD_STATUS_STATE_PAUSE) ) {
 		mpd_Song *song = entity->info.song;
 
 		if (song->title)
@@ -32,8 +34,17 @@ static bool updatestatus(void *data)
 			call(widget->title,set_text, song->file);
 		if (song->artist)
 			call(widget->artist,set_text, song->artist);
+		else
+			call(widget->artist,set_text, "");
 		if (song->album)
 			call(widget->album,set_text, song->album);
+		else
+			call(widget->album,set_text, "");
+	}
+	else {
+		call(widget->title,set_text, "");
+		call(widget->artist,set_text, "");
+		call(widget->album,set_text, "");
 	}
 
 	if (entity)

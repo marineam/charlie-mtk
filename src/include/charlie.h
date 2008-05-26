@@ -14,6 +14,8 @@ CLASS(mpd_status, mtk_container)
 	mtk_text_t *title;
 	mtk_text_t *artist;
 	mtk_text_t *album;
+	mtk_text_t *elapsed;
+	mtk_text_t *remaining;
 	mtk_image_t *art;
 METHODS(mpd_status, mtk_container)
 END

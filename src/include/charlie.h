@@ -1,6 +1,7 @@
 #ifndef CHARLIE_H
 #define CHARLIE_H
 
+#include <libmpdclient.h>
 #include "mtk.h"
 
 /* mpd.c */
@@ -9,6 +10,7 @@ METHODS(mpd_dirlist, mtk_mpdlist)
 END
 
 CLASS(mpd_status, mtk_container)
+	mpd_Status *status;
 	mtk_text_t *title;
 	mtk_text_t *artist;
 	mtk_text_t *album;

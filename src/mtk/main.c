@@ -54,6 +54,7 @@ void mtk_init()
 void mtk_cleanup()
 {
 	xcb_disconnect(_conn);
+	mtk_list_free_obj(_windows);
 }
 
 /* for use in mtk_event, searches for the window the

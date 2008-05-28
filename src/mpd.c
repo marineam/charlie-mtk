@@ -70,6 +70,8 @@ static void updatedir(mtk_list_t *list, void *data)
 		mpd_sendCommandListEnd(conn);
 	}
 
+	mtk_list_free(playlist);
+
 	die_on_mpd_error();
 
 	mpd_finishCommand(conn);

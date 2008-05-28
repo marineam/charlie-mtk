@@ -85,6 +85,16 @@ static void set_parent(void *this, mtk_widget_t *parent)
 	mtk_widget(this)->parent = parent;
 }
 
+static void objfree(void* vthis)
+{
+	mtk_widget_t *this = vthis;
+
+	if (this->surface)
+		cairo_surface_destroy(this->surface);
+
+	super(this,mtk_widget,free);
+}
+
 mtk_widget_t* mtk_widget_new(size_t size)
 {
 	mtk_widget_t* this = mtk_widget(mtk_object_new(size));
@@ -94,6 +104,7 @@ mtk_widget_t* mtk_widget_new(size_t size)
 }
 
 METHOD_TABLE_INIT(mtk_widget, mtk_object)
+	_METHOD(free, objfree);
 	METHOD(init);
 	METHOD(draw);
 	METHOD(redraw);

@@ -34,6 +34,7 @@ static bool updatestatus(void *data)
 	    widget->status->state == status->state) {
 		if (status->state != MPD_STATUS_STATE_PLAY) {
 			/* nothing important changed so do nothing */
+			mpd_freeStatus(status);
 			goto do_nothing;
 		}
 		else {
@@ -142,6 +143,16 @@ static void set_size(void *vthis, int w, int h)
 	call(this->remaining,set_size, w*0.11, h*0.04);
 }
 
+static void objfree(void *vthis)
+{
+	mpd_status_t *this = vthis;
+
+	if (this->status)
+		mpd_freeStatus(this->status);
+
+	super(this,mpd_status,free);
+}
+
 mpd_status_t* mpd_status_new(size_t size)
 {
 	mpd_status_t *this = mpd_status(mtk_container_new(size));
@@ -169,6 +180,7 @@ mpd_status_t* mpd_status_new(size_t size)
 }
 
 METHOD_TABLE_INIT(mpd_status, mtk_container)
+	_METHOD(free, objfree);
 	METHOD(draw);
 	METHOD(set_size);
 METHOD_TABLE_END

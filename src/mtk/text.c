@@ -92,6 +92,15 @@ static void set_text(void *vthis, char *text)
 	}
 }
 
+static void objfree(void *vthis)
+{
+	mtk_text_t *this = vthis;
+
+	free(this->text);
+
+	super(this,mtk_text,free);
+}
+
 mtk_text_t* mtk_text_new(size_t size, char *text)
 {
 	mtk_text_t *this = mtk_text(mtk_widget_new(size));
@@ -103,6 +112,7 @@ mtk_text_t* mtk_text_new(size_t size, char *text)
 }
 
 METHOD_TABLE_INIT(mtk_text, mtk_widget)
+	_METHOD(free, objfree);
 	METHOD(set_text);
 	METHOD(draw);
 METHOD_TABLE_END

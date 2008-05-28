@@ -50,6 +50,16 @@ static void set_image(void *vthis, char *path)
 	}
 }
 
+static void objfree(void *vthis)
+{
+	mtk_image_t *this = vthis;
+
+	free(this->path);
+	cairo_surface_destroy(this->image);
+
+	super(this,mtk_image,free);
+}
+
 mtk_image_t* mtk_image_new(size_t size, char *path)
 {
 	mtk_image_t *this = mtk_image(mtk_widget_new(size));
@@ -63,6 +73,7 @@ mtk_image_t* mtk_image_new(size_t size, char *path)
 }
 
 METHOD_TABLE_INIT(mtk_image, mtk_widget)
+	_METHOD(free, objfree);
 	METHOD(set_image);
 	METHOD(draw);
 METHOD_TABLE_END

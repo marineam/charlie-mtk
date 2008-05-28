@@ -20,6 +20,8 @@ typedef struct mtk_list {
 char* entityname(mpd_InfoEntity *entity);
 
 mtk_list_t* mtk_list_new();
+void mtk_list_free(mtk_list_t *l);
+void mtk_list_free_obj(mtk_list_t *l);
 void mtk_list_append(mtk_list_t *l, void* d);
 void mtk_list_prepend(mtk_list_t *l, void* d);
 void mtk_list_insert(mtk_list_t *l, void* d);
@@ -27,6 +29,7 @@ void* mtk_list_replace(mtk_list_t *l, void* d);
 void* mtk_list_remove(mtk_list_t *l);
 void* mtk_list_goto(mtk_list_t *l, int i);
 void* mtk_list_next(mtk_list_t *l);
+bool mtk_list_contains(mtk_list_t *l, void *data);
 
 static inline void* mtk_list_current(mtk_list_t *l) {
 	return l->current_node? l->current_node->data : NULL;

@@ -222,6 +222,21 @@ static void mouse_move(void *this, int x, int y)
 		super(m,mtk_menu,mouse_move, x, y);
 }
 
+static void objfree(void *vthis)
+{
+	mtk_menu_t *this = vthis;
+	struct item *item;
+
+	mtk_list_foreach(this->menu, item) {
+		free(item->text);
+		free(item);
+	}
+
+	mtk_list_free(this->menu);
+
+	super(this,mtk_menu,free);
+}
+
 mtk_menu_t* mtk_menu_new(size_t size)
 {
 	mtk_menu_t *this = mtk_menu(mtk_container_new(size));
@@ -234,6 +249,7 @@ mtk_menu_t* mtk_menu_new(size_t size)
 }
 
 METHOD_TABLE_INIT(mtk_menu, mtk_container)
+	_METHOD(free, objfree);
 	METHOD(draw);
 	METHOD(set_size);
 	METHOD(mouse_press);

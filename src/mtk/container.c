@@ -146,6 +146,15 @@ static void set_size(void *vthis, int w, int h)
 		call(widget,set_size, w, h);
 }
 
+static void objfree(void *vthis)
+{
+	mtk_container_t *this = vthis;
+
+	mtk_list_free_obj(this->widgets);
+
+	super(this,mtk_container,free);
+}
+
 mtk_container_t* mtk_container_new(size_t size)
 {
 	mtk_container_t *c = mtk_container(mtk_widget_new(size));
@@ -156,6 +165,7 @@ mtk_container_t* mtk_container_new(size_t size)
 }
 
 METHOD_TABLE_INIT(mtk_container, mtk_widget)
+	_METHOD(free, objfree);
 	METHOD(init);
 	METHOD(draw);
 	METHOD(mouse_press);

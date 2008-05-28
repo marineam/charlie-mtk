@@ -80,12 +80,36 @@ mtk_list_t* mtk_list_new()
 	return l;
 }
 
+void mtk_list_free(mtk_list_t *l)
+{
+	mtk_list_node_t *curr, *next;
+
+	list_audit(l);
+	for (curr = l->first; curr; curr = next) {
+		next = curr->next;
+		free(curr);
+	}
+	free(l);
+}
+
+void mtk_list_free_obj(mtk_list_t *l)
+{
+	mtk_list_node_t *curr, *next;
+
+	list_audit(l);
+	for (curr = l->first; curr; curr = next) {
+		next = curr->next;
+		call(mtk_object(curr->data), free);
+		free(curr);
+	}
+	free(l);
+}
+
 void mtk_list_append(mtk_list_t *l, void* d)
 {
 	l->current_node = NULL;
 	l->current_index = l->count;
 	mtk_list_insert(l,d);
-	list_audit(l);
 }
 
 void mtk_list_prepend(mtk_list_t *l, void* d)
@@ -93,7 +117,6 @@ void mtk_list_prepend(mtk_list_t *l, void* d)
 	l->current_node = l->first;
 	l->current_index = 0;
 	mtk_list_insert(l,d);
-	list_audit(l);
 }
 
 void mtk_list_insert(mtk_list_t *l, void* d)
@@ -139,7 +162,6 @@ void* mtk_list_replace(mtk_list_t *l, void* d)
 	void *data;
 	data = mtk_list_remove(l);
 	mtk_list_insert(l,d);
-	list_audit(l);
 	return data;
 }
 
@@ -211,6 +233,18 @@ void* mtk_list_next(mtk_list_t *l)
 
 	list_audit(l);
 	return l->current_node ? l->current_node->data : NULL;
+}
+
+bool mtk_list_contains(mtk_list_t *l, void *data)
+{
+	void *d;
+
+	mtk_list_foreach(l, d) {
+		if (data == d)
+			return true;
+	}
+
+	return false;
 }
 
 void* xmalloc(size_t size)

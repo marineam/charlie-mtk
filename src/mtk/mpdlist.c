@@ -264,6 +264,22 @@ static void mouse_move(void *this, int x, int y)
 	call(mpdlist,redraw);
 }
 
+static void objfree(void *vthis)
+{
+	mtk_mpdlist_t *this = vthis;
+	mpd_InfoEntity *entity;
+
+	cairo_surface_destroy(this->scroll_surface);
+
+	/* FIXME: this free should move up a level */
+	mtk_list_foreach(this->list, entity)
+		mpd_freeInfoEntity(entity);
+
+	mtk_list_free(this->list);
+
+	super(this,mtk_mpdlist,free);
+}
+
 mtk_mpdlist_t* mtk_mpdlist_new(size_t size,
 		void (*updatelist)(mtk_list_t *list, void *data),
 		int (*clicked)(void **data, mtk_list_t *list, int pos),
@@ -284,6 +300,7 @@ mtk_mpdlist_t* mtk_mpdlist_new(size_t size,
 }
 
 METHOD_TABLE_INIT(mtk_mpdlist, mtk_widget)
+	_METHOD(free, objfree);
 	METHOD(update);
 	METHOD(draw);
 	METHOD(mouse_press);

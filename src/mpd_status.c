@@ -5,6 +5,7 @@
 #include <charlie.h>
 #include <cairo.h>
 #include <mtk.h>
+#include <openssl/md5.h>
 
 static void set_time(mtk_text_t *widget, int time)
 {
@@ -14,6 +15,41 @@ static void set_time(mtk_text_t *widget, int time)
 	assert(str);
 	call(widget,set_text, str);
 	free(str);
+}
+
+/* This is kinda screwy but to keep things easy I'm ripping
+ * album art out of amarok and it likes to hash art by the function:
+ * md5(tolower(artist)tolower(album))
+ */
+static void set_art(mtk_image_t *widget, mpd_Song *song)
+{
+	unsigned char hash[MD5_DIGEST_LENGTH];
+	const char path[] = "../data/";
+	int start = strlen(path);
+	char *str;
+
+	if (!song->artist || !song->album) {
+		/* TODO: fix paths */
+		call(widget,set_image,"../data/album.png");
+		return;
+	}
+
+	asprintf(&str, "%s%s", song->artist, song->album);
+	for (int i = 0; i < strlen(str); i++) {
+		if (str[i] >= 'A' && str[i] <= 'Z')
+			str[i] += 'a' - 'A';
+	}
+	MD5((unsigned char*)str, strlen(str), hash);
+	free(str);
+
+	str = xmalloc(start+2*MD5_DIGEST_LENGTH+1);
+	strncpy(str, path, start+1);
+
+	for (int i = 0; i < MD5_DIGEST_LENGTH; i++)
+		snprintf(str+start+2*i, 3, "%02x", hash[i]);
+
+	//printf("setting image to: %s\n", str);
+	call(widget,set_image,str);
 }
 
 static bool updatestatus(void *data)
@@ -62,6 +98,7 @@ static bool updatestatus(void *data)
 			call(widget->album,set_text, song->album);
 		else
 			call(widget->album,set_text, "");
+		set_art(widget->art, song);
 	}
 	else {
 		call(widget->title,set_text, "");
@@ -159,7 +196,8 @@ mpd_status_t* mpd_status_new(size_t size)
 
 	SET_CLASS(this, mpd_status);
 
-	this->art = new(mtk_image, "album-test.png");
+	/* TODO: fix path */
+	this->art = new(mtk_image, "../data/album.png");
 	this->title = new(mtk_text, "");
 	this->artist = new(mtk_text, "");
 	this->album = new(mtk_text, "");

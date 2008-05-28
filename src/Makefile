@@ -3,7 +3,7 @@ MAKEFLAGS = --no-print-directory
 CFLAGS += -g -Wall -D_GNU_SOURCE -std=gnu99 -fms-extensions
 CFLAGS += -I./include -I./libmpdclient
 CFLAGS += $(shell pkg-config --cflags cairo xcb xcb-aux)
-LIBS = $(shell pkg-config --libs cairo xcb xcb-aux) -lrt
+LIBS = $(shell pkg-config --libs cairo xcb xcb-aux) -lrt -lssl
 SRCS = $(wildcard *.c)
 OBJS = $(SRCS:.c=.o)
 HEAD = $(wildcard include/*.h)

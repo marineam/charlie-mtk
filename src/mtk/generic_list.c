@@ -6,25 +6,26 @@
 
 #include "private.h"
 
-static void update(void *this)
+static void draw(void *this)
 {
 	mtk_widget_t *widget = this;
 	mtk_mpdlist_t *mpdlist = this;
-	cairo_t *cr = cairo_create(mpdlist->scroll_surface);
+	cairo_t *cr;
 	cairo_pattern_t *pat;
 	cairo_text_extents_t te;
 	mpd_InfoEntity *entity;
-	int y = 0;
+	int start, y;
 	char *name;
 
 	if (mpdlist->updatelist)
 		mpdlist->updatelist(mpdlist->list, mpdlist->data);
 
+	cr = cairo_create(widget->surface);
+
 	cairo_set_source_rgb(cr, 1, 1, 1);
-	cairo_rectangle(cr, 0, 0, WIDTH, 4000);
+	cairo_rectangle(cr, 0, 0, widget->w, widget->h);
 	cairo_fill(cr);
 
-	cairo_set_line_width(cr, 2);
 	cairo_select_font_face(cr, "Sans",
 		CAIRO_FONT_SLANT_NORMAL,
 		CAIRO_FONT_WEIGHT_NORMAL);
@@ -37,8 +38,12 @@ static void update(void *this)
 	cairo_pattern_add_color_stop_rgb(pat, 0.0, 0.8, 0.9, 0.9);
 	cairo_pattern_add_color_stop_rgb(pat, 0.6, 1.0, 1.0, 1.0);
 
-	mtk_list_foreach(mpdlist->list, entity) {
+	start = mpdlist->scroll_top / UNIT;
+	y = UNIT - mpdlist->scroll_top % UNIT;
 
+	for (entity = mtk_list_goto(mpdlist->list, start);
+	     entity && y < widget->h - UNIT;
+	     entity = mtk_list_next(mpdlist->list)) {
 		cairo_rectangle(cr, UNIT*0.1, y+UNIT*0.1, widget->w, UNIT*0.8);
 		cairo_set_source(cr, pat);
 		cairo_fill(cr);
@@ -54,17 +59,6 @@ static void update(void *this)
 	}
 
 	cairo_pattern_destroy(pat);
-	cairo_destroy(cr);
-}
-
-static void draw(void *this)
-{
-	mtk_widget_t *widget = this;
-	mtk_mpdlist_t *mpdlist = this;
-	cairo_t *cr;
-	cairo_pattern_t *pat;
-
-	cr = cairo_create(widget->surface);
 
 	pat = cairo_pattern_create_linear(0, 0, 0, UNIT);
 	cairo_pattern_add_color_stop_rgb(pat, 0.0, 0.6, 0.6, 0.9);
@@ -108,12 +102,6 @@ static void draw(void *this)
 	else
 		cairo_set_source_rgba(cr, 0.0, 0.0, 0.9, 0.7);
 	cairo_fill(cr);
-
-	cairo_rectangle(cr, 0, UNIT, widget->w, widget->h - 2*UNIT);
-	cairo_clip(cr);
-	cairo_set_source_surface(cr, mpdlist->scroll_surface, 0,
-		-mpdlist->scroll_top + UNIT);
-	cairo_paint(cr);
 
 	cairo_destroy(cr);
 
@@ -301,7 +289,6 @@ mtk_mpdlist_t* mtk_mpdlist_new(size_t size,
 
 METHOD_TABLE_INIT(mtk_mpdlist, mtk_widget)
 	_METHOD(free, objfree);
-	METHOD(update);
 	METHOD(draw);
 	METHOD(mouse_press);
 	METHOD(mouse_release);

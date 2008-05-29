@@ -142,7 +142,7 @@ static bool slider(void *data)
 	 * finish sliding at the same time. use 8 frames,
 	 * that seems to give a nice speed for my app */
 	menu_rate = this->slide_dir * this->slide_max/8.0;
-	item_rate = -this->slide_dir * (mtk_widget(this)->w-UNIT)/8.0;
+	item_rate = (mtk_widget(this)->w-UNIT)/8.0;
 
 	if (this->slide_item > UNIT)
 		this->slide_item += item_rate;

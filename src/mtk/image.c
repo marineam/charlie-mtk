@@ -17,7 +17,7 @@ static void draw(void *this)
 	w = cairo_image_surface_get_width(image->image);
 	h = cairo_image_surface_get_height(image->image);
 
-	if (w/h)
+	if (w >= h && (double)widget->w/w * h <= widget->h)
 		scale = (double)widget->w/w;
 	else
 		scale = (double)widget->h/h;

@@ -4,9 +4,8 @@
 #include <libmpdclient.h>
 #include "mtk.h"
 
-/* mpd.c */
-CLASS(mpd_dirlist, mtk_mpdlist)
-METHODS(mpd_dirlist, mtk_mpdlist)
+CLASS(mpd_dirlist, mtk_text_list)
+METHODS(mpd_dirlist, mtk_text_list)
 END
 
 CLASS(mpd_status, mtk_container)

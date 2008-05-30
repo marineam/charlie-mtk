@@ -15,10 +15,6 @@ typedef struct mtk_list {
 	int count;
 } mtk_list_t;
 
-/* little mpd helper thingy, move out of mtk some time */
-#include <libmpdclient.h>
-char* entityname(mpd_InfoEntity *entity);
-
 mtk_list_t* mtk_list_new();
 void mtk_list_free(mtk_list_t *l);
 void mtk_list_free_obj(mtk_list_t *l);

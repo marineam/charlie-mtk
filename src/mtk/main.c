@@ -33,7 +33,7 @@ void mtk_init()
 	_mtk_menu_class_init();
 	_mtk_text_class_init();
 	_mtk_image_class_init();
-	_mtk_mpdlist_class_init();
+	_mtk_text_list_class_init();
 
 	/* start of event and timer subsystems */
 	_mtk_event_init();

@@ -91,7 +91,7 @@ METHODS(mtk_image, mtk_widget, char *path)
 	void (*set_image)(void *this, char *path);
 END
 
-CLASS(mtk_mpdlist, mtk_widget)
+CLASS(mtk_text_list, mtk_widget)
 	mtk_list_t* list;
 	int timed_scroll;
 	bool timed_active;
@@ -100,14 +100,12 @@ CLASS(mtk_mpdlist, mtk_widget)
 	int slide_start;
 	int slide_offset;
 	int scroll_top;
-	cairo_surface_t *scroll_surface;
-	void (*updatelist)(mtk_list_t *list, void *data);
-	int (*clicked)(void **data, mtk_list_t *list, int pos);
-	void *data;
-METHODS(mtk_mpdlist, mtk_widget,
-	void (*updatelist)(mtk_list_t *list, void *data),
-	int (*clicked)(void **data, mtk_list_t *list, int pos),
-	void *data)
+METHODS(mtk_text_list, mtk_widget, mtk_list_t *list)
+	void (*set_list)(void *this, mtk_list_t *list);
+	char* (*_item_text)(void *this, void *item);
+	void (*_item_draw)(void *this, cairo_t *cr, void *item, int y);
+	void (*_item_click)(void *this, void *item);
+	void (*_item_free)(void *this, void *item);
 END
 
 /* main.c */

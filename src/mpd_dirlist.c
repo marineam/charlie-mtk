@@ -30,13 +30,17 @@ static char* _item_text(void *this, void *item)
 
 	if (file) {
 		char *s;
+		int len;
+
 		s = strrchr(file, '/');
 		s = s?s+1:file;
 		if (strstr(file, "../") == file)
 			snprintf(name, MAXTEXT, "Directory: %s", s);
 		else
 			strncpy(name, s, MAXTEXT);
-		for (int i = 0; i < strlen(name); i++) {
+
+		len = strlen(name);
+		for (int i = 0; i < len; i++) {
 			if (name[i] == '_')
 				name[i] = ' ';
 		}

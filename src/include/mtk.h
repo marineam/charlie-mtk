@@ -22,9 +22,8 @@ CLASS(mtk_widget, mtk_object)
 	cairo_surface_t *surface;
 METHODS(mtk_widget, mtk_object)
 	void (*init)(void *this, mtk_widget_t* parent);
-	void (*draw)(void *this); /* children must implement this */
+	void (*draw)(void *this);
 	void (*redraw)(void *this);
-	void (*update)(void *this);
 	void (*mouse_press)(void *this, int x, int y);
 	void (*mouse_release)(void *this, int x, int y);
 	void (*mouse_move)(void *this, int x, int y);

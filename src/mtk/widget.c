@@ -15,9 +15,6 @@ static void init(void *this, mtk_widget_t* parent)
 			CAIRO_CONTENT_COLOR,
 			widget->w, widget->h);
 
-	if (call_defined(widget,update))
-		call(widget,update);
-
 	call(widget,redraw);
 }
 

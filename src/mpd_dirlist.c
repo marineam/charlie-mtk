@@ -64,10 +64,10 @@ static void updatedir(mpd_dirlist_t *this, mpd_InfoEntity *dir)
 	else
 		path = "";
 
-	mpd_sendLsInfoCommand(conn, path);
+	mpd_sendLsInfoCommand(mpd_conn, path);
 	die_on_mpd_error();
 
-	while((entity = mpd_getNextInfoEntity(conn))) {
+	while((entity = mpd_getNextInfoEntity(mpd_conn))) {
 		die_on_mpd_error();
 		mtk_list_append(list, entity);
 		// temp
@@ -78,20 +78,20 @@ static void updatedir(mpd_dirlist_t *this, mpd_InfoEntity *dir)
 	// temp
 	if (mtk_list_length(playlist)) {
 		int pos = 0;
-		mpd_sendCommandListBegin(conn);
-		mpd_sendClearCommand(conn);
+		mpd_sendCommandListBegin(mpd_conn);
+		mpd_sendClearCommand(mpd_conn);
 		mtk_list_foreach(playlist, entity) {
 			entity->info.song->pos = pos;
-			mpd_sendAddIdCommand(conn, entity->info.song->file);
+			mpd_sendAddIdCommand(mpd_conn, entity->info.song->file);
 			pos++;
 		}
-		mpd_sendCommandListEnd(conn);
+		mpd_sendCommandListEnd(mpd_conn);
 	}
 	mtk_list_free(playlist);
 
 	die_on_mpd_error();
 
-	mpd_finishCommand(conn);
+	mpd_finishCommand(mpd_conn);
 	die_on_mpd_error();
 
 	call(this,set_list, list);
@@ -131,9 +131,9 @@ static void _item_click(void *vthis, void *item)
 		updatedir(this, new);
 	}
 	else if (entity->type == MPD_INFO_ENTITY_TYPE_SONG) {
-		mpd_sendPlayCommand(conn, entity->info.song->pos);
+		mpd_sendPlayCommand(mpd_conn, entity->info.song->pos);
 		die_on_mpd_error();
-		mpd_finishCommand(conn);
+		mpd_finishCommand(mpd_conn);
 		die_on_mpd_error();
 	}
 }

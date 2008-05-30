@@ -58,9 +58,9 @@ static bool updatestatus(void *data)
 	mpd_InfoEntity *entity;
 	mpd_status_t *widget = data;
 
-	mpd_sendStatusCommand(conn);
+	mpd_sendStatusCommand(mpd_conn);
 
-	status = mpd_getStatus(conn);
+	status = mpd_getStatus(mpd_conn);
 	die_on_mpd_error();
 	assert(status);
 
@@ -79,8 +79,8 @@ static bool updatestatus(void *data)
 		}
 	}
 
-	mpd_sendCurrentSongCommand(conn);
-	entity = mpd_getNextInfoEntity(conn);
+	mpd_sendCurrentSongCommand(mpd_conn);
+	entity = mpd_getNextInfoEntity(mpd_conn);
 	if (entity && entity->type == MPD_INFO_ENTITY_TYPE_SONG &&
 	   (status->state == MPD_STATUS_STATE_PLAY ||
 	    status->state == MPD_STATUS_STATE_PAUSE) ) {
@@ -120,7 +120,7 @@ do_redraw:
 	call(widget,redraw);
 
 do_nothing:
-	mpd_finishCommand(conn);
+	mpd_finishCommand(mpd_conn);
 	die_on_mpd_error();
 
 	return true;

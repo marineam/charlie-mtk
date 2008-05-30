@@ -29,15 +29,15 @@ static void update(void *vthis)
 	mpd_InfoEntity *entity;
 	mtk_list_t* list = mtk_list_new();
 
-	mpd_sendPlaylistInfoCommand(conn, -1);
+	mpd_sendPlaylistInfoCommand(mpd_conn, -1);
 	die_on_mpd_error();
 
-	while ((entity = mpd_getNextInfoEntity(conn))) {
+	while ((entity = mpd_getNextInfoEntity(mpd_conn))) {
 		die_on_mpd_error();
 		mtk_list_append(list, entity);
 	}
 
-	mpd_finishCommand(conn);
+	mpd_finishCommand(mpd_conn);
 	die_on_mpd_error();
 
 	call(this,set_list, list);
@@ -49,9 +49,9 @@ static void _item_click(void *vthis, void *item)
 
 	assert(entity->type == MPD_INFO_ENTITY_TYPE_SONG);
 
-	mpd_sendPlayCommand(conn, entity->info.song->pos);
+	mpd_sendPlayCommand(mpd_conn, entity->info.song->pos);
 	die_on_mpd_error();
-	mpd_finishCommand(conn);
+	mpd_finishCommand(mpd_conn);
 	die_on_mpd_error();
 }
 

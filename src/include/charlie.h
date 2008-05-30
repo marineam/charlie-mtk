@@ -24,8 +24,8 @@ CLASS(mpd_status, mtk_container)
 METHODS(mpd_status, mtk_container)
 END
 
-extern mpd_Connection *conn;
-#define die_on_mpd_error() die_on(conn->error, "%s\n", conn->errorStr)
+extern mpd_Connection *mpd_conn;
+#define die_on_mpd_error() die_on(mpd_conn->error, "%s\n", mpd_conn->errorStr)
 
 void mpd_init();
 

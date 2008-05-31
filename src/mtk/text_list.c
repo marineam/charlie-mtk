@@ -54,7 +54,7 @@ static void draw(void *this)
 
 	if (text_list->scroll_top == 0)
 		cairo_set_source_rgba(cr, 0.0, 0.0, 0.9, 0.2);
-	else if (text_list->scroll_top > text_list->timed_scroll)
+	else if (text_list->scroll_dir < 0)
 		cairo_set_source_rgba(cr, 0.0, 0.0, 0.9, 0.9);
 	else
 		cairo_set_source_rgba(cr, 0.0, 0.0, 0.9, 0.7);
@@ -68,7 +68,7 @@ static void draw(void *this)
 	if (text_list->scroll_top ==
 		mtk_list_length(text_list->list)*UNIT - widget->h + 2*UNIT)
 		cairo_set_source_rgba(cr, 0.0, 0.0, 0.9, 0.2);
-	else if (text_list->scroll_top < text_list->timed_scroll)
+	else if (text_list->scroll_dir > 0)
 		cairo_set_source_rgba(cr, 0.0, 0.0, 0.9, 0.9);
 	else
 		cairo_set_source_rgba(cr, 0.0, 0.0, 0.9, 0.7);
@@ -79,8 +79,8 @@ static void draw(void *this)
 	super(widget,mtk_text_list,draw);
 }
 
-/* cleans things up after mouse events */
-static void scroll_fixup(mtk_text_list_t *text_list)
+/* compute new scroll position */
+static void scroll(mtk_text_list_t *text_list)
 {
 	/* extreme scroll positions, max is the top, min bottom */
 	int min = 0;
@@ -88,27 +88,41 @@ static void scroll_fixup(mtk_text_list_t *text_list)
 		(mtk_widget(text_list)->h - 2*UNIT);
 
 	if (max <= min) {
-		text_list->timed_scroll = 0;
+		text_list->scroll_dir = 0;
 		text_list->scroll_top = 0;
 		return;
 	}
 
-	if (text_list->timed_scroll > max)
-		text_list->timed_scroll = max;
-	else if (text_list->timed_scroll < min)
-		text_list->timed_scroll = min;
+	if (!text_list->scroll_hold) {
+		int diff;
 
-	if (text_list->scroll_top > max)
-		text_list->scroll_top = max;
-	else if (text_list->scroll_top < min)
-		text_list->scroll_top = min;
-
-	if (text_list->timed_scroll != text_list->scroll_top) {
-		if (abs(text_list->timed_scroll - text_list->scroll_top) <=2)
-			text_list->scroll_top = text_list->timed_scroll;
+		if (text_list->scroll_dir >= 0)
+			diff = (UNIT - text_list->scroll_top % UNIT) % UNIT;
 		else
-			text_list->scroll_top += (text_list->timed_scroll
-				- text_list->scroll_top) * 0.5;
+			diff = -text_list->scroll_top % UNIT;
+
+		if (diff == 0)
+			text_list->scroll_dir = 0;
+		else {
+			if (abs(text_list->scroll_dir) > abs(diff))
+				text_list->scroll_dir = diff*0.9;
+			else
+				text_list->scroll_dir *= 0.9;
+
+			if (!text_list->scroll_dir)
+				text_list->scroll_dir = diff>0?1:-1;
+		}
+	}
+
+	text_list->scroll_top += text_list->scroll_dir;
+
+	if (text_list->scroll_top > max) {
+		text_list->scroll_top = max;
+		text_list->scroll_dir = 0;
+	}
+	else if (text_list->scroll_top < min) {
+		text_list->scroll_top = min;
+		text_list->scroll_dir = 0;
 	}
 }
 
@@ -116,11 +130,11 @@ static bool timed_draw(void *data)
 {
 	mtk_text_list_t *text_list = data;
 
-	scroll_fixup(text_list);
+	scroll(text_list);
 	call(text_list,redraw);
 
-	if (text_list->scroll_top == text_list->timed_scroll) {
-		text_list->timed_active = false;
+	if (!text_list->scroll_dir) {
+		text_list->scroll_active = false;
 		return false;
 	}
 	else
@@ -132,17 +146,11 @@ static void mouse_press(void *this, int x, int y)
 	mtk_widget_t *widget = this;
 	mtk_text_list_t *text_list = this;
 
-	if (y <= UNIT) {
-		text_list->timed_scroll -= (widget->h/2 - (widget->h/2)%UNIT);
-		if (!text_list->timed_active) {
-			text_list->timed_active = true;
-			mtk_timer_add(1.0/30, timed_draw, text_list);
-		}
-	}
-	else if (y > widget->h-UNIT) {
-		text_list->timed_scroll += (widget->h/2 - (widget->h/2)%UNIT);
-		if (!text_list->timed_active) {
-			text_list->timed_active = true;
+	if (y <= UNIT || y > widget->h-UNIT) {
+		text_list->scroll_hold = true;
+		text_list->scroll_dir = y<=UNIT ? -UNIT/4 : UNIT/4;
+		if (!text_list->scroll_active) {
+			text_list->scroll_active = true;
 			mtk_timer_add(1.0/30, timed_draw, text_list);
 		}
 	}
@@ -156,8 +164,15 @@ static void mouse_press(void *this, int x, int y)
 		}
 	}
 
-	scroll_fixup(text_list);
+	scroll(text_list);
 	call(text_list,redraw);
+}
+
+static void mouse_release(void *this, int x, int y)
+{
+	mtk_text_list_t *text_list = this;
+
+	text_list->scroll_hold = false;
 }
 
 static char* _item_text(void *this, void *item)
@@ -260,7 +275,7 @@ static void set_list(void *vthis, mtk_list_t *list)
 	mtk_list_free(this->list);
 
 	this->list = list;
-	this->timed_scroll = 0;
+	this->scroll_dir = 0;
 	this->scroll_top = 0;
 	call(this,redraw);
 }
@@ -296,6 +311,7 @@ METHOD_TABLE_INIT(mtk_text_list, mtk_widget)
 	_METHOD(free, objfree);
 	METHOD(draw);
 	METHOD(mouse_press);
+	METHOD(mouse_release);
 	METHOD(set_size);
 	METHOD(set_list);
 	METHOD(init);

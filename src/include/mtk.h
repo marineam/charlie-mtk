@@ -92,9 +92,10 @@ END
 
 CLASS(mtk_text_list, mtk_widget)
 	mtk_list_t* list;
-	int timed_scroll;
-	bool timed_active;
+	int scroll_dir;
 	int scroll_top;
+	bool scroll_active;
+	bool scroll_hold;
 	cairo_surface_t *item_background;
 METHODS(mtk_text_list, mtk_widget, mtk_list_t *list)
 	void (*set_list)(void *this, mtk_list_t *list);

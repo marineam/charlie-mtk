@@ -140,7 +140,7 @@ void mtk_main()
 			return;
 
 		/* pause until X sends something or we get a signal */
-		if (pselect(nfds, &xfd_set, NULL, NULL, NULL, &signals) >0)
-			while (event()>0);
+		pselect(nfds, &xfd_set, NULL, NULL, NULL, &signals);
+		while (event()>0);
 	}
 }

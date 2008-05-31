@@ -28,7 +28,7 @@ static void set_art(mtk_image_t *widget, mpd_Song *song)
 	int start = strlen(path);
 	char *str;
 
-	if (!song->artist || !song->album) {
+	if (!song || !song->artist || !song->album) {
 		/* TODO: fix paths */
 		call(widget,set_image,"../data/album.png");
 		return;
@@ -52,84 +52,64 @@ static void set_art(mtk_image_t *widget, mpd_Song *song)
 	call(widget,set_image,str);
 }
 
-static bool updatestatus(void *data)
+static void update(void *vthis)
 {
-	mpd_Status *status;
-	mpd_InfoEntity *entity;
-	mpd_status_t *widget = data;
+	mpd_InfoEntity *entity = NULL;
+	mpd_status_t *this = vthis;
 
-	mpd_sendStatusCommand(mpd_conn);
+	set_time(this->elapsed, mpd_stat->elapsedTime);
+	set_time(this->remaining, mpd_stat->elapsedTime - mpd_stat->totalTime);
 
-	status = mpd_getStatus(mpd_conn);
-	die_on_mpd_error();
-	assert(status);
-
-	if (widget->status &&
-	    widget->status->playlist == status->playlist &&
-	    widget->status->song == status->song &&
-	    widget->status->state == status->state) {
-		if (status->state != MPD_STATUS_STATE_PLAY) {
-			/* nothing important changed so do nothing */
-			mpd_freeStatus(status);
-			goto do_nothing;
-		}
-		else {
-			/* Not much changed, just update the time */
-			goto do_redraw;
-		}
+	if (mpd_stat->playlist == this->playlist &&
+	    mpd_stat->song == this->song) {
+		call(this,redraw);
+		return;
 	}
 
-	mpd_sendCurrentSongCommand(mpd_conn);
-	entity = mpd_getNextInfoEntity(mpd_conn);
-	if (entity && entity->type == MPD_INFO_ENTITY_TYPE_SONG &&
-	   (status->state == MPD_STATUS_STATE_PLAY ||
-	    status->state == MPD_STATUS_STATE_PAUSE) ) {
+	this->playlist = mpd_stat->playlist;
+	this->song = mpd_stat->song;
+
+	if (mpd_stat->playlistLength) {
+		mpd_sendPlaylistInfoCommand(mpd_conn, mpd_stat->song);
+		entity = mpd_getNextInfoEntity(mpd_conn);
+		mpd_finishCommand(mpd_conn);
+		die_on_mpd_error();
+	}
+
+	if (entity) {
 		mpd_Song *song = entity->info.song;
+		assert(entity->type == MPD_INFO_ENTITY_TYPE_SONG);
 
 		if (song->title)
-			call(widget->title,set_text, song->title);
+			call(this->title,set_text, song->title);
 		else
-			call(widget->title,set_text, song->file);
+			call(this->title,set_text, song->file);
 		if (song->artist)
-			call(widget->artist,set_text, song->artist);
+			call(this->artist,set_text, song->artist);
 		else
-			call(widget->artist,set_text, "");
+			call(this->artist,set_text, "");
 		if (song->album)
-			call(widget->album,set_text, song->album);
+			call(this->album,set_text, song->album);
 		else
-			call(widget->album,set_text, "");
-		set_art(widget->art, song);
+			call(this->album,set_text, "");
+		set_art(this->art, song);
 	}
 	else {
-		call(widget->title,set_text, "");
-		call(widget->artist,set_text, "");
-		call(widget->album,set_text, "");
+		call(this->title,set_text, "");
+		call(this->artist,set_text, "");
+		call(this->album,set_text, "");
+		set_art(this->art, NULL);
 	}
 
 	if (entity)
 		mpd_freeInfoEntity(entity);
 
-do_redraw:
-	set_time(widget->elapsed, status->elapsedTime);
-	set_time(widget->remaining, status->elapsedTime-status->totalTime);
-
-	if (widget->status)
-		mpd_freeStatus(widget->status);
-	widget->status = status;
-
-	call(widget,redraw);
-
-do_nothing:
-	mpd_finishCommand(mpd_conn);
-	die_on_mpd_error();
-
-	return true;
+	call(this,redraw);
 }
 
 static void draw(void *vthis)
 {
 	mtk_widget_t *this = vthis;
-	mpd_Status *status = mpd_status(vthis)->status;
 	cairo_t *cr = cairo_create(this->surface);
 	double x;
 
@@ -144,7 +124,7 @@ static void draw(void *vthis)
 	cairo_line_to(cr, this->w*0.88, this->h*0.42);
 	cairo_stroke(cr);
 
-	x = ((double)status->elapsedTime / status->totalTime) *
+	x = ((double)mpd_stat->elapsedTime / mpd_stat->totalTime) *
 		(this->w*(0.88-0.46)) + this->w*0.46;
 
 	cairo_move_to(cr, x, this->h*0.41);
@@ -180,16 +160,6 @@ static void set_size(void *vthis, int w, int h)
 	call(this->remaining,set_size, w*0.11, h*0.04);
 }
 
-static void objfree(void *vthis)
-{
-	mpd_status_t *this = vthis;
-
-	if (this->status)
-		mpd_freeStatus(this->status);
-
-	super(this,mpd_status,free);
-}
-
 mpd_status_t* mpd_status_new(size_t size)
 {
 	mpd_status_t *this = mpd_status(mtk_container_new(size));
@@ -211,14 +181,11 @@ mpd_status_t* mpd_status_new(size_t size)
 	call(this,add_widget, mtk_widget(this->elapsed));
 	call(this,add_widget, mtk_widget(this->remaining));
 
-	updatestatus(this);
-	mtk_timer_add(1.0, updatestatus, this);
-
 	return this;
 }
 
 METHOD_TABLE_INIT(mpd_status, mtk_container)
-	_METHOD(free, objfree);
+	METHOD(update);
 	METHOD(draw);
 	METHOD(set_size);
 METHOD_TABLE_END

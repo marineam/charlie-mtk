@@ -101,6 +101,10 @@ static void updatedir(mpd_dirlist_t *this, mpd_InfoEntity *dir)
 	call(this,set_list, list);
 }
 
+static void update(void *vthis)
+{
+}
+
 static void _item_click(void *vthis, void *item)
 {
 	mpd_dirlist_t *this = vthis;
@@ -167,6 +171,7 @@ mpd_dirlist_t* mpd_dirlist_new(size_t size)
 }
 
 METHOD_TABLE_INIT(mpd_dirlist, mtk_text_list)
+	METHOD(update);
 	_METHOD(free, objfree);
 	METHOD(_item_text);
 	METHOD(_item_click);

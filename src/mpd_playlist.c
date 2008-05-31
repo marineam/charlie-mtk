@@ -29,6 +29,15 @@ static void update(void *vthis)
 	mpd_InfoEntity *entity;
 	mtk_list_t* list = mtk_list_new();
 
+	if (mpd_stat->playlist == this->playlist &&
+	    mpd_stat->song == this->song) {
+		return;
+	}
+
+	this->playlist = mpd_stat->playlist;
+	this->song = mpd_stat->song;
+
+	/* FIXME: do an incremental update instead */
 	mpd_sendPlaylistInfoCommand(mpd_conn, -1);
 	die_on_mpd_error();
 
@@ -74,7 +83,6 @@ mpd_playlist_t* mpd_playlist_new(size_t size)
 	mpd_playlist_t *this = mpd_playlist(mtk_text_list_new(size, NULL));
 
 	SET_CLASS(this, mpd_playlist);
-	call(this, update);
 
 	return this;
 }

@@ -227,9 +227,7 @@ static char* _item_text(void *this, void *item)
 static void _item_draw(void *vthis, cairo_t *cr, void *item, int y)
 {
 	mtk_text_list_t *this = vthis;
-	mtk_widget_t *widget = vthis;
 	cairo_text_extents_t te;
-	cairo_pattern_t *pat;
 
 	cairo_select_font_face(cr, "Sans",
 		CAIRO_FONT_SLANT_NORMAL,
@@ -239,19 +237,16 @@ static void _item_draw(void *vthis, cairo_t *cr, void *item, int y)
 	 * the font's ascent value doesn't actually match it's ascent */
 	cairo_text_extents(cr, "M", &te);
 
-	pat = cairo_pattern_create_linear(0, 0, widget->w, 0);
-	cairo_pattern_add_color_stop_rgb(pat, 0.0, 0.8, 0.9, 0.9);
-	cairo_pattern_add_color_stop_rgb(pat, 0.6, 1.0, 1.0, 1.0);
-
-	cairo_rectangle(cr, UNIT*0.1, y+UNIT*0.1, widget->w, UNIT*0.8);
-	cairo_set_source(cr, pat);
-	cairo_fill(cr);
+	cairo_save(cr);
+	cairo_rectangle(cr, 0, y, mtk_widget(this)->w, UNIT);
+	cairo_clip(cr);
+	cairo_set_source_surface(cr, this->item_background, 0, y);
+	cairo_paint(cr);
+	cairo_restore(cr);
 
 	cairo_set_source_rgb(cr, 0, 0, 0);
 	cairo_move_to(cr, UNIT*0.2, y+UNIT*0.5 + te.height*0.5);
 	cairo_show_text(cr, call(this,_item_text, item));
-
-	cairo_pattern_destroy(pat);
 }
 
 static void _item_click(void *this, void *item)
@@ -261,6 +256,56 @@ static void _item_click(void *this, void *item)
 static void _item_free(void *this, void *item)
 {
 	free(item);
+}
+
+static void cache_background(mtk_text_list_t *this)
+{
+	int w = mtk_widget(this)->w;
+
+	if (this->item_background)
+		cairo_surface_destroy(this->item_background);
+
+	if (mtk_widget(this)->surface) {
+		cairo_pattern_t *pat;
+		cairo_t *cr;
+
+		this->item_background = cairo_surface_create_similar(
+			mtk_widget(this)->surface,
+			CAIRO_CONTENT_COLOR, w, UNIT);
+
+		cr = cairo_create(this->item_background);
+
+		cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+		cairo_rectangle(cr, 0, 0, w, UNIT);
+		cairo_fill(cr);
+
+		pat = cairo_pattern_create_linear(0, 0, w, 0);
+		cairo_pattern_add_color_stop_rgb(pat, 0.0, 0.8, 0.9, 0.9);
+		cairo_pattern_add_color_stop_rgb(pat, 0.6, 1.0, 1.0, 1.0);
+
+		cairo_rectangle(cr, UNIT*0.1, UNIT*0.1, w, UNIT*0.8);
+		cairo_set_source(cr, pat);
+		cairo_fill(cr);
+		
+		cairo_pattern_destroy(pat);
+		cairo_destroy(cr);
+	}
+}
+
+static void set_size(void *vthis, int w, int h)
+{
+	mtk_text_list_t *this = vthis;
+
+	super(this,mtk_text_list,set_size, w, h);
+	cache_background(this);
+}
+
+static void init(void *vthis, mtk_widget_t *parent)
+{
+	mtk_text_list_t *this = vthis;
+
+	super(this,mtk_text_list,init, parent);
+	cache_background(this);
 }
 
 static void set_list(void *vthis, mtk_list_t *list)
@@ -312,7 +357,9 @@ METHOD_TABLE_INIT(mtk_text_list, mtk_widget)
 	METHOD(mouse_press);
 	METHOD(mouse_release);
 	METHOD(mouse_move);
+	METHOD(set_size);
 	METHOD(set_list);
+	METHOD(init);
 	METHOD(_item_text);
 	METHOD(_item_draw);
 	METHOD(_item_click);

@@ -99,6 +99,7 @@ CLASS(mtk_text_list, mtk_widget)
 	int slide_start;
 	int slide_offset;
 	int scroll_top;
+	cairo_surface_t *item_background;
 METHODS(mtk_text_list, mtk_widget, mtk_list_t *list)
 	void (*set_list)(void *this, mtk_list_t *list);
 	char* (*_item_text)(void *this, void *item);

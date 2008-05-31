@@ -118,7 +118,6 @@ static bool timed_draw(void *data)
 
 	scroll_fixup(text_list);
 	call(text_list,redraw);
-	call(text_list,draw); // hack so the following code works
 
 	if (text_list->scroll_top == text_list->timed_scroll) {
 		text_list->timed_active = false;
@@ -134,7 +133,6 @@ static void mouse_press(void *this, int x, int y)
 	mtk_text_list_t *text_list = this;
 
 	if (y <= UNIT) {
-		text_list->slide_scroll = false;
 		text_list->timed_scroll -= (widget->h/2 - (widget->h/2)%UNIT);
 		if (!text_list->timed_active) {
 			text_list->timed_active = true;
@@ -142,7 +140,6 @@ static void mouse_press(void *this, int x, int y)
 		}
 	}
 	else if (y > widget->h-UNIT) {
-		text_list->slide_scroll = false;
 		text_list->timed_scroll += (widget->h/2 - (widget->h/2)%UNIT);
 		if (!text_list->timed_active) {
 			text_list->timed_active = true;
@@ -150,24 +147,6 @@ static void mouse_press(void *this, int x, int y)
 		}
 	}
 	else {
-		text_list->slide_scroll = true;
-		text_list->timed_scroll = text_list->scroll_top;
-		text_list->slide_start = text_list->scroll_top;
-		text_list->slide_offset = y;
-	}
-
-	scroll_fixup(text_list);
-	call(text_list,redraw);
-}
-
-static void mouse_release(void *this, int x, int y)
-{
-	mtk_text_list_t *text_list = this;
-
-	if (!text_list->slide_scroll)
-		return;
-
-	if (!text_list->slide_scroll_moved) {
 		int pos = (float)(y - UNIT) / UNIT +
 			(float)text_list->scroll_top / UNIT;
 
@@ -176,44 +155,6 @@ static void mouse_release(void *this, int x, int y)
 				mtk_list_goto(text_list->list, pos));
 		}
 	}
-	else if (text_list->slide_scroll_moved) {
-		/* slide scroll done, adjust to nearest item */
-		text_list->timed_scroll = text_list->slide_start - y +
-			text_list->slide_offset;
-
-		if (text_list->slide_offset < y)
-			text_list->timed_scroll -=
-				abs(text_list->timed_scroll) % UNIT;
-		else
-			text_list->timed_scroll +=
-				UNIT - abs(text_list->timed_scroll) % UNIT;
-
-		if (!text_list->timed_active) {
-			text_list->timed_active = true;
-			mtk_timer_add(1.0/30, timed_draw, text_list);
-		}
-	}
-
-	text_list->slide_scroll = false;
-	text_list->slide_scroll_moved = false;
-
-	scroll_fixup(text_list);
-	call(text_list,redraw);
-}
-
-static void mouse_move(void *this, int x, int y)
-{
-	mtk_text_list_t *text_list = this;
-
-	if (!text_list->slide_scroll)
-		return;
-
-	if (!text_list->slide_scroll_moved && abs(y - text_list->slide_offset) < 5)
-		return;
-
-	text_list->scroll_top = text_list->slide_start - y + text_list->slide_offset;
-	text_list->timed_scroll = text_list->scroll_top;
-	text_list->slide_scroll_moved = true;
 
 	scroll_fixup(text_list);
 	call(text_list,redraw);
@@ -286,7 +227,7 @@ static void cache_background(mtk_text_list_t *this)
 		cairo_rectangle(cr, UNIT*0.1, UNIT*0.1, w, UNIT*0.8);
 		cairo_set_source(cr, pat);
 		cairo_fill(cr);
-		
+
 		cairo_pattern_destroy(pat);
 		cairo_destroy(cr);
 	}
@@ -355,8 +296,6 @@ METHOD_TABLE_INIT(mtk_text_list, mtk_widget)
 	_METHOD(free, objfree);
 	METHOD(draw);
 	METHOD(mouse_press);
-	METHOD(mouse_release);
-	METHOD(mouse_move);
 	METHOD(set_size);
 	METHOD(set_list);
 	METHOD(init);

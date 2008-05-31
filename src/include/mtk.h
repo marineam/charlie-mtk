@@ -94,10 +94,6 @@ CLASS(mtk_text_list, mtk_widget)
 	mtk_list_t* list;
 	int timed_scroll;
 	bool timed_active;
-	bool slide_scroll;
-	bool slide_scroll_moved;
-	int slide_start;
-	int slide_offset;
 	int scroll_top;
 	cairo_surface_t *item_background;
 METHODS(mtk_text_list, mtk_widget, mtk_list_t *list)

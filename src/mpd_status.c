@@ -6,6 +6,9 @@
 #include <cairo.h>
 #include <mtk.h>
 #include <openssl/md5.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 static void set_time(mtk_text_t *widget, int time)
 {
@@ -20,12 +23,37 @@ static void set_time(mtk_text_t *widget, int time)
 /* This is kinda screwy but to keep things easy I'm ripping
  * album art out of amarok and it likes to hash art by the function:
  * md5(tolower(artist)tolower(album))
+ *
+ * result must be freed
  */
-static void set_art(mtk_image_t *widget, mpd_Song *song)
+static char* hashpath(const char *path, const char *artist, const char *album)
 {
 	unsigned char hash[MD5_DIGEST_LENGTH];
+	int pathlen = strlen(path);
+	int len = strlen(artist) + strlen(album);
+	char str[len+1], *ret;
+
+	snprintf(str, len+1, "%s%s", artist, album);
+
+	for (int i = 0; i < len; i++) {
+		if (str[i] >= 'A' && str[i] <= 'Z')
+			str[i] += 'a' - 'A';
+	}
+
+	MD5((unsigned char*)str, len, hash);
+
+	ret = xmalloc(pathlen+2*MD5_DIGEST_LENGTH+1);
+	strncpy(ret, path, pathlen);
+	for (int i = 0; i < MD5_DIGEST_LENGTH; i++)
+		snprintf(ret+pathlen+2*i, 3, "%02x", hash[i]);
+
+	return ret;
+}
+
+static void set_art(mtk_image_t *widget, mpd_Song *song)
+{
 	const char path[] = "../data/";
-	int start = strlen(path);
+	struct stat statdata;
 	char *str;
 
 	if (!song || !song->artist || !song->album) {
@@ -34,22 +62,21 @@ static void set_art(mtk_image_t *widget, mpd_Song *song)
 		return;
 	}
 
-	asprintf(&str, "%s%s", song->artist, song->album);
-	for (int i = 0; i < strlen(str); i++) {
-		if (str[i] >= 'A' && str[i] <= 'Z')
-			str[i] += 'a' - 'A';
+	str = hashpath(path, song->artist, song->album);
+	if (stat(str, &statdata) < 0) {
+		/* stat failed, maybe it's a mixed artist album */
+		free(str);
+		str = hashpath(path, "", song->album);
+		if (stat(str, &statdata) < 0) {
+			/* still no good, set default */
+			free(str);
+			call(widget,set_image,"../data/album.png");
+			return;
+		}
 	}
-	MD5((unsigned char*)str, strlen(str), hash);
-	free(str);
 
-	str = xmalloc(start+2*MD5_DIGEST_LENGTH+1);
-	strncpy(str, path, start+1);
-
-	for (int i = 0; i < MD5_DIGEST_LENGTH; i++)
-		snprintf(str+start+2*i, 3, "%02x", hash[i]);
-
-	//printf("setting image to: %s\n", str);
 	call(widget,set_image,str);
+	free(str);
 }
 
 static void update(void *vthis)

@@ -285,6 +285,9 @@ static void objfree(void *vthis)
 	mtk_text_list_t *this = vthis;
 	void *item;
 
+	if (this->item_background)
+		cairo_surface_destroy(this->item_background);
+
 	mtk_list_foreach(this->list, item)
 		call(this,_item_free, item);
 

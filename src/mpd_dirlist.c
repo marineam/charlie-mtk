@@ -146,6 +146,11 @@ static void _item_click(void *vthis, void *item)
 	}
 }
 
+static void _item_free(void *this, void *item)
+{
+	mpd_freeInfoEntity((mpd_InfoEntity*)item);
+}
+
 static void objfree(void *vthis)
 {
 	mtk_text_list_t *this = vthis;
@@ -175,4 +180,5 @@ METHOD_TABLE_INIT(mpd_dirlist, mtk_text_list)
 	_METHOD(free, objfree);
 	METHOD(_item_text);
 	METHOD(_item_click);
+	METHOD(_item_free);
 METHOD_TABLE_END

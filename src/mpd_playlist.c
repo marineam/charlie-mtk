@@ -27,13 +27,14 @@ static void update(void *vthis)
 {
 	mpd_playlist_t *this = vthis;
 	mpd_InfoEntity *entity;
-	mtk_list_t* list = mtk_list_new();
+	mtk_list_t* list;
 
 	if (mpd_stat->playlist == this->playlist &&
 	    mpd_stat->song == this->song) {
 		return;
 	}
 
+	list = mtk_list_new();
 	this->playlist = mpd_stat->playlist;
 	this->song = mpd_stat->song;
 
@@ -64,6 +65,11 @@ static void _item_click(void *vthis, void *item)
 	die_on_mpd_error();
 }
 
+static void _item_free(void *this, void *item)
+{
+	mpd_freeInfoEntity((mpd_InfoEntity*)item);
+}
+
 static void objfree(void *vthis)
 {
 	mtk_text_list_t *this = vthis;
@@ -91,5 +97,6 @@ METHOD_TABLE_INIT(mpd_playlist, mtk_text_list)
 	_METHOD(free, objfree);
 	METHOD(_item_text);
 	METHOD(_item_click);
+	METHOD(_item_free);
 	METHOD(update);
 METHOD_TABLE_END

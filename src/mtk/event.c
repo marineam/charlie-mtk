@@ -17,15 +17,18 @@ void _mtk_event_init()
 	events = mtk_list_new();
 }
 
-void mtk_event_process()
+bool _mtk_event()
 {
 	struct event *e;
 
 	mtk_list_goto(events, 0);
-	while((e = mtk_list_remove(events))) {
+	if ((e = mtk_list_remove(events))) {
 		e->callback(e->data);
 		free(e);
+		return true;
 	}
+	else
+		return false;
 }
 
 void mtk_event_add(void(*callback)(void *data), void *data)

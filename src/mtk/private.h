@@ -12,6 +12,7 @@ extern xcb_visualtype_t *_visual;
 extern mtk_list_t *_windows;
 
 void _mtk_event_init();
+bool _mtk_event();
 void _mtk_timer_init();
 void _mtk_timer_cleanup();
 

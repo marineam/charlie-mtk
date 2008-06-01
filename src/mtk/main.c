@@ -69,7 +69,7 @@ void mtk_cleanup()
 	} \
 	assert(w); } /* w should have been found */
 
-static int event()
+static bool event()
 {
 	xcb_generic_event_t *e;
 	mtk_window_t *w = NULL;
@@ -77,10 +77,10 @@ static int event()
 	e = xcb_poll_for_event(_conn);
 
 	if (xcb_connection_has_error(_conn))
-		return -1;
+		return false;
 
 	if (!e)
-		return 0; /* nothing to do */
+		return false; /* nothing to do */
 
 	switch (e->response_type & ~0x80) {
 	case XCB_BUTTON_PRESS:
@@ -114,7 +114,7 @@ static int event()
 	}
 
 	free(e);
-	return 1;
+	return true;
 }
 
 void mtk_main()
@@ -132,15 +132,17 @@ void mtk_main()
 	FD_SET(xfd, &xfd_set);
 
 	while (1) {
-		mtk_event_process();
-		_mtk_timer_cleanup();
+		bool e = event();
+		e |= _mtk_event();
 		xcb_flush(_conn);
 
 		if (xcb_connection_has_error(_conn))
 			return;
 
 		/* pause until X sends something or we get a signal */
-		pselect(nfds, &xfd_set, NULL, NULL, NULL, &signals);
-		while (event()>0);
+		if (!e) {
+			_mtk_timer_cleanup();
+			pselect(nfds, &xfd_set, NULL, NULL, NULL, &signals);
+		}
 	}
 }

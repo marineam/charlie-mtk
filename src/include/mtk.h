@@ -117,5 +117,6 @@ void mtk_event_add(void(*callback)(void *data), void *data);
 /* timer.c */
 void mtk_timer_add(double interval, bool(*callback)(void *data), void *data);
 double mtk_time();
+void mtk_sleep(double sec);
 
 #endif

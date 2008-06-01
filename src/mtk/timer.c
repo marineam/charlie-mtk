@@ -121,3 +121,12 @@ double mtk_time()
 	clock_gettime(CLOCK_REALTIME, &t);
 	return t.tv_sec + (double)t.tv_nsec/1000000000;
 }
+
+void mtk_sleep(double sec)
+{
+	struct timespec t;
+	
+	t.tv_sec = (time_t)sec;
+	t.tv_nsec = (long)((sec-(time_t)sec)*1000000000);
+	nanosleep(&t, NULL);
+}

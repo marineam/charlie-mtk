@@ -6,30 +6,71 @@
 
 #include "private.h"
 
+static void cache_draw(mtk_text_list_t *this)
+{
+	mtk_widget_t *widget = mtk_widget(this);
+	cairo_pattern_t *pat;
+	cairo_t *cr;
+	int start, y;
+	void *item;
+
+	assert(this->cache);
+
+	cr = cairo_create(this->cache);
+
+	cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+	cairo_rectangle(cr, 0, 0, widget->w, widget->h);
+	cairo_fill(cr);
+
+	pat = cairo_pattern_create_linear(0, 0, widget->w, 0);
+	cairo_pattern_add_color_stop_rgb(pat, 0.0, 0.8, 0.9, 0.9);
+	cairo_pattern_add_color_stop_rgb(pat, 0.6, 1.0, 1.0, 1.0);
+
+	start = this->cache_top / UNIT - 1;
+	y = -this->cache_top % UNIT;
+
+	if (start < 0) {
+		start = 0;
+		y += UNIT;
+	}
+
+	for (item = mtk_list_goto(this->list, start);
+	     item && y < widget->h;
+	     item = mtk_list_next(this->list)) {
+
+		cairo_rectangle(cr, UNIT*0.1, y+UNIT*0.1, widget->w, UNIT*0.8);
+		cairo_set_source(cr, pat);
+		cairo_fill(cr);
+
+		call(this,_item_draw, cr, item, y);
+		y += UNIT;
+	}
+
+	cairo_pattern_destroy(pat);
+	cairo_destroy(cr);
+}
+
 static void draw(void *this)
 {
 	mtk_widget_t *widget = this;
 	mtk_text_list_t *text_list = this;
 	cairo_t *cr;
 	cairo_pattern_t *pat;
-	int start, y;
-	void *item;
+	int y;
+
+	y = text_list->cache_top - text_list->scroll_top;
+
+	if (abs(y) > UNIT) {
+		text_list->cache_top = text_list->scroll_top;
+		y = 0;
+		cache_draw(text_list);
+	}
 
 	cr = cairo_create(widget->surface);
 
-	cairo_set_source_rgb(cr, 1, 1, 1);
-	cairo_rectangle(cr, 0, 0, widget->w, widget->h);
+	cairo_rectangle(cr, 0, y, widget->w, widget->h);
+	cairo_set_source_surface(cr, text_list->cache, 0, y);
 	cairo_fill(cr);
-
-	start = text_list->scroll_top / UNIT;
-	y = UNIT - text_list->scroll_top % UNIT;
-
-	for (item = mtk_list_goto(text_list->list, start);
-	     item && y < widget->h - UNIT;
-	     item = mtk_list_next(text_list->list)) {
-		call(text_list,_item_draw, cr, item, y);
-		y += UNIT;
-	}
 
 	pat = cairo_pattern_create_linear(0, 0, 0, UNIT);
 	cairo_pattern_add_color_stop_rgb(pat, 0.0, 0.6, 0.6, 0.9);
@@ -193,13 +234,6 @@ static void _item_draw(void *vthis, cairo_t *cr, void *item, int y)
 	 * the font's ascent value doesn't actually match it's ascent */
 	cairo_text_extents(cr, "M", &te);
 
-	cairo_save(cr);
-	cairo_rectangle(cr, 0, y, mtk_widget(this)->w, UNIT);
-	cairo_clip(cr);
-	cairo_set_source_surface(cr, this->item_background, 0, y);
-	cairo_paint(cr);
-	cairo_restore(cr);
-
 	cairo_set_source_rgb(cr, 0, 0, 0);
 	cairo_move_to(cr, UNIT*0.2, y+UNIT*0.5 + te.height*0.5);
 	cairo_show_text(cr, call(this,_item_text, item));
@@ -214,37 +248,18 @@ static void _item_free(void *this, void *item)
 	free(item);
 }
 
-static void cache_background(mtk_text_list_t *this)
+static void cache_init(mtk_text_list_t *this)
 {
-	int w = mtk_widget(this)->w;
-
-	if (this->item_background)
-		cairo_surface_destroy(this->item_background);
+	if (this->cache)
+		cairo_surface_destroy(this->cache);
 
 	if (mtk_widget(this)->surface) {
-		cairo_pattern_t *pat;
-		cairo_t *cr;
-
-		this->item_background = cairo_surface_create_similar(
+		this->cache = cairo_surface_create_similar(
 			mtk_widget(this)->surface,
-			CAIRO_CONTENT_COLOR, w, UNIT);
+			CAIRO_CONTENT_COLOR,
+			mtk_widget(this)->w, mtk_widget(this)->h);
 
-		cr = cairo_create(this->item_background);
-
-		cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
-		cairo_rectangle(cr, 0, 0, w, UNIT);
-		cairo_fill(cr);
-
-		pat = cairo_pattern_create_linear(0, 0, w, 0);
-		cairo_pattern_add_color_stop_rgb(pat, 0.0, 0.8, 0.9, 0.9);
-		cairo_pattern_add_color_stop_rgb(pat, 0.6, 1.0, 1.0, 1.0);
-
-		cairo_rectangle(cr, UNIT*0.1, UNIT*0.1, w, UNIT*0.8);
-		cairo_set_source(cr, pat);
-		cairo_fill(cr);
-
-		cairo_pattern_destroy(pat);
-		cairo_destroy(cr);
+		cache_draw(this);
 	}
 }
 
@@ -253,7 +268,7 @@ static void set_size(void *vthis, int w, int h)
 	mtk_text_list_t *this = vthis;
 
 	super(this,mtk_text_list,set_size, w, h);
-	cache_background(this);
+	cache_init(this);
 }
 
 static void init(void *vthis, mtk_widget_t *parent)
@@ -261,7 +276,7 @@ static void init(void *vthis, mtk_widget_t *parent)
 	mtk_text_list_t *this = vthis;
 
 	super(this,mtk_text_list,init, parent);
-	cache_background(this);
+	cache_init(this);
 }
 
 static void set_list(void *vthis, mtk_list_t *list)
@@ -285,8 +300,8 @@ static void objfree(void *vthis)
 	mtk_text_list_t *this = vthis;
 	void *item;
 
-	if (this->item_background)
-		cairo_surface_destroy(this->item_background);
+	if (this->cache)
+		cairo_surface_destroy(this->cache);
 
 	mtk_list_foreach(this->list, item)
 		call(this,_item_free, item);

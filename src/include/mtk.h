@@ -117,8 +117,6 @@ void mtk_event_process();
 
 /* timer.c */
 void mtk_timer_add(double interval, bool(*callback)(void *data), void *data);
-/* Hack to make libmpdclient not shit itself by blocking SIGALRM */
-void mtk_timer_block();
-void mtk_timer_unblock();
+double mtk_time();
 
 #endif

@@ -114,3 +114,10 @@ void mtk_timer_add(double interval, bool(*callback)(void *data), void *data)
 	timer_settime(t->id, 0, &time, NULL);
 }
 
+double mtk_time()
+{
+	struct timespec t;
+
+	clock_gettime(CLOCK_REALTIME, &t);
+	return t.tv_sec + (double)t.tv_nsec/1000000000;
+}

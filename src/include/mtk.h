@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <xcb/xcb.h>
+#include <X11/Xlib.h>
 #include <cairo.h>
 
 #include "config.h"
@@ -56,7 +56,7 @@ METHODS(mtk_menu, mtk_container)
 END
 
 CLASS(mtk_window, mtk_container)
-	xcb_window_t id;
+	Window id;
 	//cairo_surface_t *surface;
 METHODS(mtk_window, mtk_container, int w, int h)
 END

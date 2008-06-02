@@ -5,10 +5,9 @@
 
 #define TIMER_SIG SIGRTMIN
 
-extern int _screen_num;
-extern xcb_connection_t *_conn;
-extern xcb_screen_t *_screen;
-extern xcb_visualtype_t *_visual;
+extern int _screen;
+extern Display *_display;
+extern Visual *_visual;
 extern mtk_list_t *_windows;
 
 void _mtk_event_init();

@@ -1,8 +1,7 @@
 #include <assert.h>
-#include <xcb/xcb.h>
-#include <xcb/xcb_aux.h>
+#include <X11/Xlib.h>
 #include <cairo.h>
-#include <cairo-xcb.h>
+#include <cairo-xlib.h>
 #include <mtk.h>
 
 #include "private.h"
@@ -10,8 +9,6 @@
 mtk_window_t* mtk_window_new(size_t size, int w, int h)
 {
 	mtk_window_t *window = mtk_window(mtk_container_new(size));
-	xcb_params_cw_t values;
-	uint32_t mask;
 
 	SET_CLASS(window, mtk_window);
 
@@ -19,25 +16,23 @@ mtk_window_t* mtk_window_new(size_t size, int w, int h)
 	mtk_widget(window)->h = h;
 
 	/* create window */
-	window->id = xcb_generate_id(_conn);
-
-	mask = XCB_CW_EVENT_MASK;
-	values.event_mask =
-		XCB_EVENT_MASK_EXPOSURE |
-		XCB_EVENT_MASK_BUTTON_PRESS |
-		XCB_EVENT_MASK_BUTTON_RELEASE |
-		XCB_EVENT_MASK_BUTTON_MOTION |
-		XCB_EVENT_MASK_STRUCTURE_NOTIFY;
-	xcb_aux_create_window(_conn, _screen->root_depth,
-		window->id, _screen->root,
+	window->id = XCreateSimpleWindow(_display,
+		RootWindow(_display,_screen),
 		0, 0, w, h, 0, /* x,y,w,h,border */
-		XCB_WINDOW_CLASS_INPUT_OUTPUT,
-		_screen->root_visual, mask, &values);
+		WhitePixel(_display, _screen),
+		WhitePixel(_display, _screen));
+
+	XSelectInput(_display, window->id,
+		ExposureMask |
+		ButtonPressMask |
+		ButtonReleaseMask |
+		ButtonMotionMask |
+		StructureNotifyMask);
 
 	/* show the window */
-	xcb_map_window(_conn, window->id);
+	XMapWindow(_display, window->id);
 
-	mtk_widget(window)->surface = cairo_xcb_surface_create(_conn,
+	mtk_widget(window)->surface = cairo_xlib_surface_create(_display,
 		window->id, _visual, w, h);
 
 	mtk_list_append(_windows, window);
@@ -73,7 +68,7 @@ static void set_size(void *vthis, int w, int h)
 		return;
 
 	assert(this->surface);
-	cairo_xcb_surface_set_size(this->surface, w, h);
+	cairo_xlib_surface_set_size(this->surface, w, h);
 
 	super(this,mtk_window,set_size, w, h);
 }

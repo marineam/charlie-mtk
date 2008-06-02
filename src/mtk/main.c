@@ -1,18 +1,16 @@
 #include <assert.h>
-#include <xcb/xcb.h>
-#include <xcb/xcb_aux.h>
+#include <X11/Xlib.h>
 #include <cairo.h>
-#include <cairo-xcb.h>
+#include <cairo-xlib.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <sys/select.h>
 #include <mtk.h>
 #include "private.h"
 
-int _screen_num;
-xcb_connection_t *_conn;
-xcb_screen_t *_screen;
-xcb_visualtype_t *_visual;
+int _screen;
+Display *_display;
+Visual *_visual;
 mtk_list_t *_windows;
 
 void mtk_init()
@@ -40,29 +38,28 @@ void mtk_init()
 	_mtk_timer_init();
 
 	/* open connection with the server */
-	_conn = xcb_connect(NULL, &_screen_num);
-	die_on(xcb_connection_has_error(_conn), "Cannot open display\n");
+	_display = XOpenDisplay(NULL);
+	die_on(!_display, "Cannot open display\n");
 
-	/* get the first screen and visual*/
-	_screen = xcb_aux_get_screen(_conn, _screen_num);
-	_visual = xcb_aux_get_visualtype(_conn, _screen_num,
-		_screen->root_visual);
+	/* get the screen and visual*/
+	_screen = DefaultScreen(_display);
+	_visual = DefaultVisual(_display, _screen);
 
 	_windows = mtk_list_new();
 }
 
 void mtk_cleanup()
 {
-	xcb_disconnect(_conn);
+	XCloseDisplay(_display);
 	mtk_list_free_obj(_windows);
 }
 
 /* for use in mtk_event, searches for the window the
  * event applies to and runs the given code for it */
-#define WINDOW_EVENT(type, member) \
-	{ type *_e = (type*)e; \
+#define WINDOW_EVENT(type) \
+	{ type *_e = (type*)&e; \
 	mtk_list_foreach(_windows, w) { \
-		if (w->id == _e->member) {
+		if (w->id == _e->window) {
 #define WINDOW_EVENT_END \
 			break; \
 		} \
@@ -71,40 +68,40 @@ void mtk_cleanup()
 
 static bool event()
 {
-	xcb_generic_event_t *e;
+	XEvent e;
 	mtk_window_t *w = NULL;
 
-	e = xcb_poll_for_event(_conn);
-
-	if (xcb_connection_has_error(_conn))
-		return false;
-
-	if (!e)
+	if (!XPending(_display))
 		return false; /* nothing to do */
 
-	switch (e->response_type & ~0x80) {
-	case XCB_BUTTON_PRESS:
-		WINDOW_EVENT(xcb_button_press_event_t, event)
-			call(w,mouse_press,_e->event_x,_e->event_y);
+	XNextEvent(_display, &e);
+
+//	if (xcb_connection_has_error(_conn))
+//		return false;
+
+	switch (e.type) {
+	case ButtonPress:
+		WINDOW_EVENT(XButtonEvent)
+			call(w,mouse_press, _e->x, _e->y);
 		WINDOW_EVENT_END
 		break;
-	case XCB_BUTTON_RELEASE:
-		WINDOW_EVENT(xcb_button_release_event_t, event)
-			call(w,mouse_release,_e->event_x,_e->event_y);
+	case ButtonRelease:
+		WINDOW_EVENT(XButtonEvent)
+			call(w,mouse_release, _e->x, _e->y);
 		WINDOW_EVENT_END
 		break;
-	case XCB_MOTION_NOTIFY:
-		WINDOW_EVENT(xcb_motion_notify_event_t, event)
-			call(w,mouse_move,_e->event_x,_e->event_y);
+	case MotionNotify:
+		WINDOW_EVENT(XMotionEvent)
+			call(w,mouse_move, _e->x, _e->y);
 		WINDOW_EVENT_END
 		break;
-	case XCB_EXPOSE:    /* draw or redraw the window */
-		WINDOW_EVENT(xcb_expose_event_t, window)
+	case Expose:    /* draw or redraw the window */
+		WINDOW_EVENT(XExposeEvent)
 			call(w,redraw);
 		WINDOW_EVENT_END
 		break;
-	case XCB_CONFIGURE_NOTIFY:
-		WINDOW_EVENT(xcb_configure_notify_event_t, window)
+	case ConfigureNotify:
+		WINDOW_EVENT(XConfigureEvent)
 			call(w,set_size, _e->width, _e->height);
 		WINDOW_EVENT_END
 		break;
@@ -113,7 +110,6 @@ static bool event()
 		break;
 	}
 
-	free(e);
 	return true;
 }
 
@@ -126,7 +122,7 @@ void mtk_main()
 	sigprocmask(SIG_SETMASK, NULL, &signals);
 	sigdelset(&signals, TIMER_SIG);
 
-	xfd = xcb_get_file_descriptor(_conn);
+	xfd = ConnectionNumber(_display);
 	nfds = xfd+1;
 	FD_ZERO(&xfd_set);
 	FD_SET(xfd, &xfd_set);
@@ -134,10 +130,10 @@ void mtk_main()
 	while (1) {
 		bool e = event();
 		e |= _mtk_event();
-		xcb_flush(_conn);
+		//xcb_flush(_conn);
 
-		if (xcb_connection_has_error(_conn))
-			return;
+		//if (xcb_connection_has_error(_conn))
+		//	return;
 
 		/* pause until X sends something or we get a signal */
 		if (!e) {

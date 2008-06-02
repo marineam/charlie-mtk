@@ -1,8 +1,5 @@
 #include <assert.h>
-#include <xcb/xcb.h>
-#include <xcb/xcb_aux.h>
 #include <cairo.h>
-#include <cairo-xcb.h>
 #include <mtk.h>
 
 #include "private.h"

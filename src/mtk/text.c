@@ -13,7 +13,7 @@ static bool scroller(void *data)
 	if (this->scroll_stop)
 		return 0;
 
-	this->scroll -= 2;
+	this->scroll -= 4;
 	call(this,redraw);
 
 	return this->scroll ? true : false;
@@ -24,7 +24,7 @@ static bool start_scroll(void *data)
 	mtk_text_t *this = data;
 
 	this->scroll_stop = false;
-	mtk_timer_add(1.0/30, scroller, this);
+	mtk_timer_add(1.0/20, scroller, this);
 
 	return false;
 }

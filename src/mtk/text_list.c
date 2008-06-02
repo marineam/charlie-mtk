@@ -138,7 +138,7 @@ static void scroll(mtk_text_list_t *text_list)
 		}
 	}
 	else
-		text_list->scroll_dir += text_list->scroll_dir>0?0.1:-0.1;
+		text_list->scroll_dir += text_list->scroll_dir>0?0.2:-0.2;
 
 	text_list->scroll_top += text_list->scroll_dir;
 

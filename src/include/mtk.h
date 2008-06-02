@@ -57,7 +57,6 @@ END
 
 CLASS(mtk_window, mtk_container)
 	Window id;
-	//cairo_surface_t *surface;
 METHODS(mtk_window, mtk_container, int w, int h)
 END
 

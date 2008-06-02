@@ -50,11 +50,11 @@ static void draw(void *this)
 
 	cr = cairo_create(widget->surface);
 
-	cairo_rectangle(cr, 0, UNIT, widget->w, widget->h-2*UNIT);
+	cairo_rectangle(cr, 0, 0, widget->w, widget->h);
 	cairo_set_source_surface(cr, text_list->cache,
 		0, UNIT - text_list->scroll_top);
 	cairo_fill(cr);
-/*
+
 	pat = cairo_pattern_create_linear(0, 0, 0, UNIT);
 	cairo_pattern_add_color_stop_rgb(pat, 0.0, 0.6, 0.6, 0.9);
 	cairo_pattern_add_color_stop_rgb(pat, 1.0, 1.0, 1.0, 1.0);
@@ -70,14 +70,6 @@ static void draw(void *this)
 	cairo_set_source(cr, pat);
 	cairo_fill(cr);
 	cairo_pattern_destroy(pat);
-*/
-	// temp:
-	cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
-	cairo_rectangle(cr, 0, 0, widget->w, UNIT);
-	cairo_fill(cr);
-	cairo_rectangle(cr, 0, widget->h - UNIT, widget->w, widget->h);
-	cairo_fill(cr);
-	// end temp
 
 	cairo_move_to(cr, widget->w/2.0-UNIT*0.25, UNIT*0.75);
 	cairo_line_to(cr, widget->w/2.0, UNIT*0.25);
@@ -183,7 +175,7 @@ static void mouse_press(void *this, int x, int y)
 		text_list->scroll_dir = y<=UNIT ? -UNIT/4 : UNIT/4;
 		if (!text_list->scroll_active) {
 			text_list->scroll_active = true;
-			mtk_timer_add(1.0/20, timed_draw, text_list);
+			mtk_timer_add(1.0/30, timed_draw, text_list);
 		}
 	}
 	else {

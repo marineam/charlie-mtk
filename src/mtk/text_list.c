@@ -137,6 +137,8 @@ static void scroll(mtk_text_list_t *text_list)
 				text_list->scroll_dir = diff>0?1:-1;
 		}
 	}
+	else
+		text_list->scroll_dir += text_list->scroll_dir>0?0.1:-0.1;
 
 	text_list->scroll_top += text_list->scroll_dir;
 
@@ -280,6 +282,8 @@ static void set_list(void *vthis, mtk_list_t *list)
 	this->list = list;
 	this->scroll_dir = 0;
 	this->scroll_top = 0;
+
+	cache_init(this);
 	cache_draw(this);
 	call(this,redraw);
 }

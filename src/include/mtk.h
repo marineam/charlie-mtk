@@ -92,7 +92,7 @@ END
 
 CLASS(mtk_text_list, mtk_widget)
 	mtk_list_t* list;
-	int scroll_dir;
+	float scroll_dir;
 	int scroll_top;
 	bool scroll_active;
 	bool scroll_hold;

@@ -12,6 +12,7 @@ int _screen;
 Display *_display;
 Visual *_visual;
 mtk_list_t *_windows;
+Atom _delete_window;
 
 void mtk_init()
 {
@@ -46,6 +47,9 @@ void mtk_init()
 	_visual = DefaultVisual(_display, _screen);
 
 	_windows = mtk_list_new();
+
+	/* get the Atom for the WM_DELETE_WINDOW message */
+	_delete_window = XInternAtom(_display, "WM_DELETE_WINDOW", True);
 }
 
 void mtk_cleanup()
@@ -66,18 +70,21 @@ void mtk_cleanup()
 	} \
 	assert(w); } /* w should have been found */
 
-static bool event()
+enum event_result {
+	EVENT_QEMPTY = false,
+	EVENT_PROCESSED = true,
+	EVENT_EXIT,
+};
+
+static enum event_result event()
 {
 	XEvent e;
 	mtk_window_t *w = NULL;
 
 	if (!XPending(_display))
-		return false; /* nothing to do */
+		return EVENT_QEMPTY; /* nothing to do */
 
 	XNextEvent(_display, &e);
-
-//	if (xcb_connection_has_error(_conn))
-//		return false;
 
 	switch (e.type) {
 	case ButtonPress:
@@ -105,12 +112,20 @@ static bool event()
 			call(w,set_size, _e->width, _e->height);
 		WINDOW_EVENT_END
 		break;
+	case ClientMessage:
+		WINDOW_EVENT(XClientMessageEvent)
+			/* FIXME: handle closing a single window
+			 * instead of always just exiting */
+			if (_e->data.l[0] == _delete_window)
+				return EVENT_EXIT;
+		WINDOW_EVENT_END
+		break;
 	default:
 		/* ignore everything else */
 		break;
 	}
 
-	return true;
+	return EVENT_PROCESSED;
 }
 
 void mtk_main()
@@ -128,12 +143,12 @@ void mtk_main()
 	FD_SET(xfd, &xfd_set);
 
 	while (1) {
-		bool e = event();
-		e |= _mtk_event();
-		//xcb_flush(_conn);
+		enum event_result e = event();
 
-		//if (xcb_connection_has_error(_conn))
-		//	return;
+		if (e == EVENT_EXIT)
+			break;
+
+		e |= _mtk_event();
 
 		/* pause until X sends something or we get a signal */
 		if (!e) {

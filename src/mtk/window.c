@@ -22,12 +22,17 @@ mtk_window_t* mtk_window_new(size_t size, int w, int h)
 		WhitePixel(_display, _screen),
 		WhitePixel(_display, _screen));
 
+	/* accept various events */
 	XSelectInput(_display, window->id,
 		ExposureMask |
 		ButtonPressMask |
 		ButtonReleaseMask |
 		ButtonMotionMask |
 		StructureNotifyMask);
+
+	/* accept WM_DELETE_WINDOW events if available */
+	if (_delete_window != None)
+		XSetWMProtocols(_display, window->id, &_delete_window, 1);
 
 	/* show the window */
 	XMapWindow(_display, window->id);

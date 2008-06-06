@@ -96,7 +96,7 @@ CLASS(mtk_text_list, mtk_widget)
 	bool scroll_active;
 	bool scroll_hold;
 	cairo_surface_t *cache;
-	int cache_h;
+	int cache_top;
 METHODS(mtk_text_list, mtk_widget, mtk_list_t *list)
 	void (*set_list)(void *this, mtk_list_t *list);
 	char* (*_item_text)(void *this, void *item);

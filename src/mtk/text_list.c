@@ -11,24 +11,33 @@ static void cache_draw(mtk_text_list_t *this)
 	mtk_widget_t *widget = mtk_widget(this);
 	cairo_pattern_t *pat;
 	cairo_t *cr;
-	int y = 0;
+	int start, y;
 	void *item;
 
-	if (!this->cache)
-		return;
+	assert(this->cache);
 
 	cr = cairo_create(this->cache);
 
 	cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
-	cairo_rectangle(cr, 0, 0, widget->w, this->cache_h);
+	cairo_rectangle(cr, 0, 0, widget->w, widget->h);
 	cairo_fill(cr);
 
 	pat = cairo_pattern_create_linear(0, 0, widget->w, 0);
 	cairo_pattern_add_color_stop_rgb(pat, 0.0, 0.8, 0.9, 0.9);
 	cairo_pattern_add_color_stop_rgb(pat, 0.6, 1.0, 1.0, 1.0);
 
-	for (item = mtk_list_goto(this->list, 0);
-	     item; item = mtk_list_next(this->list)) {
+	start = this->cache_top / UNIT - 1;
+	y = -this->cache_top % UNIT;
+
+	if (start < 0) {
+		start = 0;
+		y += UNIT;
+	}
+
+	for (item = mtk_list_goto(this->list, start);
+	     item && y < widget->h;
+	     item = mtk_list_next(this->list)) {
+
 		cairo_rectangle(cr, UNIT*0.1, y+UNIT*0.1, widget->w, UNIT*0.8);
 		cairo_set_source(cr, pat);
 		cairo_fill(cr);
@@ -47,12 +56,20 @@ static void draw(void *this)
 	mtk_text_list_t *text_list = this;
 	cairo_t *cr;
 	cairo_pattern_t *pat;
+	int y;
+
+	y = text_list->cache_top - text_list->scroll_top;
+
+	if (abs(y) > UNIT) {
+		text_list->cache_top = text_list->scroll_top;
+		y = 0;
+		cache_draw(text_list);
+	}
 
 	cr = cairo_create(widget->surface);
 
-	cairo_rectangle(cr, 0, 0, widget->w, widget->h);
-	cairo_set_source_surface(cr, text_list->cache,
-		0, UNIT - text_list->scroll_top);
+	cairo_rectangle(cr, 0, y, widget->w, widget->h);
+	cairo_set_source_surface(cr, text_list->cache, 0, y);
 	cairo_fill(cr);
 
 	pat = cairo_pattern_create_linear(0, 0, 0, UNIT);
@@ -239,15 +256,10 @@ static void cache_init(mtk_text_list_t *this)
 		cairo_surface_destroy(this->cache);
 
 	if (mtk_widget(this)->surface) {
-		if (mtk_widget(this)->h > mtk_list_length(this->list)*UNIT)
-			this->cache_h = mtk_widget(this)->h;
-		else
-			this->cache_h = mtk_list_length(this->list)*UNIT;
-
 		this->cache = cairo_surface_create_similar(
 			mtk_widget(this)->surface,
 			CAIRO_CONTENT_COLOR,
-			mtk_widget(this)->w, this->cache_h);
+			mtk_widget(this)->w, mtk_widget(this)->h);
 
 		cache_draw(this);
 	}
@@ -284,7 +296,6 @@ static void set_list(void *vthis, mtk_list_t *list)
 	this->scroll_top = 0;
 
 	cache_init(this);
-	cache_draw(this);
 	call(this,redraw);
 }
 

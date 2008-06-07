@@ -176,7 +176,7 @@ static void scroll(mtk_text_list_t *text_list)
 			else
 				text_list->scroll_dir *= 0.9;
 
-			if (!text_list->scroll_dir)
+			if (abs(text_list->scroll_dir) < 1.0)
 				text_list->scroll_dir = diff>0?1:-1;
 		}
 	}
@@ -185,11 +185,11 @@ static void scroll(mtk_text_list_t *text_list)
 
 	text_list->scroll_top += text_list->scroll_dir;
 
-	if (text_list->scroll_top > max) {
+	if (text_list->scroll_top >= max) {
 		text_list->scroll_top = max;
 		text_list->scroll_dir = 0;
 	}
-	else if (text_list->scroll_top < min) {
+	else if (text_list->scroll_top <= min) {
 		text_list->scroll_top = min;
 		text_list->scroll_dir = 0;
 	}

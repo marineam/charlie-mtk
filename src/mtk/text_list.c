@@ -195,15 +195,15 @@ static bool timed_draw(void *data)
 {
 	mtk_text_list_t *text_list = data;
 
-	scroll(text_list);
-	call(text_list,redraw);
-
 	if (!text_list->scroll_dir) {
 		text_list->scroll_active = false;
 		return false;
 	}
-	else
+	else {
+		scroll(text_list);
+		call(text_list,redraw);
 		return true;
+	}
 }
 
 static void mouse_press(void *this, int x, int y)

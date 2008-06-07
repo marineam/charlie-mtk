@@ -83,8 +83,8 @@ static void draw(void *this)
 		cairo_pattern_t *pat;
 
 		pat = cairo_pattern_create_linear(0, y, 0, y+UNIT);
-		cairo_pattern_add_color_stop_rgb(pat, 0.0, 0.6, 0.6, 0.9);
-		cairo_pattern_add_color_stop_rgb(pat, 1.0, 1.0, 1.0, 1.0);
+		cairo_pattern_add_color_stop_rgb(pat, y?1.0:0.0, 0.6, 0.6, 0.9);
+		cairo_pattern_add_color_stop_rgb(pat, y?0.0:1.0, 1.0, 1.0, 1.0);
 		cairo_rectangle(cr, 0, y, widget->w, UNIT);
 		cairo_set_source(cr, pat);
 		cairo_fill(cr);

@@ -51,6 +51,7 @@ static inline int mtk_list_length(mtk_list_t *l) {
 
 void* xmalloc(size_t size);
 void* xmalloc0(size_t size);
+void* xrealloc(void *ptr, size_t size);
 
 #define warn(fmt, args...) \
 	fprintf(stderr, "%s:%d " fmt, __FILE__, __LINE__, ## args)

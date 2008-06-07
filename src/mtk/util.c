@@ -221,3 +221,10 @@ void* xmalloc0(size_t size)
 	memset(ret, 0, size);
 	return ret;
 }
+
+void* xrealloc(void *ptr, size_t size)
+{
+	ptr = realloc(ptr, size);
+	die_on(!ptr, "realloc failed\n");
+	return ptr;
+}

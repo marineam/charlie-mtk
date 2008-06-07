@@ -79,6 +79,17 @@ static void draw(void *this)
 	mtk_text_list_t *text_list = this;
 	cairo_t *cr;
 	int y;
+	void draw_background(int y) {
+		cairo_pattern_t *pat;
+
+		pat = cairo_pattern_create_linear(0, y, 0, y+UNIT);
+		cairo_pattern_add_color_stop_rgb(pat, 0.0, 0.6, 0.6, 0.9);
+		cairo_pattern_add_color_stop_rgb(pat, 1.0, 1.0, 1.0, 1.0);
+		cairo_rectangle(cr, 0, y, widget->w, UNIT);
+		cairo_set_source(cr, pat);
+		cairo_fill(cr);
+		cairo_pattern_destroy(pat);
+	}
 
 	y = text_list->cache_top - text_list->scroll_top;
 
@@ -94,51 +105,44 @@ static void draw(void *this)
 	cairo_fill(cr);
 
 	if (widget->init) {
-		cairo_pattern_t *pat;
 		/* we only need to draw this once */
-
-		pat = cairo_pattern_create_linear(0, 0, 0, UNIT);
-		cairo_pattern_add_color_stop_rgb(pat, 0.0, 0.6, 0.6, 0.9);
-		cairo_pattern_add_color_stop_rgb(pat, 1.0, 1.0, 1.0, 1.0);
-		cairo_rectangle(cr, 0, 0, widget->w, UNIT);
-		cairo_set_source(cr, pat);
-		cairo_fill(cr);
-		cairo_pattern_destroy(pat);
-
-		pat = cairo_pattern_create_linear(0, widget->h-UNIT, 0, widget->h);
-		cairo_pattern_add_color_stop_rgb(pat, 1.0, 0.6, 0.6, 0.9);
-		cairo_pattern_add_color_stop_rgb(pat, 0.0, 1.0, 1.0, 1.0);
-		cairo_rectangle(cr, 0, widget->h - UNIT, widget->w, widget->h);
-		cairo_set_source(cr, pat);
-		cairo_fill(cr);
-		cairo_pattern_destroy(pat);
+		draw_background(0);
+		draw_background(widget->h - UNIT);
 	}
+
+	if (text_list->scroll_top == 0) {
+		if (!widget->init)
+			/* redraw background to fix color bleeding */
+			draw_background(0);
+		cairo_set_source_rgba(cr, 0.3, 0.3, 0.9, 0.5);
+	}
+	else if (text_list->scroll_dir < 0)
+		cairo_set_source_rgb(cr, 0.0, 0.0, 0.9);
+	else
+		cairo_set_source_rgb(cr, 0.3, 0.3, 0.9);
 
 	cairo_move_to(cr, widget->w/2.0-UNIT*0.25, UNIT*0.75);
 	cairo_line_to(cr, widget->w/2.0, UNIT*0.25);
 	cairo_line_to(cr, widget->w/2.0+UNIT*0.25, UNIT*0.75);
 	cairo_close_path(cr);
+	cairo_fill(cr);
 
-	if (text_list->scroll_top == 0)
-		cairo_set_source_rgb(cr, 0.7, 0.7, 0.9);
-	else if (text_list->scroll_dir < 0)
+	if (text_list->scroll_top ==
+		mtk_list_length(text_list->list)*UNIT - widget->h + 2*UNIT) {
+		if (!widget->init)
+			/* redraw background to fix color bleeding */
+			draw_background(widget->h - UNIT);
+		cairo_set_source_rgba(cr, 0.3, 0.3, 0.9, 0.5);
+	}
+	else if (text_list->scroll_dir > 0)
 		cairo_set_source_rgb(cr, 0.0, 0.0, 0.9);
 	else
 		cairo_set_source_rgb(cr, 0.3, 0.3, 0.9);
-	cairo_fill(cr);
 
 	cairo_move_to(cr, widget->w/2.0-UNIT*0.25, widget->h - UNIT*0.75);
 	cairo_line_to(cr, widget->w/2.0, widget->h - UNIT*0.25);
 	cairo_line_to(cr, widget->w/2.0+UNIT*0.25, widget->h - UNIT*0.75);
 	cairo_close_path(cr);
-
-	if (text_list->scroll_top ==
-		mtk_list_length(text_list->list)*UNIT - widget->h + 2*UNIT)
-		cairo_set_source_rgb(cr, 0.7, 0.7, 0.9);
-	else if (text_list->scroll_dir > 0)
-		cairo_set_source_rgb(cr, 0.0, 0.0, 0.9);
-	else
-		cairo_set_source_rgb(cr, 0.3, 0.3, 0.9);
 	cairo_fill(cr);
 
 	cairo_destroy(cr);

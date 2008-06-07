@@ -17,6 +17,7 @@
 CLASS(mtk_widget, mtk_object)
 	int x, y, w, h;
 	bool redraw;
+	bool init;
 	struct mtk_window *window;
 	struct mtk_widget *parent;
 	cairo_surface_t *surface;

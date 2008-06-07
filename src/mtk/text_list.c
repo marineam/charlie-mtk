@@ -78,7 +78,6 @@ static void draw(void *this)
 	mtk_widget_t *widget = this;
 	mtk_text_list_t *text_list = this;
 	cairo_t *cr;
-	cairo_pattern_t *pat;
 	int y;
 
 	y = text_list->cache_top - text_list->scroll_top;
@@ -94,21 +93,26 @@ static void draw(void *this)
 	cairo_set_source_surface(cr, text_list->cache, 0, y);
 	cairo_fill(cr);
 
-	pat = cairo_pattern_create_linear(0, 0, 0, UNIT);
-	cairo_pattern_add_color_stop_rgb(pat, 0.0, 0.6, 0.6, 0.9);
-	cairo_pattern_add_color_stop_rgb(pat, 1.0, 1.0, 1.0, 1.0);
-	cairo_rectangle(cr, 0, 0, widget->w, UNIT);
-	cairo_set_source(cr, pat);
-	cairo_fill(cr);
-	cairo_pattern_destroy(pat);
+	if (widget->init) {
+		cairo_pattern_t *pat;
+		/* we only need to draw this once */
 
-	pat = cairo_pattern_create_linear(0, widget->h-UNIT, 0, widget->h);
-	cairo_pattern_add_color_stop_rgb(pat, 1.0, 0.6, 0.6, 0.9);
-	cairo_pattern_add_color_stop_rgb(pat, 0.0, 1.0, 1.0, 1.0);
-	cairo_rectangle(cr, 0, widget->h - UNIT, widget->w, widget->h);
-	cairo_set_source(cr, pat);
-	cairo_fill(cr);
-	cairo_pattern_destroy(pat);
+		pat = cairo_pattern_create_linear(0, 0, 0, UNIT);
+		cairo_pattern_add_color_stop_rgb(pat, 0.0, 0.6, 0.6, 0.9);
+		cairo_pattern_add_color_stop_rgb(pat, 1.0, 1.0, 1.0, 1.0);
+		cairo_rectangle(cr, 0, 0, widget->w, UNIT);
+		cairo_set_source(cr, pat);
+		cairo_fill(cr);
+		cairo_pattern_destroy(pat);
+
+		pat = cairo_pattern_create_linear(0, widget->h-UNIT, 0, widget->h);
+		cairo_pattern_add_color_stop_rgb(pat, 1.0, 0.6, 0.6, 0.9);
+		cairo_pattern_add_color_stop_rgb(pat, 0.0, 1.0, 1.0, 1.0);
+		cairo_rectangle(cr, 0, widget->h - UNIT, widget->w, widget->h);
+		cairo_set_source(cr, pat);
+		cairo_fill(cr);
+		cairo_pattern_destroy(pat);
+	}
 
 	cairo_move_to(cr, widget->w/2.0-UNIT*0.25, UNIT*0.75);
 	cairo_line_to(cr, widget->w/2.0, UNIT*0.25);
@@ -116,11 +120,11 @@ static void draw(void *this)
 	cairo_close_path(cr);
 
 	if (text_list->scroll_top == 0)
-		cairo_set_source_rgba(cr, 0.0, 0.0, 0.9, 0.2);
+		cairo_set_source_rgb(cr, 0.7, 0.7, 0.9);
 	else if (text_list->scroll_dir < 0)
-		cairo_set_source_rgba(cr, 0.0, 0.0, 0.9, 0.9);
+		cairo_set_source_rgb(cr, 0.0, 0.0, 0.9);
 	else
-		cairo_set_source_rgba(cr, 0.0, 0.0, 0.9, 0.7);
+		cairo_set_source_rgb(cr, 0.3, 0.3, 0.9);
 	cairo_fill(cr);
 
 	cairo_move_to(cr, widget->w/2.0-UNIT*0.25, widget->h - UNIT*0.75);
@@ -130,11 +134,11 @@ static void draw(void *this)
 
 	if (text_list->scroll_top ==
 		mtk_list_length(text_list->list)*UNIT - widget->h + 2*UNIT)
-		cairo_set_source_rgba(cr, 0.0, 0.0, 0.9, 0.2);
+		cairo_set_source_rgb(cr, 0.7, 0.7, 0.9);
 	else if (text_list->scroll_dir > 0)
-		cairo_set_source_rgba(cr, 0.0, 0.0, 0.9, 0.9);
+		cairo_set_source_rgb(cr, 0.0, 0.0, 0.9);
 	else
-		cairo_set_source_rgba(cr, 0.0, 0.0, 0.9, 0.7);
+		cairo_set_source_rgb(cr, 0.3, 0.3, 0.9);
 	cairo_fill(cr);
 
 	cairo_destroy(cr);

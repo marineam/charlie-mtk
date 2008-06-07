@@ -15,12 +15,14 @@ static void init(void *this, mtk_widget_t* parent)
 			CAIRO_CONTENT_COLOR,
 			widget->w, widget->h);
 
+	widget->init = true;
 	call(widget,redraw);
 }
 
 static void draw(void* this)
 {
 	mtk_widget(this)->redraw = false;
+	mtk_widget(this)->init = false;
 }
 
 static void redraw(void* vthis)

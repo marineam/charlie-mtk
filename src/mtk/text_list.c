@@ -1,8 +1,6 @@
 #include <string.h>
 #include <assert.h>
 #include <cairo.h>
-#include <cairo-xlib.h>
-#include <X11/Xlib.h>
 #include <mtk.h>
 
 #include "private.h"

@@ -1,8 +1,9 @@
 #include <string.h>
 #include <assert.h>
 #include <cairo.h>
+#include <cairo-xlib.h>
+#include <X11/Xlib.h>
 #include <mtk.h>
-#include <libmpdclient.h>
 
 #include "private.h"
 
@@ -11,23 +12,45 @@ static void cache_draw(mtk_text_list_t *this)
 	mtk_widget_t *widget = mtk_widget(this);
 	cairo_pattern_t *pat;
 	cairo_t *cr;
-	int start, y;
+	int start, y, ymax, diff;
 	void *item;
+
+	diff = this->cache_top - this->scroll_top;
+	if (!diff)
+		return;
 
 	assert(this->cache);
 
 	cr = cairo_create(this->cache);
 
+	start = this->scroll_top / UNIT - 1;
+	y = -this->scroll_top % UNIT;
+	ymax = widget->h;
+
+	if (this->cache_top >= 0) {
+		if (diff < 0) {
+			/* viewable area went up, redraw bottom */
+			start = (this->scroll_top + widget->h + diff)/UNIT - 1;
+			y = widget->h + diff -
+				(this->scroll_top + widget->h + diff) % UNIT;
+		}
+		else
+			ymax = diff+UNIT;
+
+		/* shift the existing surface */
+		cairo_set_source_surface(cr, this->cache, 0, diff);
+		cairo_paint(cr);
+	}
+
+	this->cache_top = this->scroll_top;
+
 	cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
-	cairo_rectangle(cr, 0, 0, widget->w, widget->h);
+	cairo_rectangle(cr, 0, y, widget->w, ymax);
 	cairo_fill(cr);
 
 	pat = cairo_pattern_create_linear(0, 0, widget->w, 0);
 	cairo_pattern_add_color_stop_rgb(pat, 0.0, 0.8, 0.9, 0.9);
 	cairo_pattern_add_color_stop_rgb(pat, 0.6, 1.0, 1.0, 1.0);
-
-	start = this->cache_top / UNIT - 1;
-	y = -this->cache_top % UNIT;
 
 	if (start < 0) {
 		start = 0;
@@ -35,7 +58,7 @@ static void cache_draw(mtk_text_list_t *this)
 	}
 
 	for (item = mtk_list_goto(this->list, start);
-	     item && y < widget->h;
+	     item && y < ymax;
 	     item = mtk_list_next(this->list)) {
 
 		cairo_rectangle(cr, UNIT*0.1, y+UNIT*0.1, widget->w, UNIT*0.8);
@@ -61,14 +84,13 @@ static void draw(void *this)
 	y = text_list->cache_top - text_list->scroll_top;
 
 	if (abs(y) > UNIT) {
-		text_list->cache_top = text_list->scroll_top;
 		y = 0;
 		cache_draw(text_list);
 	}
 
 	cr = cairo_create(widget->surface);
 
-	cairo_rectangle(cr, 0, y, widget->w, widget->h);
+	cairo_rectangle(cr, 0, UNIT, widget->w, widget->h-2*UNIT);
 	cairo_set_source_surface(cr, text_list->cache, 0, y);
 	cairo_fill(cr);
 
@@ -254,6 +276,8 @@ static void cache_init(mtk_text_list_t *this)
 {
 	if (this->cache)
 		cairo_surface_destroy(this->cache);
+
+	this->cache_top = -1;
 
 	if (mtk_widget(this)->surface) {
 		this->cache = cairo_surface_create_similar(

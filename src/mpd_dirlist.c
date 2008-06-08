@@ -133,19 +133,51 @@ static void update(void *vthis)
 {
 }
 
-static void _item_click(void *vthis, void *item)
+static void _item_draw(void *vthis, cairo_t *cr, void *item, int y)
+{
+        mpd_dirlist_t *this = vthis;
+	mtk_widget_t *widget = vthis;
+
+	super(this,mpd_dirlist,_item_draw, cr, item, y);
+
+	cairo_set_source_rgb(cr, 0.6, 0.6, 0.9);
+	cairo_rectangle(cr, widget->w - 2*UNIT + UNIT*0.1, y + UNIT*0.1,
+		2*UNIT-UNIT*0.2, UNIT*0.8);
+	cairo_fill(cr);
+
+	cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+	cairo_move_to(cr, widget->w - UNIT, y + UNIT*0.3);
+	cairo_line_to(cr, widget->w - UNIT, y + UNIT*0.7);
+	cairo_move_to(cr, widget->w - UNIT*1.2, y + UNIT*0.5);
+	cairo_line_to(cr, widget->w - UNIT*0.8, y + UNIT*0.5);
+	cairo_stroke(cr);
+}
+
+static void _item_click(void *vthis, void *item, int x, int y)
 {
 	mpd_dirlist_t *this = vthis;
 	mpd_InfoEntity *entity = item;
 
 	if (entity->type == MPD_INFO_ENTITY_TYPE_DIRECTORY) {
-		updatedir(this, entity->info.directory->path);
+		if (x >= mtk_widget(this)->w - UNIT*2) {
+			mpd_sendAddCommand(mpd_conn, entity->info.directory->path);
+			mpd_finishCommand(mpd_conn);
+			die_on_mpd_error();
+		}
+		else
+			updatedir(this, entity->info.directory->path);
 	}
 	else if (entity->type == MPD_INFO_ENTITY_TYPE_SONG) {
-		mpd_sendPlayCommand(mpd_conn, entity->info.song->pos);
-		die_on_mpd_error();
-		mpd_finishCommand(mpd_conn);
-		die_on_mpd_error();
+		if (x >= mtk_widget(this)->w - UNIT*2) {
+			mpd_sendAddCommand(mpd_conn, entity->info.directory->path);
+			mpd_finishCommand(mpd_conn);
+			die_on_mpd_error();
+		}
+		else if (0) { // fixme: check if song is in playlist
+			mpd_sendPlayCommand(mpd_conn, entity->info.song->pos);
+			mpd_finishCommand(mpd_conn);
+			die_on_mpd_error();
+		}
 	}
 }
 
@@ -185,6 +217,7 @@ METHOD_TABLE_INIT(mpd_dirlist, mtk_text_list)
 	METHOD(update);
 	_METHOD(free, objfree);
 	METHOD(_item_text);
+	METHOD(_item_draw);
 	METHOD(_item_click);
 	METHOD(_item_free);
 METHOD_TABLE_END

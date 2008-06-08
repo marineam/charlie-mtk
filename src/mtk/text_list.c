@@ -231,7 +231,8 @@ static void mouse_press(void *this, int x, int y)
 
 		if (pos < mtk_list_length(text_list->list)) {
 			call(text_list,_item_click,
-				mtk_list_goto(text_list->list, pos));
+				mtk_list_goto(text_list->list, pos),
+				x, y - pos*UNIT);
 		}
 	}
 
@@ -269,7 +270,7 @@ static void _item_draw(void *vthis, cairo_t *cr, void *item, int y)
 	cairo_show_text(cr, call(this,_item_text, item));
 }
 
-static void _item_click(void *this, void *item)
+static void _item_click(void *this, void *item, int x, int y)
 {
 }
 

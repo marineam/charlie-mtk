@@ -53,7 +53,7 @@ static void update(void *vthis)
 	call(this,set_list, list);
 }
 
-static void _item_click(void *vthis, void *item)
+static void _item_click(void *vthis, void *item, int x, int y)
 {
 	mpd_InfoEntity *entity = item;
 

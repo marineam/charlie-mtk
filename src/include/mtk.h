@@ -102,7 +102,7 @@ METHODS(mtk_text_list, mtk_widget, mtk_list_t *list)
 	void (*set_list)(void *this, mtk_list_t *list);
 	char* (*_item_text)(void *this, void *item);
 	void (*_item_draw)(void *this, cairo_t *cr, void *item, int y);
-	void (*_item_click)(void *this, void *item);
+	void (*_item_click)(void *this, void *item, int x, int y);
 	void (*_item_free)(void *this, void *item);
 END
 

@@ -86,6 +86,11 @@ static void update(void *vthis)
 
 	set_time(this->elapsed, mpd_stat->elapsedTime);
 	set_time(this->remaining, mpd_stat->elapsedTime - mpd_stat->totalTime);
+	if (mpd_stat->elapsedTime)
+		call(this->progress,set_value,
+			(double)mpd_stat->elapsedTime / mpd_stat->elapsedTime);
+	else
+		call(this->progress,set_value, 0.0);
 
 	if (mpd_stat->playlist == this->playlist &&
 	    mpd_stat->song == this->song) {
@@ -138,27 +143,14 @@ static void draw(void *vthis)
 {
 	mtk_widget_t *this = vthis;
 	cairo_t *cr = cairo_create(this->surface);
-	double x;
 
 	cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
 	cairo_rectangle(cr, 0, 0, this->w, this->h);
 	cairo_fill(cr);
 
-	super(this,mpd_status,draw);
-
-	cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
-	cairo_move_to(cr, this->w*0.46, this->h*0.42);
-	cairo_line_to(cr, this->w*0.88, this->h*0.42);
-	cairo_stroke(cr);
-
-	x = ((double)mpd_stat->elapsedTime / mpd_stat->totalTime) *
-		(this->w*(0.88-0.46)) + this->w*0.46;
-
-	cairo_move_to(cr, x, this->h*0.41);
-	cairo_line_to(cr, x, this->h*0.43);
-	cairo_stroke(cr);
-
 	cairo_destroy(cr);
+
+	super(this,mpd_status,draw);
 }
 
 static void set_size(void *vthis, int w, int h)
@@ -183,6 +175,9 @@ static void set_size(void *vthis, int w, int h)
 	call(this->elapsed,set_coord, w*0.4, h*0.4);
 	call(this->elapsed,set_size, w*0.06, h*0.04);
 
+	call(this->progress,set_coord, w*0.46, h*0.41);
+	call(this->progress,set_size, w*0.42, h*0.02);
+
 	call(this->remaining,set_coord, w*0.89, h*0.4);
 	call(this->remaining,set_size, w*0.11, h*0.04);
 }
@@ -199,6 +194,7 @@ mpd_status_t* mpd_status_new(size_t size)
 	this->artist = new(mtk_text, "");
 	this->album = new(mtk_text, "");
 	this->elapsed = new(mtk_text, "");
+	this->progress = new(mtk_slider, 0.0);
 	this->remaining = new(mtk_text, "");
 
 	call(this,add_widget, mtk_widget(this->art));
@@ -206,6 +202,7 @@ mpd_status_t* mpd_status_new(size_t size)
 	call(this,add_widget, mtk_widget(this->artist));
 	call(this,add_widget, mtk_widget(this->album));
 	call(this,add_widget, mtk_widget(this->elapsed));
+	call(this,add_widget, mtk_widget(this->progress));
 	call(this,add_widget, mtk_widget(this->remaining));
 
 	return this;

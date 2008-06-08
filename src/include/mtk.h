@@ -90,6 +90,12 @@ METHODS(mtk_image, mtk_widget, char *path)
 	void (*set_image)(void *this, char *path);
 END
 
+CLASS(mtk_slider, mtk_widget)
+	double value;
+METHODS(mtk_slider, mtk_widget, double value)
+	void (*set_value)(void *this, double value);
+END
+
 CLASS(mtk_text_list, mtk_widget)
 	mtk_list_t* list;
 	float scroll_dir;

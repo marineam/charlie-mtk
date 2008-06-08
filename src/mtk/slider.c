@@ -37,6 +37,15 @@ static void set_value(void *vthis, double val)
 	call(this,redraw);
 }
 
+static void mouse_press(void *vthis, int x, int y)
+{
+	mtk_slider_t *this = vthis;
+	double value = (double)x / mtk_widget(this)->w;
+
+	call(this,set_value, value);
+	emit(this,value_changed, value);
+}
+
 mtk_slider_t* mtk_slider_new(size_t size, double val)
 {
 	mtk_slider_t *this = mtk_slider(mtk_widget_new(size));
@@ -48,5 +57,6 @@ mtk_slider_t* mtk_slider_new(size_t size, double val)
 
 METHOD_TABLE_INIT(mtk_slider, mtk_widget)
 	METHOD(set_value);
+	METHOD(mouse_press);
 	METHOD(draw);
 METHOD_TABLE_END

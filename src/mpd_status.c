@@ -199,6 +199,18 @@ static void set_size(void *vthis, int w, int h)
 	call(this->volvalue,set_size, w*0.11, h*0.04);
 }
 
+static void set_volume(void *vthis, double value)
+{
+	mpd_status_t *this = vthis;
+
+	mpd_stat->volume = value*100;
+
+	mpd_sendSetvolCommand(mpd_conn, mpd_stat->volume);
+	mpd_finishCommand(mpd_conn);
+	die_on_mpd_error();
+	call(this,update);
+}
+
 mpd_status_t* mpd_status_new(size_t size)
 {
 	mpd_status_t *this = mpd_status(mtk_container_new(size));
@@ -228,11 +240,14 @@ mpd_status_t* mpd_status_new(size_t size)
 	call(this,add_widget, mtk_widget(this->volume));
 	call(this,add_widget, mtk_widget(this->volvalue));
 
+	connect(this->volume, value_changed, this, set_volume);
+
 	return this;
 }
 
 METHOD_TABLE_INIT(mpd_status, mtk_container)
 	METHOD(update);
+	METHOD(set_volume);
 	METHOD(draw);
 	METHOD(set_size);
 METHOD_TABLE_END

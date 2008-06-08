@@ -2,10 +2,12 @@
 #define MTK_OBJECT_H
 
 #include <string.h>
+#include "mtk_util.h"
 
 typedef struct mtk_object mtk_object_t;
 struct mtk_object {
 	struct mtk_object_class *_class;
+	mtk_list_t *signals;
 };
 mtk_object_t* mtk_object_new(size_t size);
 void _mtk_object_class_init();
@@ -15,6 +17,8 @@ extern struct mtk_object_class _mtk_object_class;
 struct mtk_object_class {
 	void *_super;
 	void (*free)(void *this);
+	/* used in connect macro only */
+	void (*_register_signal)(void *this, mtk_list_t *siglist);
 };
 
 #define CLASS(name, parent) \
@@ -24,6 +28,13 @@ struct mtk_object_class {
 			struct name##_class *_class; \
 			struct parent _parent; \
 		};
+
+#define SIGNAL(signame, sigargs...) \
+		union { \
+			void (*o)(void *this, ## sigargs); \
+			void (*f)(sigargs); \
+		} _##signame; \
+		mtk_list_t *_##signame##_list;
 
 #define METHODS(name, parent, newargs...) \
 	}; \
@@ -60,5 +71,57 @@ struct mtk_object_class {
 	(obj)->_class->func((obj), ## args)
 #define call_defined(obj,func) \
 	((obj)->_class->func != NULL)
+
+struct _signalcall {
+	void *object;
+	void *function;
+};
+
+#define emit(obj,signal,args...) \
+	do { \
+		struct _signalcall *_data; \
+		if (!(obj)->_##signal##_list) \
+			break; \
+		mtk_list_foreach((obj)->_##signal##_list, _data) { \
+			(obj)->_##signal.f = _data->function; \
+			if (_data->object) \
+				(obj)->_##signal.o(_data->object, ## args); \
+			else \
+				(obj)->_##signal.f(args); \
+		} \
+	} while(0)
+
+#define _connect(sobj,signal,data) \
+	if (!(sobj)->_##signal##_list) { \
+		(sobj)->_##signal##_list = mtk_list_new(); \
+		/* _register_signal hands mtk_object the list so all \
+		 * _signalcall structs can be freed later */ \
+		call((sobj),_register_signal, (sobj)->_##signal##_list); \
+	} \
+	mtk_list_append((sobj)->_##signal##_list, _data); \
+
+/* Connect a signal to an object's method */
+#define connect(sobj,signal,dobj,func) \
+	do { \
+		struct _signalcall *_data = \
+			xmalloc(sizeof(struct _signalcall)); \
+		/* assignment is just needed as a type check */ \
+		(sobj)->_##signal.o = (dobj)->_class->func; \
+		_data->object = (dobj); \
+		_data->function = (dobj)->_class->func; \
+		_connect(sobj,signal,_data) \
+	} while(0)
+
+/* Connect a signal to a function */
+#define connectf(sobj,signal,func) \
+	do { \
+		struct _signalcall *_data = \
+			xmalloc(sizeof(struct _signalcall)); \
+		/* assignment is just needed as a type check */ \
+		(sobj)->_##signal.f = func; \
+		_data->object = NULL; \
+		_data->function = func; \
+		_connect(sobj,signal,_data) \
+	} while(0)
 
 #endif

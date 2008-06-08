@@ -31,6 +31,7 @@ CLASS(mpd_status, mtk_container)
 	int song;
 METHODS(mpd_status, mtk_container)
 	void (*update)(void *this);
+	void (*set_volume)(void *this, double value);
 END
 
 extern mpd_Connection *mpd_conn;

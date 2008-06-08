@@ -92,6 +92,7 @@ END
 
 CLASS(mtk_slider, mtk_widget)
 	double value;
+	SIGNAL(value_changed, double value);
 METHODS(mtk_slider, mtk_widget, double value)
 	void (*set_value)(void *this, double value);
 END

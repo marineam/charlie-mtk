@@ -14,7 +14,10 @@ static void set_time(mtk_text_t *widget, int time)
 {
 	char *str;
 
-	asprintf(&str, "%d:%02d", time / 60, abs(time % 60));
+	if (time >= 0)
+		asprintf(&str, "%d:%02d", abs(time / 60), abs(time % 60));
+	else
+		asprintf(&str, "-%d:%02d", abs(time / 60), abs(time % 60));
 	assert(str);
 	call(widget,set_text, str);
 	free(str);
@@ -199,6 +202,18 @@ static void set_size(void *vthis, int w, int h)
 	call(this->volvalue,set_size, w*0.11, h*0.04);
 }
 
+static void set_progress(void *vthis, double value)
+{
+	mpd_status_t *this = vthis;
+
+	mpd_stat->elapsedTime = mpd_stat->totalTime*value;
+
+	mpd_sendSeekCommand(mpd_conn, mpd_stat->song, mpd_stat->elapsedTime);
+	mpd_finishCommand(mpd_conn);
+	die_on_mpd_error();
+	call(this,update);
+}
+
 static void set_volume(void *vthis, double value)
 {
 	mpd_status_t *this = vthis;
@@ -240,6 +255,7 @@ mpd_status_t* mpd_status_new(size_t size)
 	call(this,add_widget, mtk_widget(this->volume));
 	call(this,add_widget, mtk_widget(this->volvalue));
 
+	connect(this->progress, value_changed, this, set_progress);
 	connect(this->volume, value_changed, this, set_volume);
 
 	return this;
@@ -247,6 +263,7 @@ mpd_status_t* mpd_status_new(size_t size)
 
 METHOD_TABLE_INIT(mpd_status, mtk_container)
 	METHOD(update);
+	METHOD(set_progress);
 	METHOD(set_volume);
 	METHOD(draw);
 	METHOD(set_size);

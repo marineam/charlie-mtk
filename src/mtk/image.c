@@ -26,9 +26,9 @@ static void draw(void *this)
 	cairo_rectangle(cr, 0, 0, widget->w, widget->h);
 	cairo_fill(cr);
 
-	cairo_matrix_init(&trans, scale, 0.0, 0.0, scale, 0, widget->h/2.0);
+	cairo_matrix_init(&trans, scale, 0.0, 0.0, scale, widget->w/2.0, widget->h/2.0);
 	cairo_transform(cr, &trans);
-	cairo_set_source_surface(cr, image->image, 0, -h/2.0);
+	cairo_set_source_surface(cr, image->image, -w/2.0, -h/2.0);
 	cairo_paint(cr);
 
 	cairo_destroy(cr);

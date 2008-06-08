@@ -83,6 +83,7 @@ static void update(void *vthis)
 {
 	mpd_InfoEntity *entity = NULL;
 	mpd_status_t *this = vthis;
+	char vol[5];
 
 	set_time(this->elapsed, mpd_stat->elapsedTime);
 	set_time(this->remaining, mpd_stat->elapsedTime - mpd_stat->totalTime);
@@ -91,6 +92,13 @@ static void update(void *vthis)
 			(double)mpd_stat->elapsedTime / mpd_stat->elapsedTime);
 	else
 		call(this->progress,set_value, 0.0);
+
+	call(this->volume,set_value, (double)mpd_stat->volume / 100.0);
+	if (mpd_stat->volume == MPD_STATUS_NO_VOLUME)
+		vol[0] = '\0';
+	else
+		snprintf(vol, 5, "%d%%", mpd_stat->volume);
+	call(this->volvalue,set_text, vol);
 
 	if (mpd_stat->playlist == this->playlist &&
 	    mpd_stat->song == this->song) {
@@ -180,6 +188,15 @@ static void set_size(void *vthis, int w, int h)
 
 	call(this->remaining,set_coord, w*0.89, h*0.4);
 	call(this->remaining,set_size, w*0.11, h*0.04);
+
+	call(this->vollabel,set_coord, w*0.4, h*0.5);
+	call(this->vollabel,set_size, w*0.06, h*0.04);
+
+	call(this->volume,set_coord, w*0.46, h*0.51);
+	call(this->volume,set_size, w*0.42, h*0.02);
+
+	call(this->volvalue,set_coord, w*0.89, h*0.5);
+	call(this->volvalue,set_size, w*0.11, h*0.04);
 }
 
 mpd_status_t* mpd_status_new(size_t size)
@@ -196,6 +213,9 @@ mpd_status_t* mpd_status_new(size_t size)
 	this->elapsed = new(mtk_text, "");
 	this->progress = new(mtk_slider, 0.0);
 	this->remaining = new(mtk_text, "");
+	this->vollabel = new(mtk_text, "Vol:");
+	this->volume = new(mtk_slider, 0.0);
+	this->volvalue = new(mtk_text, "0%");
 
 	call(this,add_widget, mtk_widget(this->art));
 	call(this,add_widget, mtk_widget(this->title));
@@ -204,6 +224,9 @@ mpd_status_t* mpd_status_new(size_t size)
 	call(this,add_widget, mtk_widget(this->elapsed));
 	call(this,add_widget, mtk_widget(this->progress));
 	call(this,add_widget, mtk_widget(this->remaining));
+	call(this,add_widget, mtk_widget(this->vollabel));
+	call(this,add_widget, mtk_widget(this->volume));
+	call(this,add_widget, mtk_widget(this->volvalue));
 
 	return this;
 }

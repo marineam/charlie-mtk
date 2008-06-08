@@ -26,10 +26,8 @@ static bool mpd_update(void *nill)
 	    mpd_stat->playlist == old->playlist &&
 	    mpd_stat->song == old->song &&
 	    mpd_stat->state == old->state) {
-		if (mpd_stat->state == MPD_STATUS_STATE_PLAY) {
-			/* Not much changed, just update the time */
-			call(status,update);
-		}
+		/* Not much changed, just update the time/volume */
+		call(status,update);
 	}
 	else {
 		call(status,update);

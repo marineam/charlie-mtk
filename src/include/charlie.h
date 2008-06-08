@@ -23,6 +23,9 @@ CLASS(mpd_status, mtk_container)
 	mtk_text_t *elapsed;
 	mtk_slider_t *progress;
 	mtk_text_t *remaining;
+	mtk_text_t *vollabel;
+	mtk_slider_t *volume;
+	mtk_text_t *volvalue;
 	mtk_image_t *art;
 	long long playlist;
 	int song;

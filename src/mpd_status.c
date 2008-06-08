@@ -87,9 +87,9 @@ static void update(void *vthis)
 
 	set_time(this->elapsed, mpd_stat->elapsedTime);
 	set_time(this->remaining, mpd_stat->elapsedTime - mpd_stat->totalTime);
-	if (mpd_stat->elapsedTime)
+	if (mpd_stat->totalTime)
 		call(this->progress,set_value,
-			(double)mpd_stat->elapsedTime / mpd_stat->elapsedTime);
+			(double)mpd_stat->elapsedTime / mpd_stat->totalTime);
 	else
 		call(this->progress,set_value, 0.0);
 
@@ -183,8 +183,8 @@ static void set_size(void *vthis, int w, int h)
 	call(this->elapsed,set_coord, w*0.4, h*0.4);
 	call(this->elapsed,set_size, w*0.06, h*0.04);
 
-	call(this->progress,set_coord, w*0.46, h*0.41);
-	call(this->progress,set_size, w*0.42, h*0.02);
+	call(this->progress,set_coord, w*0.46, h*0.4);
+	call(this->progress,set_size, w*0.42, h*0.04);
 
 	call(this->remaining,set_coord, w*0.89, h*0.4);
 	call(this->remaining,set_size, w*0.11, h*0.04);
@@ -192,8 +192,8 @@ static void set_size(void *vthis, int w, int h)
 	call(this->vollabel,set_coord, w*0.4, h*0.5);
 	call(this->vollabel,set_size, w*0.06, h*0.04);
 
-	call(this->volume,set_coord, w*0.46, h*0.51);
-	call(this->volume,set_size, w*0.42, h*0.02);
+	call(this->volume,set_coord, w*0.46, h*0.5);
+	call(this->volume,set_size, w*0.42, h*0.04);
 
 	call(this->volvalue,set_coord, w*0.89, h*0.5);
 	call(this->volvalue,set_size, w*0.11, h*0.04);

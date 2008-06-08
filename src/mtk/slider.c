@@ -20,8 +20,8 @@ static void draw(void *vthis)
 	cairo_line_to(cr, widget->w, widget->h/2.0);
 	cairo_stroke(cr);
 
-	cairo_move_to(cr, this->value*(widget->w-2)+1, 0);
-	cairo_line_to(cr, this->value*(widget->w-2)+1, widget->h);
+	cairo_move_to(cr, this->value*(widget->w-2)+1, widget->h*0.25);
+	cairo_line_to(cr, this->value*(widget->w-2)+1, widget->h*0.75);
 	cairo_stroke(cr);
 
 	cairo_destroy(cr);

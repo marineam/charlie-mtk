@@ -32,6 +32,8 @@ CLASS(mpd_status, mtk_container)
 	mtk_text_t *volvalue;
 	mtk_image_t *art;
 	mtk_image_t *playpause;
+	mtk_text_t *nextlabel;
+	mtk_text_t *next[3];
 	long long playlist;
 	int song;
 METHODS(mpd_status, mtk_container)
@@ -46,5 +48,6 @@ extern mpd_Status *mpd_stat;
 #define die_on_mpd_error() die_on(mpd_conn->error, "%s\n", mpd_conn->errorStr)
 
 void mpd_init();
+char* mpd_song_name(mpd_InfoEntity *entity);
 
 #endif

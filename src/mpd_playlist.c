@@ -3,24 +3,9 @@
 #include <assert.h>
 #include <charlie.h>
 
-#define MAXTEXT 200
 static char* _item_text(void *this, void *item)
 {
-	static char name[MAXTEXT];
-	mpd_InfoEntity *entity = item;
-	mpd_Song *song = entity->info.song;
-
-	assert(entity->type == MPD_INFO_ENTITY_TYPE_SONG);
-	if (song->title && song->artist)
-		snprintf(name, MAXTEXT, "%s - %s", song->artist, song->title);
-	else {
-		char *s;
-		s = strrchr(song->file, '/');
-		s = s?s+1:song->file;
-		strncpy(name, s, MAXTEXT);
-	}
-
-	return name;
+	return mpd_song_name((mpd_InfoEntity*)item);
 }
 
 static void update(void *vthis)

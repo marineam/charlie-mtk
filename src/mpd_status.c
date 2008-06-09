@@ -118,10 +118,13 @@ static void update(void *vthis)
 	this->song = mpd_stat->song;
 
 	if (mpd_stat->playlistLength) {
+		mpd_sendCommandListBegin(mpd_conn);
 		mpd_sendPlaylistInfoCommand(mpd_conn, mpd_stat->song);
+		mpd_sendPlaylistInfoCommand(mpd_conn, mpd_stat->song+1);
+		mpd_sendPlaylistInfoCommand(mpd_conn, mpd_stat->song+2);
+		mpd_sendPlaylistInfoCommand(mpd_conn, mpd_stat->song+3);
+		mpd_sendCommandListEnd(mpd_conn);
 		entity = mpd_getNextInfoEntity(mpd_conn);
-		mpd_finishCommand(mpd_conn);
-		die_on_mpd_error();
 	}
 
 	if (entity) {
@@ -141,6 +144,7 @@ static void update(void *vthis)
 		else
 			call(this->album,set_text, "");
 		set_art(this->art, song);
+		mpd_freeInfoEntity(entity);
 	}
 	else {
 		call(this->title,set_text, "");
@@ -149,8 +153,18 @@ static void update(void *vthis)
 		set_art(this->art, NULL);
 	}
 
-	if (entity)
-		mpd_freeInfoEntity(entity);
+	for (int i = 0; i < 3; i++) {
+		entity = mpd_getNextInfoEntity(mpd_conn);
+		if (entity) {
+			call(this->next[i],set_text, mpd_song_name(entity));
+			mpd_freeInfoEntity(entity);
+		}
+		else
+			call(this->next[i],set_text, "");
+	}
+
+	mpd_finishCommand(mpd_conn);
+	die_on_mpd_error();
 
 	call(this,redraw);
 }
@@ -206,8 +220,18 @@ static void set_size(void *vthis, int w, int h)
 	call(this->volvalue,set_coord, w*0.89, h*0.5);
 	call(this->volvalue,set_size, w*0.11, h*0.04);
 
-	call(this->playpause,set_coord, w*0.05, h*0.6);
+	call(this->playpause,set_coord, w*0.05, h-UNIT*1.1);
 	call(this->playpause,set_size, UNIT, UNIT);
+
+	call(this->nextlabel,set_coord, w*0.05, h*0.6);
+	call(this->nextlabel,set_size, w*0.2, h*0.06);
+
+	call(this->next[0],set_coord, w*0.3, h*0.6);
+	call(this->next[0],set_size, w*0.7, h*0.06);
+	call(this->next[1],set_coord, w*0.3, h*0.7);
+	call(this->next[1],set_size, w*0.7, h*0.06);
+	call(this->next[2],set_coord, w*0.3, h*0.8);
+	call(this->next[2],set_size, w*0.7, h*0.06);
 }
 
 static void set_progress(void *vthis, double value)
@@ -274,6 +298,10 @@ mpd_status_t* mpd_status_new(size_t size)
 	this->volume = new(mtk_slider, 0.0);
 	this->volvalue = new(mtk_text, "0%");
 	this->playpause = new(mtk_image, "../data/play.png");
+	this->nextlabel = new(mtk_text, "Next:");
+	this->next[0] = new(mtk_text, "");
+	this->next[1] = new(mtk_text, "");
+	this->next[2] = new(mtk_text, "");
 
 	call(this,add_widget, mtk_widget(this->art));
 	call(this,add_widget, mtk_widget(this->title));
@@ -286,6 +314,10 @@ mpd_status_t* mpd_status_new(size_t size)
 	call(this,add_widget, mtk_widget(this->volume));
 	call(this,add_widget, mtk_widget(this->volvalue));
 	call(this,add_widget, mtk_widget(this->playpause));
+	call(this,add_widget, mtk_widget(this->nextlabel));
+	call(this,add_widget, mtk_widget(this->next[0]));
+	call(this,add_widget, mtk_widget(this->next[1]));
+	call(this,add_widget, mtk_widget(this->next[2]));
 
 	connect(this->progress, value_changed, this, set_progress);
 	connect(this->volume, value_changed, this, set_volume);

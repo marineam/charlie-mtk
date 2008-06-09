@@ -21,6 +21,7 @@ CLASS(mtk_widget, mtk_object)
 	struct mtk_window *window;
 	struct mtk_widget *parent;
 	cairo_surface_t *surface;
+	SIGNAL(clicked);
 METHODS(mtk_widget, mtk_object)
 	void (*init)(void *this, mtk_widget_t* parent);
 	void (*draw)(void *this);

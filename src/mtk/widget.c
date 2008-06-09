@@ -84,6 +84,11 @@ static void set_parent(void *this, mtk_widget_t *parent)
 	mtk_widget(this)->parent = parent;
 }
 
+static void mouse_press(void *this, int x, int y)
+{
+	emit(mtk_widget(this),clicked);
+}
+
 static void objfree(void* vthis)
 {
 	mtk_widget_t *this = vthis;
@@ -112,4 +117,5 @@ METHOD_TABLE_INIT(mtk_widget, mtk_object)
 	METHOD(get_coord);
 	METHOD(get_size);
 	METHOD(set_parent);
+	METHOD(mouse_press);
 METHOD_TABLE_END

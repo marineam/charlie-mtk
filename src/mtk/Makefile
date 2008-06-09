@@ -5,7 +5,7 @@ CFLAGS += $(shell pkg-config --cflags cairo x11 openssl)
 LIBS = $(shell pkg-config --libs cairo x11 openssl) -lrt
 SRCS = $(filter-out test.c, $(wildcard *.c))
 OBJS = $(SRCS:.c=.o)
-HEAD = $(wildcard ../include/*.h) private.h
+HEAD = $(wildcard ../include/mtk*.h) private.h
 
 all: mtk.a test
 

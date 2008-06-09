@@ -7,10 +7,11 @@
 #include <X11/Xlib.h>
 #include <cairo.h>
 
-#include "config.h"
-
 #include "mtk_util.h"
 #include "mtk_object.h"
+
+/* Default base unit for widget size and many things */
+#define UNIT 48
 
 /* The data in the following structures should only be accessed
  * by the corresponding class implementation in mtk or a child class */

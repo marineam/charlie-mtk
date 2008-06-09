@@ -1,5 +1,4 @@
 #include <time.h>
-#include <config.h>
 #include <charlie.h>
 #include <mtk.h>
 

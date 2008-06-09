@@ -4,6 +4,10 @@
 #include <libmpdclient.h>
 #include "mtk.h"
 
+/* Default window size */
+#define WIDTH 800
+#define HEIGHT 480
+
 CLASS(mpd_dirlist, mtk_text_list)
 METHODS(mpd_dirlist, mtk_text_list)
 	void (*update)(void *this);

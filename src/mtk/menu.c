@@ -89,18 +89,15 @@ static void add_widget(void *this, mtk_widget_t *w)
 	super(c,mtk_menu,add_widget, w);
 }
 
-static void add_item(void *vthis, mtk_widget_t *widget, char *text)
+static void set_slide_max(mtk_menu_t *this)
 {
-	mtk_menu_t *this = vthis;
-	struct item *item = xmalloc(sizeof(struct item));
+	struct item *item;
 	cairo_t *cr;
 	cairo_text_extents_t te;
 	int max = 0;
 
-	call(this,add_widget, widget);
-	item->text = strdup(text);
-	item->widget = widget;
-	mtk_list_append(this->menu, item);
+	if (!mtk_widget(this)->surface)
+		return;
 
 	/* Don't actually draw anything, just calc the max menu width */
 	cr = cairo_create(mtk_widget(this)->surface);
@@ -119,6 +116,27 @@ static void add_item(void *vthis, mtk_widget_t *widget, char *text)
 	this->slide_max = max;
 
 	cairo_destroy(cr);
+}
+
+static void add_item(void *vthis, mtk_widget_t *widget, char *text)
+{
+	mtk_menu_t *this = vthis;
+	struct item *item = xmalloc(sizeof(struct item));
+
+	call(this,add_widget, widget);
+	item->text = strdup(text);
+	item->widget = widget;
+	mtk_list_append(this->menu, item);
+
+	set_slide_max(this);
+}
+
+static void init(void *vthis, mtk_widget_t *parent)
+{
+	mtk_menu_t *this = vthis;
+
+	super(this,mtk_menu,init, parent);
+	set_slide_max(vthis);
 }
 
 static void set_size(void *vthis, int w, int h)
@@ -251,6 +269,7 @@ mtk_menu_t* mtk_menu_new(size_t size)
 METHOD_TABLE_INIT(mtk_menu, mtk_container)
 	_METHOD(free, objfree);
 	METHOD(draw);
+	METHOD(init);
 	METHOD(set_size);
 	METHOD(mouse_press);
 	METHOD(mouse_release);

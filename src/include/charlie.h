@@ -43,11 +43,18 @@ METHODS(mpd_status, mtk_container)
 	void (*set_playpause)(void *this);
 END
 
+CLASS(mpd_main, mtk_container)
+	mtk_menu_t *menu;
+	mpd_dirlist_t *dirlist;
+	mpd_playlist_t *playlist;
+	mpd_status_t *status;
+METHODS(mpd_main, mtk_container)
+END
+
 extern mpd_Connection *mpd_conn;
 extern mpd_Status *mpd_stat;
 #define die_on_mpd_error() die_on(mpd_conn->error, "%s\n", mpd_conn->errorStr)
 
-void mpd_init();
 char* mpd_song_name(mpd_InfoEntity *entity);
 
 #endif

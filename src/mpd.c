@@ -7,12 +7,10 @@
 
 mpd_Connection *mpd_conn;
 mpd_Status *mpd_stat;
-static mpd_status_t *status;
-static mpd_playlist_t *playlist;
-static mpd_dirlist_t *dirlist;
 
-static bool mpd_update(void *nill)
+static bool mpd_update(void *vthis)
 {
+	mpd_main_t *this = vthis;
 	mpd_Status *old;
 
 	mpd_sendStatusCommand(mpd_conn);
@@ -27,12 +25,12 @@ static bool mpd_update(void *nill)
 	    mpd_stat->song == old->song &&
 	    mpd_stat->state == old->state) {
 		/* Not much changed, just update the time/volume */
-		call(status,update);
+		call(this->status,update);
 	}
 	else {
-		call(status,update);
-		call(playlist,update);
-		call(dirlist,update);
+		call(this->status,update);
+		call(this->playlist,update);
+		call(this->dirlist,update);
 	}
 
 	if (old)
@@ -41,10 +39,14 @@ static bool mpd_update(void *nill)
 	return true;
 }
 
-void mpd_init(mtk_menu_t *view)
+
+mpd_main_t* mpd_main_new(size_t size)
 {
+	mpd_main_t *this = mpd_main(mtk_container_new(size));
 	char *hostname = getenv("MPD_HOST");
 	char *port = getenv("MPD_PORT");
+
+	SET_CLASS(this, mpd_main);
 
 	if(hostname == NULL)
 		hostname = "localhost";
@@ -54,16 +56,23 @@ void mpd_init(mtk_menu_t *view)
 	mpd_conn = mpd_newConnection(hostname, atoi(port), 10);
 	die_on_mpd_error();
 
-	status = new(mpd_status);
-	playlist = new(mpd_playlist);
-	dirlist = new(mpd_dirlist);
-	call(view,add_item, mtk_widget(status), "Currently Playing");
-	call(view,add_item, mtk_widget(playlist), "Playlist");
-	call(view,add_item, mtk_widget(dirlist), "Music Library");
+	this->menu = new(mtk_menu);
+	this->status = new(mpd_status);
+	this->playlist = new(mpd_playlist);
+	this->dirlist = new(mpd_dirlist);
+	call(this,add_widget, mtk_widget(this->menu));
+	call(this->menu,add_item, mtk_widget(this->status), "Current Song");
+	call(this->menu,add_item, mtk_widget(this->playlist), "Playlist");
+	call(this->menu,add_item, mtk_widget(this->dirlist), "Music Library");
 
-	mpd_update(NULL);
-	mtk_timer_add(1.0, mpd_update, NULL);
+	mpd_update(this);
+	mtk_timer_add(1.0, mpd_update, this);
+
+	return this;
 }
+
+METHOD_TABLE_INIT(mpd_main, mtk_container)
+METHOD_TABLE_END
 
 #define MAXTEXT 200
 char* mpd_song_name(mpd_InfoEntity *entity)

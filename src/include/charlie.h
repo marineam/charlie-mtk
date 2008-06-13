@@ -31,7 +31,6 @@ CLASS(mpd_status, mtk_container)
 	mtk_slider_t *volume;
 	mtk_text_t *volvalue;
 	mtk_image_t *art;
-	mtk_image_t *playpause;
 	mtk_text_t *nextlabel;
 	mtk_text_t *next[3];
 	long long playlist;
@@ -40,7 +39,6 @@ METHODS(mpd_status, mtk_container)
 	void (*update)(void *this);
 	void (*set_progress)(void *this, double value);
 	void (*set_volume)(void *this, double value);
-	void (*set_playpause)(void *this);
 END
 
 CLASS(mpd_main, mtk_container)
@@ -48,7 +46,10 @@ CLASS(mpd_main, mtk_container)
 	mpd_dirlist_t *dirlist;
 	mpd_playlist_t *playlist;
 	mpd_status_t *status;
+	mtk_image_t *playpause;
+	mtk_text_t *clock;
 METHODS(mpd_main, mtk_container)
+	void (*set_playpause)(void *this);
 END
 
 extern mpd_Connection *mpd_conn;

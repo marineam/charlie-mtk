@@ -103,11 +103,6 @@ static void update(void *vthis)
 		snprintf(vol, 5, "%d%%", mpd_stat->volume);
 	call(this->volvalue,set_text, vol);
 
-	if (mpd_stat->state == MPD_STATUS_STATE_PLAY)
-		call(this->playpause,set_image, "../data/pause.png");
-	else
-		call(this->playpause,set_image, "../data/play.png");
-
 	if (mpd_stat->playlist == this->playlist &&
 	    mpd_stat->song == this->song) {
 		call(this,redraw);
@@ -220,9 +215,6 @@ static void set_size(void *vthis, int w, int h)
 	call(this->volvalue,set_coord, w*0.89, h*0.5);
 	call(this->volvalue,set_size, w*0.11, h*0.04);
 
-	call(this->playpause,set_coord, w*0.05, h-UNIT*1.1);
-	call(this->playpause,set_size, UNIT, UNIT);
-
 	call(this->nextlabel,set_coord, w*0.05, h*0.6);
 	call(this->nextlabel,set_size, w*0.2, h*0.06);
 
@@ -258,28 +250,6 @@ static void set_volume(void *vthis, double value)
 	call(this,update);
 }
 
-static void set_playpause(void *vthis)
-{
-	mpd_status_t *this = vthis;
-
-	if (mpd_stat->state == MPD_STATUS_STATE_PLAY) {
-		mpd_stat->state = MPD_STATUS_STATE_PAUSE;
-		mpd_sendPauseCommand(mpd_conn, 1);
-	}
-	else if (mpd_stat->state == MPD_STATUS_STATE_PAUSE)
-	{
-		mpd_stat->state = MPD_STATUS_STATE_PLAY;
-		mpd_sendPauseCommand(mpd_conn, 0);
-	}
-	else {
-		mpd_stat->state = MPD_STATUS_STATE_PLAY;
-		mpd_sendPlayCommand(mpd_conn, mpd_stat->song);
-	}
-	mpd_finishCommand(mpd_conn);
-	die_on_mpd_error();
-	call(this,update);
-}
-
 mpd_status_t* mpd_status_new(size_t size)
 {
 	mpd_status_t *this = mpd_status(mtk_container_new(size));
@@ -297,7 +267,6 @@ mpd_status_t* mpd_status_new(size_t size)
 	this->vollabel = new(mtk_text, "Vol:");
 	this->volume = new(mtk_slider, 0.0);
 	this->volvalue = new(mtk_text, "0%");
-	this->playpause = new(mtk_image, "../data/play.png");
 	this->nextlabel = new(mtk_text, "Next:");
 	this->next[0] = new(mtk_text, "");
 	this->next[1] = new(mtk_text, "");
@@ -313,7 +282,6 @@ mpd_status_t* mpd_status_new(size_t size)
 	call(this,add_widget, mtk_widget(this->vollabel));
 	call(this,add_widget, mtk_widget(this->volume));
 	call(this,add_widget, mtk_widget(this->volvalue));
-	call(this,add_widget, mtk_widget(this->playpause));
 	call(this,add_widget, mtk_widget(this->nextlabel));
 	call(this,add_widget, mtk_widget(this->next[0]));
 	call(this,add_widget, mtk_widget(this->next[1]));
@@ -321,7 +289,6 @@ mpd_status_t* mpd_status_new(size_t size)
 
 	connect(this->progress, value_changed, this, set_progress);
 	connect(this->volume, value_changed, this, set_volume);
-	connect(mtk_widget(this->playpause), clicked, this, set_playpause);
 
 	return this;
 }
@@ -330,7 +297,6 @@ METHOD_TABLE_INIT(mpd_status, mtk_container)
 	METHOD(update);
 	METHOD(set_progress);
 	METHOD(set_volume);
-	METHOD(set_playpause);
 	METHOD(draw);
 	METHOD(set_size);
 METHOD_TABLE_END

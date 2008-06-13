@@ -154,8 +154,11 @@ static void update(void *vthis)
 			call(this->next[i],set_text, mpd_song_name(entity));
 			mpd_freeInfoEntity(entity);
 		}
-		else
+		else {
 			call(this->next[i],set_text, "");
+			mpd_clearError(mpd_conn);
+		}
+
 	}
 
 	mpd_finishCommand(mpd_conn);
@@ -218,12 +221,12 @@ static void set_size(void *vthis, int w, int h)
 	call(this->nextlabel,set_coord, w*0.05, h*0.6);
 	call(this->nextlabel,set_size, w*0.2, h*0.06);
 
-	call(this->next[0],set_coord, w*0.3, h*0.6);
-	call(this->next[0],set_size, w*0.7, h*0.06);
-	call(this->next[1],set_coord, w*0.3, h*0.7);
-	call(this->next[1],set_size, w*0.7, h*0.06);
-	call(this->next[2],set_coord, w*0.3, h*0.8);
-	call(this->next[2],set_size, w*0.7, h*0.06);
+	call(this->next[0],set_coord, w*0.05, h*0.67);
+	call(this->next[0],set_size, w*0.9, h*0.06);
+	call(this->next[1],set_coord, w*0.05, h*0.74);
+	call(this->next[1],set_size, w*0.9, h*0.06);
+	call(this->next[2],set_coord, w*0.05, h*0.81);
+	call(this->next[2],set_size, w*0.9, h*0.06);
 }
 
 static void set_progress(void *vthis, double value)
